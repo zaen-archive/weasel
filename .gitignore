@@ -1,0 +1,6 @@
+llvm-build
+llvm-project
+build
+clang
+
+.vscode
