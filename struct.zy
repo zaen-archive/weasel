@@ -1,0 +1,10 @@
+import "io"
+
+fun main() int
+{
+    let fundec fun() int    // declaration function lambda
+    let test int            // declaration
+    let testing = 123       // definition
+    let anon = fun() {}     // definition function lambda
+    final testfinal = 123   // definition final variable
+}

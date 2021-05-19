@@ -2,5 +2,7 @@ llvm-build
 llvm-project
 build
 clang
+out
 
 .vscode
+.vs
