@@ -49,6 +49,12 @@ underrated::Token *underrated::Lexer::getToken()
             return new Token(TokenKind::TokenKeyInt, identifier);
         }
 
+        // debug
+        if (identifier == "debug")
+        {
+            return new Token(TokenKind::TokenDebug, identifier);
+        }
+
         // Identifier
         return new Token(TokenKind::TokenIdentifier, identifier);
     }

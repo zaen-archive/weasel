@@ -41,5 +41,8 @@ namespace underrated
 
         // Top Level Semicolons
         TokenSemicolon,
+
+        // Debug
+        TokenDebug,
     };
 } // namespace underrated

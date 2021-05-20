@@ -13,7 +13,6 @@
 #include <memory>
 #include <iostream>
 
-
 // Simple Operation
 /*
 func something() {
@@ -23,7 +22,8 @@ func something() {
     return d
 }
 */
-llvm::Function *createFun(llvm::Module *m, llvm::LLVMContext &c) {
+llvm::Function *createFun(llvm::Module *m, llvm::LLVMContext &c)
+{
     // Functions
     llvm::FunctionType *funTy = llvm::FunctionType::get(llvm::Type::getInt32Ty(c), false);
     llvm::Function *fun = llvm::Function::Create(funTy, llvm::Function::LinkageTypes::ExternalLinkage, "test", m);
@@ -41,6 +41,7 @@ llvm::Function *createFun(llvm::Module *m, llvm::LLVMContext &c) {
     // var d = a * b
     llvm::AllocaInst *d = new llvm::AllocaInst(intTy, 0, "d", block);
     llvm::LoadInst *lb = new llvm::LoadInst(intTy, b, "b", block);
+
     // 'a' is a constant Just reuse it.
     llvm::BinaryOperator *dOp = llvm::BinaryOperator::CreateMul(a, lb, "d_op", block);
     new llvm::StoreInst(dOp, d, block);
@@ -51,8 +52,8 @@ llvm::Function *createFun(llvm::Module *m, llvm::LLVMContext &c) {
     return fun;
 }
 
-
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     // Argument
     int n = argc > 1 ? atol(argv[1]) : 24;
 
@@ -74,24 +75,26 @@ int main(int argc, char **argv) {
     std::string errStr;
     llvm::ExecutionEngine *ee =
         llvm::EngineBuilder(std::move(owner))
-        .setErrorStr(&errStr)
-        .create();
+            .setErrorStr(&errStr)
+            .create();
 
-    if (!ee) {
+    if (!ee)
+    {
         std::cout << argv[0] << "Failed to construct ExecutionEngine: " << errStr << '\n';
         return 1;
     }
 
     std::cout << "Verifying .....\n";
-    if (llvm::verifyModule(*module)) {
+    if (llvm::verifyModule(*module))
+    {
         std::cout << "Error Constructing Function!\n";
         return 1;
     }
-    
+
     llvm::errs() << *module;
 
     std::cout << "Run Function\n";
-    
+
     // Call Function with argument n:
     // llvm/ExecutionEngine/GenericValue
     std::vector<llvm::GenericValue> args(0);

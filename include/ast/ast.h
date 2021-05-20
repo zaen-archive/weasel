@@ -2,9 +2,13 @@
 
 #include <iostream>
 #include "lex/token.h"
+#include "llvm/IR/Value.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace underrated
 {
+    class ASTContext;
+
     class ExprAST
     {
     public:
@@ -12,15 +16,31 @@ namespace underrated
 
     public:
         virtual void debug() { std::cout << "Base Class\n"; }
+        virtual llvm::Value *codegen(ASTContext *context) = 0;
+    };
+
+    // TODO: Debug
+    class DebugExprAST : public ExprAST
+    {
+    public:
+        llvm::Value *codegen(ASTContext *context);
+
+    public:
+        void debug() override
+        {
+            std::cout << "DebugAST\n";
+        }
     };
 
     class NumberExprAST : public ExprAST
     {
     private:
-        double _value;
+        int _value;
 
     public:
-        NumberExprAST(double value) : _value(value) {}
+        NumberExprAST(int value) : _value(value) {}
+        int getValue() const { return _value; }
+        llvm::Value *codegen(ASTContext *context);
 
     public:
         void debug() override
@@ -37,6 +57,9 @@ namespace underrated
 
     public:
         VariableExprAST(std::string identifier, ExprAST *value) : _identifier(identifier), _value(value) {}
+        std::string getIdentifier() const { return _identifier; }
+        ExprAST *getValue() const { return _value; }
+        llvm::Value *codegen(ASTContext *context);
 
     public:
         void debug() override
@@ -54,6 +77,7 @@ namespace underrated
 
     public:
         BinopExprAST(ExprAST *lhs, ExprAST *rhs) : _lhs(lhs), _rhs(rhs) {}
+        llvm::Value *codegen(ASTContext *context);
 
     public:
         void debug() override
@@ -63,4 +87,5 @@ namespace underrated
     };
 
     ExprAST *logError(const char *msg);
+    ExprAST *logErrorV(const char *msg);
 } // namespace underrated

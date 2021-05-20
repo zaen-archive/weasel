@@ -8,18 +8,10 @@ set(LLVM_LINK_COMPONENTS
   nativecodegen
 )
 
-file(
-  GLOB compiler_src
-  "lex/*.cpp"
-  "ast/*.cpp"
-  "parse/*.cpp"
-)
-
 add_llvm_example(compiler
   compiler.cpp
-  ${compiler_src}
+  lex/lexer.cpp
+  ast/ast_context.cpp
+  ast/ast.cpp
+  parse/parser.cpp
 )
-
-# add_subdirectory(ast)
-# add_subdirectory(lex)
-# add_subdirectory(parse)

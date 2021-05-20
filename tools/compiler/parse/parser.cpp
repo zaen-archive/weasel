@@ -66,7 +66,7 @@ underrated::ExprAST *underrated::Parser::parseVariableExpr()
     token = getNextToken();
     if (token->getTokenKind() == TokenKind::TokenKeyInt)
     {
-        // our data type just integer
+        // Our data type just integer
         // TODO: Just get next token
         token = getNextToken();
 
@@ -104,7 +104,14 @@ underrated::ExprAST *underrated::Parser::parseVariableExpr()
 
 underrated::ExprAST *underrated::Parser::parse()
 {
-    auto *token = _lexer->getNextToken();
+    auto *token = getNextToken();
+
+    if (token->getTokenKind() == TokenKind::TokenDebug)
+    {
+        getNextToken();
+        return new DebugExprAST();
+    }
+
     if (token->getTokenKind() == TokenKind::TokenKeyLet)
     {
         return this->parseVariableExpr();
