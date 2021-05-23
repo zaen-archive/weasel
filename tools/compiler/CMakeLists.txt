@@ -10,8 +10,17 @@ set(LLVM_LINK_COMPONENTS
 
 add_llvm_example(compiler
   compiler.cpp
+  # test_lex.cpp
+  analysis/context.cpp
   lex/lexer.cpp
-  ast/ast_context.cpp
+  lex/lexer_type.cpp
+  lex/lexer_punctuation.cpp
+  lex/lexer_keyword.cpp
+  lex/lexer_literal.cpp
+  lex/token.cpp
   ast/ast.cpp
+  ast/type.cpp
   parse/parser.cpp
+  parse/parser_function.cpp
+  parse/parser_expr.cpp
 )

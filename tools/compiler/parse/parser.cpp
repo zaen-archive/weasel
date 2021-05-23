@@ -1,121 +1,64 @@
-#include "parse/parser.h"
 #include <iostream>
+#include "parse/parser.h"
 
-// underrated::ExprAST *underrated::Parser::parseExpr()
-// {
-//     auto *lhs = _lexer->getCurrentToken();
-//     auto tokenKind = lhs->getTokenKind();
-
-//     _lexer->getNextToken();
-
-//     // Number Token
-//     if (tokenKind == TokenKind::TokenNumber)
-//     {
-//         return new NumberExprAST(lhs);
-//     }
-
-//     // Identifier
-//     if (tokenKind == TokenKind::TokenIdentifier)
-//     {
-//         return new VariableExprAST(lhs);
-//     }
-
-//     // Parentise
-//     if (tokenKind == TokenKind::TokenOpenParen)
-//     {
-//         // parseBinOp
-//     }
-
-//     // Unary Expression
-
-//     // Error Expression
-//     return logError("Unknown token when expecting an expression");
-// }
-
-underrated::ExprAST *underrated::Parser::parseNumberExpr()
+// Codegen
+void underrated::Parser::codegen()
 {
-    return new NumberExprAST(std::stod(this->getCurrentToken()->getValue()));
-}
-
-underrated::ExprAST *underrated::Parser::parseExpr()
-{
-    auto *lhs = this->getCurrentToken();
-    if (lhs->getTokenKind() == TokenKind::TokenNumber)
+    for (auto &item : _funcs)
     {
-        return parseNumberExpr();
-    }
-
-    return nullptr;
-}
-
-// underrated::ExprAST *underrated::Parser::parseBinopExpr()
-// {
-// }
-
-underrated::ExprAST *underrated::Parser::parseVariableExpr()
-{
-    // Eat 'let'
-    auto *token = getNextToken();
-    if (token->getTokenKind() != TokenKind::TokenIdentifier)
-    {
-        return logError("Expecting identifier");
-    }
-
-    // Eat 'identifier'
-    auto identifier = token->getValue();
-    token = getNextToken();
-    if (token->getTokenKind() == TokenKind::TokenKeyInt)
-    {
-        // Our data type just integer
-        // TODO: Just get next token
-        token = getNextToken();
-
-        // If not define the value yet
-        if (token->getTokenKind() == TokenKind::TokenSemicolon)
+        auto *func = getModule()->getFunction(item->getIdentifier());
+        if (!func)
         {
-            return new VariableExprAST(identifier, new NumberExprAST(0));
+            item->codegen(getContext());
         }
     }
-
-    // Should get assign operator
-    if (token->getTokenKind() != TokenKind::TokenOpAssign)
-    {
-        return logError("Expecting assign operator");
-    }
-
-    // Eat 'Assign' Operator
-    getNextToken();
-
-    // Get An Expression
-    auto *expr = parseExpr();
-
-    if (!expr)
-    {
-        return logError("Expecting an expression");
-    }
-
-    if (getNextToken()->getTokenKind() != TokenKind::TokenSemicolon)
-    {
-        return logError("Expecting new line or semicolon");
-    }
-
-    return new VariableExprAST(identifier, expr);
 }
 
-underrated::ExprAST *underrated::Parser::parse()
+// parse
+void underrated::Parser::parse()
 {
-    auto *token = getNextToken();
+    getNextToken(); // start parsing
 
-    if (token->getTokenKind() == TokenKind::TokenDebug)
+    // Debugging
+    if (getCurrentToken()->isDebug())
     {
-        getNextToken();
-        return new DebugExprAST();
+        getNextToken(); // Eat 'debug' away
+        codegen();      // change ast to llvm IR
+        (new DebugExpression())->codegen(getContext());
+        return;
     }
 
-    if (token->getTokenKind() == TokenKind::TokenKeyLet)
+    // Function
+    if (getCurrentToken()->isKind(TokenKind::TokenKeyFun))
     {
-        return this->parseVariableExpr();
+        addFunction(parseFunction());
+        return;
     }
 
-    return logError("Expecting new code here!");
+    std::cout << enumToInt(getCurrentToken()->getTokenKind()) << ":" << getCurrentToken()->getValue() << "\n";
 }
+
+// underrated::Expr *underrated::Parser::parse()
+// {
+//     auto *token = getNextToken();
+
+//     // Function
+//     if (token->isFunctionDeclare())
+//     {
+//         return parseFunction();
+//     }
+
+//     if (token->getTokenKind() == TokenKind::TokenDebug)
+//     {
+//         getNextToken(); // eat 'debug' token
+
+//         return new DebugExpr();
+//     }
+
+//     if (token->getTokenKind() == TokenKind::TokenKeyLet)
+//     {
+//         return this->parseVariableExpr();
+//     }
+
+//     return logError("Expecting new code here!");
+// }

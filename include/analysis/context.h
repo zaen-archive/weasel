@@ -6,14 +6,12 @@
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/IRBuilder.h"
+#include "ast/function.h"
+#include "ast/expr.h"
 
 namespace underrated
 {
-    class NumberExprAST;
-    class VariableExprAST;
-    class BinopExprAST;
-
-    class ASTContext
+    class AnalysContext
     {
     private:
         llvm::Module *_module;
@@ -21,22 +19,16 @@ namespace underrated
         std::map<std::string, llvm::AllocaInst *> _namedValues;
         llvm::IRBuilder<> *_builder;
 
-        // Default Function Mode
-        // TODO: Testing Function
-    private:
-        llvm::Function *_defFun;
-        llvm::BasicBlock *_defBlock;
-
     public:
-        ASTContext();
-        llvm::LLVMContext &getContext() { return *_context; }
+        AnalysContext();
+        AnalysContext(std::string moduleName);
+
+        llvm::LLVMContext *getContext() const { return _context; }
         llvm::Module *getModule() const { return _module; }
         llvm::IRBuilder<> *getBuilder() const { return _builder; }
-        llvm::Function *getDefaultFunction() const { return _defFun; }
 
     public:
-        llvm::Value *codegen(NumberExprAST *expr);
-        llvm::Value *codegen(VariableExprAST *expr);
-        llvm::Value *codegen(BinopExprAST *expr);
+        llvm::Value *codegen(LiteralExpr *expr);
+        llvm::Function *codegen(Func *func);
     };
 } // namespace underrated

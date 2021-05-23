@@ -11,7 +11,19 @@ namespace underrated
         Token *_currentToken;
 
     private:
+        char getNextChar() { return _lastChar = getchar(); }
+
         Token *getToken();
+        Token *getType(std::string type);
+        Token *getKeyword(std::string key);
+        Token *getPunctuation(char leftChar);
+
+        // Literal
+        Token *getStringLiteral();
+        Token *getCharacterLiteral();
+        // Direct implemented happend because the lexer quite simple
+        // Token *getNumberLiteral(); -> Implemented at getToken directly
+        // Token *getBooleanLiteral(); -> Implemented at getToken directly
 
     public:
         Token *getNextToken();

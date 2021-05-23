@@ -1,5 +1,4 @@
 #include "lex/lexer.h"
-#include <iostream>
 
 underrated::Token *underrated::Lexer::getToken()
 {
@@ -9,44 +8,39 @@ underrated::Token *underrated::Lexer::getToken()
         if (_lastChar == '\n')
         {
             _lastChar = ' ';
-            return new Token(TokenKind::TokenSemicolon);
+            return new Token(TokenKind::TokenSpaceNewline);
         }
 
-        _lastChar = getchar();
+        getNextChar();
     }
 
     // Check if identifier
     if (isalpha(_lastChar))
     {
         std::string identifier = std::string(1, _lastChar);
-        while (isalnum(_lastChar = getchar()))
+        while (isalnum(getNextChar()))
         {
             identifier += _lastChar;
         }
 
         /// Check Keyword ///
-        // fun
-        if (identifier == "fun")
+        auto *ty = getKeyword(identifier);
+        if (ty)
         {
-            return new Token(TokenKind::TokenKeyFun, identifier);
+            return ty;
         }
 
-        // extern
-        if (identifier == "extern")
+        // Check if data type
+        ty = getType(identifier);
+        if (ty)
         {
-            return new Token(TokenKind::TokenKeyExtern, identifier);
+            return ty;
         }
 
-        // let
-        if (identifier == "let")
+        // Check Boolean Literal
+        if (identifier == "true" || identifier == "false")
         {
-            return new Token(TokenKind::TokenKeyLet, identifier);
-        }
-
-        // int
-        if (identifier == "int")
-        {
-            return new Token(TokenKind::TokenKeyInt, identifier);
+            return new Token(TokenKind::TokenLitBool, identifier);
         }
 
         // debug
@@ -63,65 +57,66 @@ underrated::Token *underrated::Lexer::getToken()
     if (isdigit(_lastChar))
     {
         std::string numVal = std::string(1, _lastChar);
-        while (isdigit(_lastChar = getchar()) || _lastChar == '.')
+        while (isdigit(getNextChar()) || _lastChar == '.')
         {
             numVal += _lastChar;
         }
 
-        // Check valid number
-
-        return new Token(TokenKind::TokenNumber, numVal);
+        // Number Literal
+        return new Token(TokenKind::TokenLitNumber, numVal);
     }
 
+    // String Literal
+    if (_lastChar == '"')
+    {
+        getNextChar(); // eat '"'
+        return getStringLiteral();
+    }
+
+    // Character Literal
+    if (_lastChar == '\'')
+    {
+        getNextChar(); // eat '''
+
+        return getCharacterLiteral();
+    }
+
+    // Save Last Char
     auto currentChar = _lastChar;
-    auto currentStr = std::string(1, currentChar);
-    _lastChar = getchar();
+    getNextChar();
 
-    // Semicolon
-    if (currentChar == ';')
+    // TODO: You need to save some comment to make a documentation
+    // Single Line Comment
+    if (currentChar == '/' && _lastChar == '/')
     {
-        return new Token(TokenKind::TokenSemicolon);
-    }
+        while (getNextChar() != '\n')
+            ;
 
-    // Operator
-    if (currentChar == '+')
-    {
-        return new Token(TokenKind::TokenOpPlus, currentStr);
-    }
-    if (currentChar == '-')
-    {
-        return new Token(TokenKind::TokenOpMinus, currentStr);
-    }
-    if (currentChar == '*')
-    {
-        return new Token(TokenKind::TokenOpMul, currentStr);
-    }
-    if (currentChar == '/')
-    {
-        return new Token(TokenKind::TokenOpDivide, currentStr);
-    }
-    if (currentChar == '=')
-    {
-        return new Token(TokenKind::TokenOpAssign, currentStr);
+        getNextChar(); // eat '\n'
+
+        return getToken();
     }
 
-    // Parentise
-    if (currentChar == '(')
+    // TODO: You need to save some comment to make a documentation
+    // Multiple Line Comment
+    if (currentChar == '/' && _lastChar == '*')
     {
-        return new Token(TokenKind::TokenOpenParen, currentStr);
-    }
-    if (currentChar == ')')
-    {
-        return new Token(TokenKind::TokenCloseParen, currentStr);
+        currentChar = getNextChar();
+        while (getNextChar() != '/' && currentChar != '*')
+        {
+            currentChar = _lastChar;
+        }
+
+        return getToken();
     }
 
-    // Comma
-    if (currentChar == ',')
+    // Punctuation
+    if (ispunct(currentChar))
     {
-        return new Token(TokenKind::TokenComma, currentStr);
+        return getPunctuation(currentChar);
     }
 
-    return new Token(TokenKind::TokenUndefined, currentStr);
+    return new Token(TokenKind::TokenUndefined, std::string(1, currentChar));
 }
 
 underrated::Token *underrated::Lexer::getNextToken()
@@ -139,12 +134,12 @@ int underrated::Lexer::getTokenPrecedence()
     auto val = _currentToken->getTokenKind();
     switch (val)
     {
-    case TokenKind::TokenOpPlus:
-    case TokenKind::TokenOpMinus:
+    case TokenKind::TokenPuncPlus:
+    case TokenKind::TokenPuncMinus:
         return 10;
-    case TokenKind::TokenOpMul:
-    case TokenKind::TokenOpDivide:
-    case TokenKind::TokenOpMod:
+    case TokenKind::TokenPuncStar:
+    case TokenKind::TokenPuncSlash:
+    case TokenKind::TokenPuncPercent:
         return 20;
     default:
         return -1;

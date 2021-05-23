@@ -1,7 +1,9 @@
 #pragma once
 
+#include <iostream>
 #include <string>
 #include "lex/token_kind.h"
+#include "ast/type.h"
 
 namespace underrated
 {
@@ -17,10 +19,17 @@ namespace underrated
         Token(TokenKind kind, std::string &value) : _kind(kind), _value(value) {}
         Token(TokenKind kind) : _kind(kind) {}
 
-    public:
-        TokenKind getTokenKind() const { return _kind; }
-        std::string getValue() const { return _value; }
         void setValue(std::string val) { _value = val; }
+
+        std::string getValue() const { return _value; }
+        TokenKind getTokenKind() const { return _kind; }
+
+        bool isKind(TokenKind type) const { return type == _kind; }
+        bool isDebug() const { return _kind == TokenKind::TokenDebug; }
+        bool isDataType() const { return _kind >= underrated::TokenKind::TokenTyVoid && _kind <= underrated::TokenKind::TokenTyDecimal; }
+
+    public:
+        Type *toType();
     };
 } // namespace underrated
 

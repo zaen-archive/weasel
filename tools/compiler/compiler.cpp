@@ -13,7 +13,7 @@
 #include <iostream>
 #include <memory>
 #include "parse/parser.h"
-#include "ast/ast_context.h"
+#include "ast/ast.h"
 
 int main()
 {
@@ -22,37 +22,38 @@ int main()
     llvm::InitializeNativeTargetAsmPrinter();
 
     auto *lexer = new underrated::Lexer();
-    auto *parser = new underrated::Parser(lexer);
-    auto *context = new underrated::ASTContext();
+    auto *context = new underrated::AnalysContext();
+    auto *parser = new underrated::Parser(context, lexer);
 
     /// Compiler ///
     while (true)
     {
         std::cout << "Typing > ";
-        auto *expr = parser->parse();
+        parser->parse();
+        // auto *expr = parser->parse();
 
-        if (expr)
-        {
-            expr->debug();
-            expr->codegen(context);
-        }
-        else
-        {
-            std::cout << "\n";
-        }
+        // if (expr)
+        // {
+        //     expr->debug();
+        //     expr->codegen(context);
+        // }
+        // else
+        // {
+        //     std::cout << "\n";
+        // }
     }
 
-    // testing s//
+    // testing //
     // testing();
 }
 
 int testing()
 {
-    auto *context = new underrated::ASTContext();
+    auto *context = new underrated::AnalysContext();
     auto *builder = context->getBuilder();
     auto *funTy = llvm::FunctionType::get(builder->getInt32Ty(), false);
     auto *fun = llvm::Function::Create(funTy, llvm::Function::ExternalLinkage, "testing", context->getModule());
-    auto *block = llvm::BasicBlock::Create(context->getContext(), "entry", fun);
+    auto *block = llvm::BasicBlock::Create(*context->getContext(), "entry", fun);
 
     builder->SetInsertPoint(block);
 
@@ -61,8 +62,8 @@ int testing()
     callParams.push_back(str);
 
     // Init printf
-    auto *pty = llvm::PointerType::get(llvm::IntegerType::get(context->getContext(), 8), 0);
-    auto *fty = llvm::FunctionType::get(llvm::IntegerType::get(context->getContext(), 32), true);
+    auto *pty = llvm::PointerType::get(llvm::IntegerType::get(*context->getContext(), 8), 0);
+    auto *fty = llvm::FunctionType::get(llvm::IntegerType::get(*context->getContext(), 32), true);
     auto *fpf = llvm::Function::Create(fty, llvm::GlobalValue::ExternalLinkage, "puts", context->getModule());
 
     auto test = [&]()
@@ -85,7 +86,7 @@ int testing()
 
     auto end = [&]()
     {
-        llvm::ReturnInst::Create(context->getContext(), llvm::ConstantInt::get(builder->getInt32Ty(), 10), block);
+        llvm::ReturnInst::Create(*context->getContext(), llvm::ConstantInt::get(builder->getInt32Ty(), 10), block);
     };
 
     test();

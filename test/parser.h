@@ -23,7 +23,16 @@ namespace underrated
         std::vector<FuncArg *> parseFunctionArguments();
         FuncArg *parseFunctionArgument();
 
+        // Statement
+        std::vector<Stmt *> parseBody();
+        Stmt *parseCompoundStatement() { return nullptr; };
+        Stmt *parseCondtionalStatement() { return nullptr; };
+        Stmt *parseLoopStatement() { return nullptr; };
+        Stmt *parseReturnStatement() { return nullptr; };
+        Stmt *parseVariableStatement();
+
         // Expression
+        Stmt *parseExpression();
         Expression *parseVariableExpr();
         Expression *parseExpr();
         Expression *parseScalarExpr();

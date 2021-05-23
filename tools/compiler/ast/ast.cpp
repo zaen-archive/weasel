@@ -1,40 +1,53 @@
 // TODO: Debug : Verify Function
 #include "llvm/IR/Verifier.h"
+#include "llvm/IR/Value.h"
 #include "ast/ast.h"
-#include "ast/ast_context.h"
+#include "analysis/context.h"
 
-underrated::ExprAST *underrated::logError(const char *msg)
+/// Log Error
+underrated::Expression *underrated::logError(const char *msg)
 {
     fprintf(stderr, "LogError: %s\n", msg);
     return nullptr;
 }
 
-underrated::ExprAST *underrated::logErrorV(const char *msg)
+underrated::Expression *underrated::logErrorV(const char *msg)
 {
     fprintf(stderr, "LogError LLVM : %s\n", msg);
     return nullptr;
 }
 
-llvm::Value *underrated::NumberExprAST::codegen(ASTContext *context)
+underrated::Func *underrated::logErrorF(const char *msg)
 {
-    return context->codegen(this);
-}
-
-llvm::Value *underrated::VariableExprAST::codegen(ASTContext *context)
-{
-    return context->codegen(this);
-}
-
-llvm::Value *underrated::BinopExprAST::codegen(ASTContext *context)
-{
-    return context->codegen(this);
-}
-
-// TODO: Debug
-llvm::Value *underrated::DebugExprAST::codegen(ASTContext *context)
-{
-    llvm::verifyFunction(*context->getDefaultFunction());
-    llvm::errs() << *context->getModule();
-
+    fprintf(stderr, "LogError Func : %s\n", msg);
     return nullptr;
 }
+
+// /// Codegen
+// llvm::Value *underrated::LiteralExpr::codegen(AnalysContext *context)
+// {
+//     return context->codegen(this);
+// }
+
+// llvm::Value *underrated::VariableExpr::codegen(AnalysContext *context)
+// {
+//     return context->codegen(this);
+// }
+
+// llvm::Value *underrated::BinopExpr::codegen(AnalysContext *context)
+// {
+//     return context->codegen(this);
+// }
+
+// llvm::Function *underrated::Func::codegen(AnalysContext *c)
+// {
+//     return c->codegen(this);
+// }
+
+// /// TODO: Debug
+// llvm::Value *underrated::DebugExpression::codegen(AnalysContext *context)
+// {
+//     llvm::errs() << *context->getModule();
+
+//     return nullptr;
+// }
