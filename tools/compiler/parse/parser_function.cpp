@@ -6,7 +6,37 @@
 // 'fun' identifier '(' args ')' funTy
 underrated::Func *underrated::Parser::parseFunction()
 {
+    auto *func = parseDeclareFunction();
+
+    // Ignore new line
+    while (getCurrentToken()->isKind(TokenKind::TokenSpaceNewline))
+    {
+        getNextToken();
+    }
+
+    std::cout << enumToInt(getCurrentToken()->getTokenKind()) << ":" << getCurrentToken()->getValue() << "\n";
+
+    if (!getCurrentToken()->isKind(TokenKind::TokenDelimOpenCurlyBracket))
+    {
+        return logErrorF("Expected '{'");
+    }
+
+    getNextToken(); // eat '{'
+
+    // auto *body = parseBody();
+
+    return func;
+}
+
+underrated::Func *underrated::Parser::parseDeclareFunction()
+{
+    if (!getCurrentToken()->isKind(TokenKind::TokenKeyFun))
+    {
+        return logErrorF("Expected fun keyword");
+    }
+
     getNextToken(); // eat 'fun'
+
     if (!getCurrentToken()->isKind(TokenKind::TokenIdentifier))
     {
         return logErrorF("Expected an identifier");
@@ -31,31 +61,20 @@ underrated::Func *underrated::Parser::parseFunction()
         }
     }
 
-    // Ignore new line
-    while (getCurrentToken()->isKind(TokenKind::TokenSpaceNewline))
-    {
-        getNextToken();
-    }
-
     auto *retTy = getCurrentToken();
-    if (getCurrentToken()->isKind(TokenKind::TokenDelimOpenCurlyBracket))
+    if (retTy->isDataType())
     {
-        retTy = new Token(TokenKind::TokenTyVoid);
+        getNextToken(); // eat 'data type'
     }
     else
     {
-        getNextToken(); // eat data type
+        retTy = new Token(TokenKind::TokenTyVoid);
     }
 
-    if (!retTy->isDataType())
-    {
-        return logErrorF("Expected return data type");
-    }
+    auto *funcTy = new FuncType(retTy->toType(getContext()), args);
+    auto *func = new Func(identifier, funcTy);
 
-    getNextToken(); // eat '{'
-
-    auto *funcTy = new FuncType(retTy->toType(), args);
-    return new Func(identifier, funcTy);
+    return func;
 }
 
 std::vector<underrated::FuncArg *> underrated::Parser::parseFunctionArguments()
@@ -98,5 +117,5 @@ underrated::FuncArg *underrated::Parser::parseFunctionArgument()
         getNextToken(); // eat ','
     }
 
-    return new FuncArg(identifier, token->toType());
+    return new FuncArg(identifier, token->toType(getContext()));
 }

@@ -11,12 +11,13 @@
 
 namespace underrated
 {
+    class LiteralExpression;
+
     class AnalysContext
     {
     private:
         llvm::Module *_module;
         llvm::LLVMContext *_context;
-        std::map<std::string, llvm::AllocaInst *> _namedValues;
         llvm::IRBuilder<> *_builder;
 
     public:
@@ -28,7 +29,7 @@ namespace underrated
         llvm::IRBuilder<> *getBuilder() const { return _builder; }
 
     public:
-        llvm::Value *codegen(LiteralExpr *expr);
+        llvm::Value *codegen(LiteralExpression *expr);
         llvm::Function *codegen(Func *func);
     };
 } // namespace underrated

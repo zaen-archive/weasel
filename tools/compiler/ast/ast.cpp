@@ -23,31 +23,10 @@ underrated::Func *underrated::logErrorF(const char *msg)
     return nullptr;
 }
 
-// /// Codegen
-// llvm::Value *underrated::LiteralExpr::codegen(AnalysContext *context)
-// {
-//     return context->codegen(this);
-// }
+/// TODO: Debug
+llvm::Value *underrated::DebugExpression::codegen(AnalysContext *context)
+{
+    llvm::errs() << *context->getModule();
 
-// llvm::Value *underrated::VariableExpr::codegen(AnalysContext *context)
-// {
-//     return context->codegen(this);
-// }
-
-// llvm::Value *underrated::BinopExpr::codegen(AnalysContext *context)
-// {
-//     return context->codegen(this);
-// }
-
-// llvm::Function *underrated::Func::codegen(AnalysContext *c)
-// {
-//     return c->codegen(this);
-// }
-
-// /// TODO: Debug
-// llvm::Value *underrated::DebugExpression::codegen(AnalysContext *context)
-// {
-//     llvm::errs() << *context->getModule();
-
-//     return nullptr;
-// }
+    return nullptr;
+}

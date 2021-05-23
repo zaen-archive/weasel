@@ -4,62 +4,28 @@
 
 namespace underrated
 {
-    class AnalysContext;
+    enum class Qualifier
+    {
+        QualConst,
+        QualRestrict,
+        QualVolatile,
+    };
 
+    // Type
+    // llvm type
+    // Qualifier
+    // codegen
     class Type
     {
-    protected:
-        unsigned _valueWidth;
-        bool _valueSigned;
-
-        Type(unsigned valueWidth, bool isSigned) : _valueWidth(valueWidth), _valueSigned(isSigned) {}
-
-    public:
-        virtual llvm::Type *codegen(AnalysContext *c) = 0;
-    };
-
-    class IntType : public Type
-    {
     private:
-        IntType(unsigned valueWidth, bool isSigned) : Type(valueWidth, isSigned) {}
+        llvm::Type *_llvmType;
+        Qualifier _qual;
+        bool _isSigned;
 
     public:
-        static IntType *getInt8Ty(bool isSigned) { return new IntType(8, isSigned); }
-        static IntType *getInt16Ty(bool isSigned) { return new IntType(16, isSigned); }
-        static IntType *getInt32Ty(bool isSigned) { return new IntType(32, isSigned); }
-        static IntType *getInt64Ty(bool isSigned) { return new IntType(64, isSigned); }
-        static IntType *getInt128Ty(bool isSigned) { return new IntType(128, isSigned); }
+        Type(llvm::Type *llvmType, Qualifier qualifier = Qualifier::QualVolatile, bool isSigned = true) : _llvmType(llvmType), _qual(qualifier), _isSigned(isSigned) {}
 
-        llvm::Type *codegen(AnalysContext *c);
-    };
-
-    class VoidType : public Type
-    {
-    public:
-        VoidType() : Type(0, false) {}
-
-        llvm::Type *codegen(AnalysContext *c);
-    };
-
-    class BoolType : public Type
-    {
-    public:
-        BoolType() : Type(1, false) {}
-
-        llvm::Type *codegen(AnalysContext *c);
-    };
-
-    class FloatType : public Type
-    {
-    private:
-        FloatType(unsigned valueWidth, bool isSigned) : Type(valueWidth, isSigned) {}
-
-    public:
-        static FloatType *getFloatTy() { return new FloatType(32, true); }
-        static FloatType *getDoubleTy() { return new FloatType(64, true); }
-        static FloatType *getDecimalTy() { return new FloatType(128, true); }
-
-        llvm::Type *codegen(AnalysContext *c);
+        llvm::Type *getLLVMType() const { return _llvmType; }
     };
 
     class FuncArg
@@ -72,6 +38,7 @@ namespace underrated
         FuncArg(std::string argName, Type *type) : _argName(argName), _type(type) {}
 
         Type *getType() const { return _type; }
+        llvm::Type *getLLVMType() const { return _type->getLLVMType(); }
         std::string getArgName() const { return _argName; }
     };
 

@@ -28,10 +28,27 @@ void underrated::Parser::parse()
         return;
     }
 
+    // Declare Function
+    if (getCurrentToken()->isKind(TokenKind::TokenKeyExport))
+    {
+        getNextToken(); // eat 'export'
+
+        auto *func = parseDeclareFunction();
+        if (func)
+        {
+            addFunction(func);
+        }
+        return;
+    }
+
     // Function
     if (getCurrentToken()->isKind(TokenKind::TokenKeyFun))
     {
-        addFunction(parseFunction());
+        auto *func = parseFunction();
+        if (func)
+        {
+            addFunction(func);
+        }
         return;
     }
 

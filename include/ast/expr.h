@@ -1,7 +1,10 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <map>
 #include "llvm/IR/Value.h"
+#include "ast/type.h"
 
 // LiteralExpression
 // | PathExpression
@@ -46,13 +49,23 @@ namespace underrated
         virtual llvm::Value *codegen(AnalysContext *context) = 0;
     };
 
-    class LiteralExpr : public Expression
+    class StmtExpression : public Expression
+    {
+    private:
+        std::vector<Expression *> _body;
+        // std::map<std::string, Type *> _variables;
+
+    public:
+        llvm::Value *codegen(AnalysContext *context) { return nullptr; }
+    };
+
+    class LiteralExpression : public Expression
     {
     private:
         int _value;
 
     public:
-        LiteralExpr(int value) : _value(value) {}
+        LiteralExpression(int value) : _value(value) {}
         int getValue() const { return _value; }
         llvm::Value *codegen(AnalysContext *context) { return nullptr; }
     };
@@ -78,6 +91,6 @@ namespace underrated
     class DebugExpression : public Expression
     {
     public:
-        llvm::Value *codegen(AnalysContext *context) { return nullptr; }
+        llvm::Value *codegen(AnalysContext *c);
     };
 } // namespace underrated

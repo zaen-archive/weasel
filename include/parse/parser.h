@@ -19,6 +19,7 @@ namespace underrated
 
     private:
         // Function
+        Func *parseDeclareFunction();
         Func *parseFunction();
         std::vector<FuncArg *> parseFunctionArguments();
         FuncArg *parseFunctionArgument();

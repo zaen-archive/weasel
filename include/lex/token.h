@@ -7,6 +7,8 @@
 
 namespace underrated
 {
+    class AnalysContext;
+
     class Token
     {
     private:
@@ -29,7 +31,7 @@ namespace underrated
         bool isDataType() const { return _kind >= underrated::TokenKind::TokenTyVoid && _kind <= underrated::TokenKind::TokenTyDecimal; }
 
     public:
-        Type *toType();
+        Type *toType(AnalysContext *c, Qualifier qualifier = Qualifier::QualVolatile);
     };
 } // namespace underrated
 

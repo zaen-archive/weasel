@@ -1,5 +1,7 @@
+#include <iostream>
 #include "llvm/Support/TargetSelect.h"
-#include "llvm/Support/raw_ostream.h"
+#include "lex/lexer.h"
+#include "analysis/context.h"
 #include "parse/parser.h"
 
 int main()
@@ -9,13 +11,12 @@ int main()
     llvm::InitializeNativeTargetAsmPrinter();
 
     auto *lexer = new underrated::Lexer();
-    auto *context = new underrated::AnalysContext();
+    auto *context = new underrated::AnalysContext("UnderratedProject");
     auto *parser = new underrated::Parser(context, lexer);
 
-    /// Compiler ///
     while (true)
     {
-        llvm::errs() << "Typing > ";
+        std::cout << "Typing > ";
 
         parser->parse();
     }
