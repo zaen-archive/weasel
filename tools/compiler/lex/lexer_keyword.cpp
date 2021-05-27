@@ -14,6 +14,10 @@ underrated::Token *underrated::Lexer::getKeyword(std::string key)
     {
         return new Token(TokenKind::TokenKeyExport);
     }
+    if (key == "extern")
+    {
+        return new Token(TokenKind::TokenKeyExtern);
+    }
     if (key == "return")
     {
         return new Token(TokenKind::TokenKeyReturn);

@@ -22,12 +22,12 @@ namespace underrated
         Token *getStringLiteral();
         Token *getCharacterLiteral();
         // Direct implemented happend because the lexer quite simple
-        // Token *getNumberLiteral(); -> Implemented at getToken directly
-        // Token *getBooleanLiteral(); -> Implemented at getToken directly
+        // Token *getNumberLiteral();   -> Implemented at getToken directly
+        // Token *getBooleanLiteral();  -> Implemented at getToken directly
+        // Token *getNilLiteral();      -> Implemented at getToken directly
 
     public:
-        Token *getNextToken();
+        Token *getNextToken(bool skipSpace = false);
         Token *getCurrentToken();
-        int getTokenPrecedence();
     };
 } // namespace underrated

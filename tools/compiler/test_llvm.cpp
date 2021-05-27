@@ -25,7 +25,17 @@ int main()
     auto *builder = context->getBuilder();
     auto *funTy = llvm::FunctionType::get(builder->getInt32Ty(), false);
     auto *fun = llvm::Function::Create(funTy, llvm::Function::ExternalLinkage, "testing", context->getModule());
+
+    // First
     auto *block = llvm::BasicBlock::Create(*context->getContext(), "entry", fun);
+
+    // Compound
+    auto *block1 = llvm::BasicBlock::Create(*context->getContext(), "som", fun, block);
+
+    builder->SetInsertPoint(block1);
+
+    builder->CreateStore(builder->getInt32(312312), builder->CreateAlloca(builder->getInt32Ty(), 0, "hello"));
+    llvm::BranchInst::Create(block, block1);
 
     builder->SetInsertPoint(block);
 
@@ -58,11 +68,15 @@ int main()
 
     auto end = [&]()
     {
-        llvm::ReturnInst::Create(*context->getContext(), llvm::ConstantInt::get(builder->getInt32Ty(), 10), block);
+        builder->CreateRetVoid();
+        // llvm::ReturnInst::Create(*context->getContext(), llvm::ConstantInt::get(builder->getInt32Ty(), 10), block);
     };
 
     test();
     end();
+
+    // Show Module
+    llvm::errs() << *context->getModule();
 
     // Verify Function
     llvm::verifyFunction(*fun);

@@ -1,34 +1,41 @@
 #include "parse/parser.h"
+#include "analysis/context.h"
 
 // define
 // 'fun' identifier '(' args ')' funTy '{' stmt '}'
-// declare
-// 'fun' identifier '(' args ')' funTy
-underrated::Func *underrated::Parser::parseFunction()
+underrated::Function *underrated::Parser::parseFunction()
 {
     auto *func = parseDeclareFunction();
-
-    // Ignore new line
-    while (getCurrentToken()->isKind(TokenKind::TokenSpaceNewline))
+    if (!func)
     {
-        getNextToken();
+        return nullptr;
     }
 
-    std::cout << enumToInt(getCurrentToken()->getTokenKind()) << ":" << getCurrentToken()->getValue() << "\n";
+    func->setIsDefine(true);
+    // Ignore new line
+    if (getCurrentToken()->isKind(TokenKind::TokenSpaceNewline))
+    {
+        getNextToken(true);
+    }
 
     if (!getCurrentToken()->isKind(TokenKind::TokenDelimOpenCurlyBracket))
     {
         return logErrorF("Expected '{'");
     }
 
-    getNextToken(); // eat '{'
+    auto *body = parseBody();
+    if (!body)
+    {
+        return logErrorF("Expected valid body statement!.");
+    }
 
-    // auto *body = parseBody();
+    func->setBody(body);
 
     return func;
 }
 
-underrated::Func *underrated::Parser::parseDeclareFunction()
+// extern 'fun' identifier '(' args ')' funTy
+underrated::Function *underrated::Parser::parseDeclareFunction()
 {
     if (!getCurrentToken()->isKind(TokenKind::TokenKeyFun))
     {
@@ -36,7 +43,6 @@ underrated::Func *underrated::Parser::parseDeclareFunction()
     }
 
     getNextToken(); // eat 'fun'
-
     if (!getCurrentToken()->isKind(TokenKind::TokenIdentifier))
     {
         return logErrorF("Expected an identifier");
@@ -51,7 +57,6 @@ underrated::Func *underrated::Parser::parseDeclareFunction()
     }
 
     getNextToken(); // eat '('
-
     auto args = parseFunctionArguments();
     if (args.size() > 0)
     {
@@ -71,15 +76,15 @@ underrated::Func *underrated::Parser::parseDeclareFunction()
         retTy = new Token(TokenKind::TokenTyVoid);
     }
 
-    auto *funcTy = new FuncType(retTy->toType(getContext()), args);
-    auto *func = new Func(identifier, funcTy);
+    auto *funcTy = new FunctionType(retTy->toType(getContext()), args);
+    auto *func = new Function(identifier, funcTy);
 
     return func;
 }
 
-std::vector<underrated::FuncArg *> underrated::Parser::parseFunctionArguments()
+std::vector<underrated::FunctionArgument *> underrated::Parser::parseFunctionArguments()
 {
-    std::vector<underrated::FuncArg *> args;
+    std::vector<underrated::FunctionArgument *> args;
 
     while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
     {
@@ -97,7 +102,7 @@ std::vector<underrated::FuncArg *> underrated::Parser::parseFunctionArguments()
     return args;
 }
 
-underrated::FuncArg *underrated::Parser::parseFunctionArgument()
+underrated::FunctionArgument *underrated::Parser::parseFunctionArgument()
 {
     auto *token = getCurrentToken();
     if (!token->isKind(TokenKind::TokenIdentifier))
@@ -117,5 +122,5 @@ underrated::FuncArg *underrated::Parser::parseFunctionArgument()
         getNextToken(); // eat ','
     }
 
-    return new FuncArg(identifier, token->toType(getContext()));
+    return new FunctionArgument(identifier, token->toType(getContext()));
 }

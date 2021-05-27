@@ -37,16 +37,22 @@ underrated::Token *underrated::Lexer::getToken()
             return ty;
         }
 
+        // Check NIl Literal
+        if (identifier == "nil")
+        {
+            return new Token(TokenKind::TokenLitNil);
+        }
+
         // Check Boolean Literal
         if (identifier == "true" || identifier == "false")
         {
-            return new Token(TokenKind::TokenLitBool, identifier);
+            return new Token(TokenKind::TokenLitBool);
         }
 
         // debug
         if (identifier == "debug")
         {
-            return new Token(TokenKind::TokenDebug, identifier);
+            return new Token(TokenKind::TokenDebug);
         }
 
         // Identifier
@@ -119,29 +125,17 @@ underrated::Token *underrated::Lexer::getToken()
     return new Token(TokenKind::TokenUndefined, std::string(1, currentChar));
 }
 
-underrated::Token *underrated::Lexer::getNextToken()
+underrated::Token *underrated::Lexer::getNextToken(bool skipSpace)
 {
-    return _currentToken = getToken();
+    do
+    {
+        _currentToken = getToken();
+    } while (_currentToken->isKind(TokenKind::TokenSpaceNewline) && skipSpace);
+
+    return _currentToken;
 }
 
 underrated::Token *underrated::Lexer::getCurrentToken()
 {
     return _currentToken;
-}
-
-int underrated::Lexer::getTokenPrecedence()
-{
-    auto val = _currentToken->getTokenKind();
-    switch (val)
-    {
-    case TokenKind::TokenPuncPlus:
-    case TokenKind::TokenPuncMinus:
-        return 10;
-    case TokenKind::TokenPuncStar:
-    case TokenKind::TokenPuncSlash:
-    case TokenKind::TokenPuncPercent:
-        return 20;
-    default:
-        return -1;
-    }
 }

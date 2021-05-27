@@ -12,6 +12,7 @@ add_llvm_example(compiler
   compiler.cpp
   # test_lex.cpp
   # test_expr.cpp
+  # test_llvm.cpp
   analysis/context.cpp
   lex/lexer.cpp
   lex/lexer_type.cpp
@@ -20,8 +21,8 @@ add_llvm_example(compiler
   lex/lexer_literal.cpp
   lex/token.cpp
   ast/ast.cpp
-  ast/ast_function.cpp
   parse/parser.cpp
   parse/parser_function.cpp
   parse/parser_expr.cpp
+  parse/parser_literal.cpp
 )

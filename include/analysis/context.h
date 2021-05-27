@@ -6,19 +6,18 @@
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/IRBuilder.h"
-#include "ast/function.h"
-#include "ast/expr.h"
+#include "ast/ast.h"
 
 namespace underrated
 {
-    class LiteralExpression;
-
     class AnalysContext
     {
     private:
         llvm::Module *_module;
         llvm::LLVMContext *_context;
         llvm::IRBuilder<> *_builder;
+
+        unsigned long long _counter = 0;
 
     public:
         AnalysContext();
@@ -28,8 +27,14 @@ namespace underrated
         llvm::Module *getModule() const { return _module; }
         llvm::IRBuilder<> *getBuilder() const { return _builder; }
 
+        std::string getDefaultLabel();
+
     public:
-        llvm::Value *codegen(LiteralExpression *expr);
-        llvm::Function *codegen(Func *func);
+        llvm::Value *codegen(VariableExpression *expr);
+        llvm::Value *codegen(AssignmentExpression *expr);
+        llvm::Value *codegen(NumberLiteralExpression *expr);
+        llvm::Value *codegen(StatementExpression *expr);
+        llvm::Value *codegen(ReturnExpression *expr);
+        llvm::Function *codegen(Function *func);
     };
 } // namespace underrated

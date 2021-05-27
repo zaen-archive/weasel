@@ -18,6 +18,8 @@ int main()
     {
         std::cout << "Typing > ";
 
-        parser->parse();
+        parser->getNextToken();
+        auto *expr = parser->parseExpression();
+        llvm::outs() << expr << "\n";
     }
 }

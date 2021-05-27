@@ -1,42 +1,48 @@
 #include "analysis/context.h"
 #include "lex/token.h"
-#include "ast/type.h"
+#include "ast/ast.h"
 
-underrated::Type *underrated::Token::toType(AnalysContext *c, Qualifier qualifier)
+llvm::Type *underrated::Token::toType(AnalysContext *c, Qualifier qualifier)
 {
     auto *builder = c->getBuilder();
 
     // Integer
     if (isKind(TokenKind::TokenTyByte) || isKind(TokenKind::TokenTySbyte))
     {
-        return new Type(builder->getInt8Ty(), qualifier, isKind(TokenKind::TokenTySbyte));
+        // return new Type(builder->getInt8Ty(), qualifier, isKind(TokenKind::TokenTySbyte));
+        return builder->getInt8Ty();
     }
     if (isKind(TokenKind::TokenTyShort) || isKind(TokenKind::TokenTyUshort))
     {
-        return new Type(builder->getInt16Ty(), qualifier, isKind(TokenKind::TokenTyShort));
+        // return new Type(builder->getInt16Ty(), qualifier, isKind(TokenKind::TokenTyShort));
+        return builder->getInt16Ty();
     }
     if (isKind(TokenKind::TokenTyInt) || isKind(TokenKind::TokenTyUint))
     {
-        return new Type(builder->getInt32Ty(), qualifier, isKind(TokenKind::TokenTyInt));
+        // return new Type(builder->getInt32Ty(), qualifier, isKind(TokenKind::TokenTyInt));
+        return builder->getInt32Ty();
     }
     if (isKind(TokenKind::TokenTyLong) || isKind(TokenKind::TokenTyUlong))
     {
-        return new Type(builder->getInt64Ty(), qualifier, isKind(TokenKind::TokenTyLong));
+        // return new Type(builder->getInt64Ty(), qualifier, isKind(TokenKind::TokenTyLong));
+        return builder->getInt64Ty();
     }
     if (isKind(TokenKind::TokenTyInt128) || isKind(TokenKind::TokenTyUnt128))
     {
-        // No Unsigned long
-        return new Type(builder->getInt128Ty(), qualifier, isKind(TokenKind::TokenTyInt128));
+        // return new Type(builder->getInt128Ty(), qualifier, isKind(TokenKind::TokenTyInt128));
+        return builder->getInt128Ty();
     }
 
     // Float
     if (isKind(TokenKind::TokenTyFloat))
     {
-        return new Type(builder->getFloatTy());
+        // return new Type(builder->getFloatTy());
+        return builder->getFloatTy();
     }
     if (isKind(TokenKind::TokenTyDouble))
     {
-        return new Type(builder->getDoubleTy());
+        // return new Type(builder->getDoubleTy());
+        return builder->getDoubleTy();
     }
 
     // TODO: Need more research
@@ -48,9 +54,24 @@ underrated::Type *underrated::Token::toType(AnalysContext *c, Qualifier qualifie
     // Bool
     if (isKind(TokenKind::TokenTyBool))
     {
-        return new Type(builder->getInt1Ty());
+        // return new Type(builder->getInt1Ty());
+        return builder->getInt1Ty();
     }
 
     // Void
-    return new Type(builder->getVoidTy());
+    // return new Type(builder->getVoidTy());
+    return builder->getVoidTy();
+}
+
+underrated::Qualifier underrated::Token::getQualifierDefinition()
+{
+    switch (getTokenKind())
+    {
+    case TokenKind::TokenKeyConst:
+        return Qualifier::QualConst;
+    case TokenKind::TokenKeyFinal:
+        return Qualifier::QualRestrict;
+    default:
+        return Qualifier::QualVolatile;
+    }
 }

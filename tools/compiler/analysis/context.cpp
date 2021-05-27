@@ -1,3 +1,4 @@
+#include <iostream>
 #include "analysis/context.h"
 
 underrated::AnalysContext::AnalysContext()
@@ -14,12 +15,12 @@ underrated::AnalysContext::AnalysContext(std::string moduleName)
     _builder = new llvm::IRBuilder<>(*getContext());
 }
 
-llvm::Value *underrated::AnalysContext::codegen(LiteralExpression *expr)
+std::string underrated::AnalysContext::getDefaultLabel()
 {
-    return llvm::ConstantInt::get(getBuilder()->getInt32Ty(), expr->getValue());
+    return std::to_string(_counter++);
 }
 
-llvm::Function *underrated::AnalysContext::codegen(Func *func)
+llvm::Function *underrated::AnalysContext::codegen(Function *func)
 {
     if (getModule()->getFunction(func->getIdentifier()))
     {
@@ -27,13 +28,13 @@ llvm::Function *underrated::AnalysContext::codegen(Func *func)
     }
 
     auto funcArgs = func->getArgs();
-    auto *retTy = func->getType()->getLLVMType();
+    auto *retTy = func->getFunctionType()->getReturnType();
     auto args = std::vector<llvm::Type *>();
     if (funcArgs.size() > 0)
     {
         for (auto &item : funcArgs)
         {
-            args.push_back(item->getLLVMType());
+            args.push_back(item->getArgumentType());
         }
     }
 
@@ -42,11 +43,61 @@ llvm::Function *underrated::AnalysContext::codegen(Func *func)
     auto idx = 0;
     for (auto &item : f->args())
     {
-        item.setName(funcArgs[idx++]->getArgName());
+        item.setName(funcArgs[idx++]->getArgumentName());
     }
 
-    // Create Block
-    auto *block = llvm::BasicBlock::Create(*getContext(), "entry", f);
+    if (func->getIsDefine())
+    {
+        auto *entry = llvm::BasicBlock::Create(*getContext(), "entry", f);
+        getBuilder()->SetInsertPoint(entry);
+
+        // Create Block
+        if (func->getBody())
+        {
+            func->getBody()->codegen(this);
+        }
+    }
 
     return f;
+}
+
+llvm::Value *underrated::AnalysContext::codegen(StatementExpression *expr)
+{
+    for (auto &item : expr->getBody())
+    {
+        item->codegen(this);
+    }
+
+    return nullptr;
+}
+
+llvm::Value *underrated::AnalysContext::codegen(NumberLiteralExpression *expr)
+{
+    return getBuilder()->getInt64(expr->getValue());
+}
+
+llvm::Value *underrated::AnalysContext::codegen(AssignmentExpression *expr)
+{
+    auto *rhs = expr->getRHS()->codegen(this);
+    auto *lhs = expr->getLHS()->codegen(this);
+
+    return getBuilder()->CreateStore(rhs, lhs);
+}
+
+llvm::Value *underrated::AnalysContext::codegen(ReturnExpression *expr)
+{
+    if (expr->getValue())
+    {
+        return getBuilder()->CreateRet(expr->getValue()->codegen(this));
+    }
+    else
+    {
+        return getBuilder()->CreateRetVoid();
+    }
+}
+
+// TODO: Handle just definition variable
+llvm::Value *underrated::AnalysContext::codegen(VariableExpression *expr)
+{
+    return getBuilder()->CreateAlloca(getBuilder()->getInt64Ty(), 0, expr->getIdentifier());
 }

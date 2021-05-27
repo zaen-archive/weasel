@@ -1,5 +1,6 @@
 #include <iostream>
 #include "parse/parser.h"
+#include "analysis/context.h"
 
 // Codegen
 void underrated::Parser::codegen()
@@ -28,10 +29,10 @@ void underrated::Parser::parse()
         return;
     }
 
-    // Declare Function
-    if (getCurrentToken()->isKind(TokenKind::TokenKeyExport))
+    // Extern Function
+    if (getCurrentToken()->isKind(TokenKind::TokenKeyExtern))
     {
-        getNextToken(); // eat 'export'
+        getNextToken(); // eat 'extern'
 
         auto *func = parseDeclareFunction();
         if (func)
@@ -55,27 +56,20 @@ void underrated::Parser::parse()
     std::cout << enumToInt(getCurrentToken()->getTokenKind()) << ":" << getCurrentToken()->getValue() << "\n";
 }
 
-// underrated::Expr *underrated::Parser::parse()
-// {
-//     auto *token = getNextToken();
+// getLLVMContext
+llvm::LLVMContext *underrated::Parser::getLLVMContext() const
+{
+    return _context->getContext();
+}
 
-//     // Function
-//     if (token->isFunctionDeclare())
-//     {
-//         return parseFunction();
-//     }
+// getModule
+llvm::Module *underrated::Parser::getModule() const
+{
+    return _context->getModule();
+}
 
-//     if (token->getTokenKind() == TokenKind::TokenDebug)
-//     {
-//         getNextToken(); // eat 'debug' token
-
-//         return new DebugExpr();
-//     }
-
-//     if (token->getTokenKind() == TokenKind::TokenKeyLet)
-//     {
-//         return this->parseVariableExpr();
-//     }
-
-//     return logError("Expecting new code here!");
-// }
+// getBuilder
+llvm::IRBuilder<> *underrated::Parser::getBuilder() const
+{
+    return _context->getBuilder();
+}

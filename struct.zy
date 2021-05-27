@@ -60,8 +60,11 @@ import "io"
 // cExpr1 => expr
 // cExpr1 => cExpr1 ',' expr
 
-// expr => numconst
-// expr => stringconst
+// expr => nilLiteral
+// expr => numberLiteral
+// expr => stringLiteral
+// expr => boolLiteral
+// expr => charLiteral
 // expr => identifier
 // expr => '(' exprs ')'
 // expr => expr '[' exprs ']'
