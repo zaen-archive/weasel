@@ -12,6 +12,7 @@ underrated::Function *underrated::Parser::parseFunction()
     }
 
     func->setIsDefine(true);
+
     // Ignore new line
     if (getCurrentToken()->isKind(TokenKind::TokenSpaceNewline))
     {
@@ -23,7 +24,7 @@ underrated::Function *underrated::Parser::parseFunction()
         return logErrorF("Expected '{'");
     }
 
-    auto *body = parseBody();
+    auto *body = parseFunctionBody();
     if (!body)
     {
         return logErrorF("Expected valid body statement!.");
@@ -73,7 +74,7 @@ underrated::Function *underrated::Parser::parseDeclareFunction()
     }
     else
     {
-        retTy = new Token(TokenKind::TokenTyVoid);
+        retTy = new Token(TokenKind::TokenTyVoid, retTy->getLocation());
     }
 
     auto *funcTy = new FunctionType(retTy->toType(getContext()), args);

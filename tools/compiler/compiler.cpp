@@ -19,6 +19,7 @@ int main()
     {
         llvm::errs() << "Typing > ";
 
+        parser->getNextToken(true);
         parser->parse();
     }
 }

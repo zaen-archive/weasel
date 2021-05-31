@@ -1,14 +1,22 @@
 #include "parse/parser.h"
 #include "analysis/context.h"
 
-underrated::StatementExpression *underrated::Parser::parseBody()
+void underrated::Parser::ignoreNewline()
+{
+    if (getCurrentToken()->isNewline())
+    {
+        getNextToken(true);
+    }
+}
+
+underrated::StatementExpression *underrated::Parser::parseFunctionBody()
 {
     auto *stmt = new StatementExpression();
 
     getNextToken(true); // eat '{'
     while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseCurlyBracket))
     {
-        auto *expr = parseExpression();
+        auto *expr = parseStatement();
 
         if (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseCurlyBracket))
         {
@@ -20,25 +28,20 @@ underrated::StatementExpression *underrated::Parser::parseBody()
 
             stmt->addBody(expr);
         }
+
+        ignoreNewline();
     }
 
     getNextToken(); // eat '}'
-
     return stmt;
 }
 
-underrated::Expression *underrated::Parser::parseExpression()
+underrated::Expression *underrated::Parser::parseStatement()
 {
-    // Literal Expression
-    if (getCurrentToken()->isLiteral())
-    {
-        return parseLiteralExpression();
-    }
-
     // Compound Statement Expression
     if (getCurrentToken()->isKind(TokenKind::TokenDelimOpenCurlyBracket))
     {
-        return parseCompoundExpression();
+        return parseCompoundStatement();
     }
 
     // Variable Definition Expression
@@ -50,27 +53,108 @@ underrated::Expression *underrated::Parser::parseExpression()
     // Return Expression
     if (getCurrentToken()->isKind(TokenKind::TokenKeyReturn))
     {
-        return parseReturnExpression();
+        return parseReturnStatement();
     }
 
-    // Group Expression
-    if (getCurrentToken()->isKind(TokenKind::TokenDelimOpenParen))
+    return parseExpression();
+}
+
+underrated::Expression *underrated::Parser::parseLiteralExpression()
+{
+    auto *token = getCurrentToken();
+    if (token->isKind(TokenKind::TokenLitBool))
     {
-        return nullptr;
+        return new BoolLiteralExpression(token->getValue() == "true");
     }
 
-    // Ignore New Line
-    if (getCurrentToken()->isKind(TokenKind::TokenSpaceNewline))
+    if (token->isKind(TokenKind::TokenLitChar))
     {
-        getNextToken(true); // Eat 'New Line'
+        auto val = std::stoi(token->getValue());
+        return new NumberLiteralExpression(val, 8);
+    }
 
-        return parseExpression();
+    if (token->isKind(TokenKind::TokenLitNumber))
+    {
+        auto value = strtoll(token->getValue().c_str(), 0, 10);
+        return new NumberLiteralExpression(value);
+    }
+
+    if (token->isKind(TokenKind::TokenLitString))
+    {
+        return new StringLiteralExpression(token->getValue());
+    }
+
+    return new NilLiteralExpression();
+}
+
+underrated::Expression *underrated::Parser::parseVariableExpression()
+{
+    return new VariableExpression(getCurrentToken()->getValue());
+}
+
+underrated::Expression *underrated::Parser::parsePrimaryExpression()
+{
+    if (getCurrentToken()->isLiteral())
+    {
+        return parseLiteralExpression();
+    }
+
+    if (getCurrentToken()->isKind(TokenKind::TokenIdentifier))
+    {
+        return parseVariableExpression();
     }
 
     return nullptr;
 }
 
-underrated::Expression *underrated::Parser::parseReturnExpression()
+underrated::Expression *underrated::Parser::parseExpression()
+{
+    auto *lhs = parsePrimaryExpression();
+    if (!lhs)
+    {
+        return logError("Expected LHS Expression");
+    }
+
+    getNextToken(); // Eat 'LHS' Expression
+    return parseBinaryOperator(underrated::defPrecOrder, lhs);
+}
+
+underrated::Expression *underrated::Parser::parseBinaryOperator(int precOrder, underrated::Expression *lhs)
+{
+    while (true)
+    {
+        auto *binOp = getCurrentToken();
+        if (!binOp->isOperator())
+        {
+            return lhs;
+        }
+
+        auto prec = binOp->getPrecedence();
+        if (prec.order > precOrder)
+        {
+            return lhs;
+        }
+
+        getNextToken(); // eat 'operator'
+        auto *rhs = parsePrimaryExpression();
+        if (!rhs)
+        {
+            return logError("Expected RHS Expression");
+        }
+
+        getNextToken(); // eat 'rhs'
+
+        rhs = parseBinaryOperator(prec.order, rhs);
+        if (!rhs)
+        {
+            return nullptr;
+        }
+
+        lhs = new BinaryOperatorExpression(binOp, lhs, rhs);
+    }
+}
+
+underrated::Expression *underrated::Parser::parseReturnStatement()
 {
     getNextToken(); // eat 'return'
     if (getCurrentToken()->isKind(TokenKind::TokenSpaceNewline))
@@ -88,7 +172,7 @@ underrated::Expression *underrated::Parser::parseReturnExpression()
     return new ReturnExpression(expr);
 }
 
-underrated::Expression *underrated::Parser::parseCompoundExpression()
+underrated::Expression *underrated::Parser::parseCompoundStatement()
 {
     auto *stmt = new StatementExpression();
 
@@ -146,8 +230,7 @@ underrated::Expression *underrated::Parser::parseDefinitionExpression()
         }
 
         // Create Variable with Default Value
-        // TODO: Do Default Definition
-        // return logError("Default definition called");
+        // TODO: Support wide default data type
         return new AssignmentExpression(new VariableExpression(identifier, true), new NumberLiteralExpression(0));
     }
 
@@ -166,74 +249,10 @@ underrated::Expression *underrated::Parser::parseDefinitionExpression()
     }
 
     auto *val = parseExpression();
+    if (!val)
+    {
+        return logError("Expected Value Expression");
+    }
 
-    // TODO: Get Value from expression
-    // return logError("Get Value from exression");
     return new AssignmentExpression(new VariableExpression(identifier, true), val);
 }
-
-// underrated::Expression *underrated::Parser::parseScalarExpr()
-// {
-//     return new LiteralExpr(std::stod(this->getCurrentToken()->getValue()));
-// }
-
-// underrated::Expression *underrated::Parser::parseExpr()
-// {
-//     auto *lhs = this->getCurrentToken();
-//     if (lhs->getTokenKind() == TokenKind::TokenTyInt)
-//     {
-//         return parseScalarExpr();
-//     }
-
-//     return nullptr;
-// }
-
-// underrated::Expression *underrated::Parser::parseVariableExpr()
-// {
-//     // Eat 'let'
-//     auto *token = getNextToken();
-//     if (token->getTokenKind() != TokenKind::TokenIdentifier)
-//     {
-//         return logError("Expecting identifier");
-//     }
-
-//     // Eat 'identifier'
-//     auto identifier = token->getValue();
-//     token = getNextToken();
-//     if (token->getTokenKind() == TokenKind::TokenTyInt)
-//     {
-//         // Our data type just integer
-//         // TODO: Just get next token
-//         token = getNextToken();
-
-//         // If not define the value yet
-//         if (token->getTokenKind() == TokenKind::TokenPuncSemicolon)
-//         {
-//             return new VariableExpr(identifier, new LiteralExpr(0));
-//         }
-//     }
-
-//     // Should get assign operator
-//     if (token->getTokenKind() != TokenKind::TokenPuncEqual)
-//     {
-//         return logError("Expecting assign operator");
-//     }
-
-//     // Eat 'Assign' Operator
-//     getNextToken();
-
-//     // Get An Expression
-//     auto *expr = parseExpr();
-
-//     if (!expr)
-//     {
-//         return logError("Expecting an expression");
-//     }
-
-//     if (getNextToken()->getTokenKind() != TokenKind::TokenPuncSemicolon)
-//     {
-//         return logError("Expecting new line or semicolon");
-//     }
-
-//     return new VariableExpr(identifier, expr);
-// }

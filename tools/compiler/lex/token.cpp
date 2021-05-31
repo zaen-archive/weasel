@@ -63,7 +63,7 @@ llvm::Type *underrated::Token::toType(AnalysContext *c, Qualifier qualifier)
     return builder->getVoidTy();
 }
 
-underrated::Qualifier underrated::Token::getQualifierDefinition()
+underrated::Qualifier underrated::Token::getQualifier()
 {
     switch (getTokenKind())
     {
@@ -74,4 +74,22 @@ underrated::Qualifier underrated::Token::getQualifierDefinition()
     default:
         return Qualifier::QualVolatile;
     }
+}
+
+underrated::Precedence underrated::Token::getPrecedence()
+{
+    Precedence val;
+    val.associative = Associative::LeftToRight;
+    val.order = 15;
+
+    if (_kind == TokenKind::TokenPuncMinus || _kind == TokenKind::TokenPuncPlus)
+    {
+        val.order = 6;
+    }
+    else if (_kind == TokenKind::TokenPuncStar || _kind == TokenKind::TokenPuncSlash || _kind == TokenKind::TokenPuncPercent)
+    {
+        val.order = 5;
+    }
+
+    return val;
 }

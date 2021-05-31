@@ -4,43 +4,43 @@ underrated::Token *underrated::Lexer::getKeyword(std::string key)
 {
     if (key == "fun")
     {
-        return new Token(TokenKind::TokenKeyFun);
+        return createToken(TokenKind::TokenKeyFun);
     }
     if (key == "const")
     {
-        return new Token(TokenKind::TokenKeyConst);
+        return createToken(TokenKind::TokenKeyConst);
     }
     if (key == "export")
     {
-        return new Token(TokenKind::TokenKeyExport);
+        return createToken(TokenKind::TokenKeyExport);
     }
     if (key == "extern")
     {
-        return new Token(TokenKind::TokenKeyExtern);
+        return createToken(TokenKind::TokenKeyExtern);
     }
     if (key == "return")
     {
-        return new Token(TokenKind::TokenKeyReturn);
+        return createToken(TokenKind::TokenKeyReturn);
     }
     if (key == "let")
     {
-        return new Token(TokenKind::TokenKeyLet);
+        return createToken(TokenKind::TokenKeyLet);
     }
     if (key == "final")
     {
-        return new Token(TokenKind::TokenKeyFinal);
+        return createToken(TokenKind::TokenKeyFinal);
     }
     if (key == "if")
     {
-        return new Token(TokenKind::TokenKeyIf);
+        return createToken(TokenKind::TokenKeyIf);
     }
     if (key == "else")
     {
-        return new Token(TokenKind::TokenKeyElse);
+        return createToken(TokenKind::TokenKeyElse);
     }
     if (key == "for")
     {
-        return new Token(TokenKind::TokenKeyFor);
+        return createToken(TokenKind::TokenKeyFor);
     }
 
     return nullptr;

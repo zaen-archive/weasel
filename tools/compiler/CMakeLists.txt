@@ -24,5 +24,4 @@ add_llvm_example(compiler
   parse/parser.cpp
   parse/parser_function.cpp
   parse/parser_expr.cpp
-  parse/parser_literal.cpp
 )

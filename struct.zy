@@ -89,7 +89,6 @@ import "io"
 // expr => expr '--'
 // expr => expr '?' expr ':' expr
 
-
 /*
 
 File -> Module -> Context
@@ -116,3 +115,20 @@ fun main() int
     let anon = fun() {}     // definition function lambda
     final testfinal = 123   // definition final variable
 }
+
+/*
+// Problem
+
+let i = 12 // definition and single expression
+let i = 321 + b * 2 // definition and multiple expression with assign expression
+let m = -124 // unary expression with '-' 'expression'
+
+*/
+
+/*
+
+Expression always come with left hand side(LHS) and right hand side(RHS)
+let i = expr
+expr => 'lhs', op, 'rhs'
+
+*/

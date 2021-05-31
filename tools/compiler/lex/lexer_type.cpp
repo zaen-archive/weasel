@@ -4,59 +4,59 @@ underrated::Token *underrated::Lexer::getType(std::string type)
 {
     if (type == "rune")
     {
-        return new Token(TokenKind::TokenTyRune, type);
+        return createToken(TokenKind::TokenTyRune, type);
     }
     if (type == "byte")
     {
-        return new Token(TokenKind::TokenTyByte, type);
+        return createToken(TokenKind::TokenTyByte, type);
     }
     if (type == "sbyte")
     {
-        return new Token(TokenKind::TokenTySbyte, type);
+        return createToken(TokenKind::TokenTySbyte, type);
     }
     if (type == "short")
     {
-        return new Token(TokenKind::TokenTyShort, type);
+        return createToken(TokenKind::TokenTyShort, type);
     }
     if (type == "ushort")
     {
-        return new Token(TokenKind::TokenTyUshort, type);
+        return createToken(TokenKind::TokenTyUshort, type);
     }
     if (type == "int")
     {
-        return new Token(TokenKind::TokenTyInt, type);
+        return createToken(TokenKind::TokenTyInt, type);
     }
     if (type == "uint")
     {
-        return new Token(TokenKind::TokenTyUint, type);
+        return createToken(TokenKind::TokenTyUint, type);
     }
     if (type == "long")
     {
-        return new Token(TokenKind::TokenTyLong, type);
+        return createToken(TokenKind::TokenTyLong, type);
     }
     if (type == "ulong")
     {
-        return new Token(TokenKind::TokenTyUlong, type);
+        return createToken(TokenKind::TokenTyUlong, type);
     }
     if (type == "int128")
     {
-        return new Token(TokenKind::TokenTyInt128, type);
+        return createToken(TokenKind::TokenTyInt128, type);
     }
     if (type == "bool")
     {
-        return new Token(TokenKind::TokenTyBool, type);
+        return createToken(TokenKind::TokenTyBool, type);
     }
     if (type == "float")
     {
-        return new Token(TokenKind::TokenTyFloat, type);
+        return createToken(TokenKind::TokenTyFloat, type);
     }
     if (type == "double")
     {
-        return new Token(TokenKind::TokenTyDouble, type);
+        return createToken(TokenKind::TokenTyDouble, type);
     }
     if (type == "decimal")
     {
-        return new Token(TokenKind::TokenTyDecimal, type);
+        return createToken(TokenKind::TokenTyDecimal, type);
     }
 
     return nullptr;

@@ -14,6 +14,7 @@
 #include <memory>
 #include "parse/parser.h"
 #include "ast/ast.h"
+#include "analysis/context.h"
 
 int main()
 {
@@ -21,7 +22,7 @@ int main()
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
 
-    auto *context = new underrated::AnalysContext();
+    auto *context = new underrated::AnalysContext("LLVM TESTING");
     auto *builder = context->getBuilder();
     auto *funTy = llvm::FunctionType::get(builder->getInt32Ty(), false);
     auto *fun = llvm::Function::Create(funTy, llvm::Function::ExternalLinkage, "testing", context->getModule());
@@ -50,33 +51,55 @@ int main()
 
     auto test = [&]()
     {
+        // Operation
+        llvm::Value *val = builder->getInt32(32);
+        llvm::Value *st = builder->CreateAlloca(builder->getInt64Ty());
+
+        val = builder->CreateCast(llvm::Instruction::CastOps::SExt, val, builder->getInt64Ty());
+        builder->CreateStore(val, st);
+
+        // llvm::Value *lhs = builder->CreateAlloca(builder->getInt32Ty());
+        // builder->CreateStore(builder->getInt32(2), lhs);
+        // lhs = builder->CreateLoad(lhs);
+
+        // llvm::Value *rhs = builder->getInt32(3);
+        // // rhs = builder->CreateCast(llvm::Instruction::CastOps::SExt, rhs, builder->getInt64Ty());
+        // // rhs = builder->CreateNSWMul(builder->CreateLoad(lhs), rhs);
+
+        // if (lhs->getType()->getTypeID() == rhs->getType()->getTypeID())
+        // {
+        //     std::cout << "SAME : " << lhs->getType()->getIntegerBitWidth() << ":" << rhs->getType()->getIntegerBitWidth() << "\n";
+        // }
+        // else
+        // {
+        //     std::cout << "DIFF\n";
+        // }
+
+        builder->CreateRet(builder->getInt32(199));
+
+        // auto *add = builder->CreateAdd(builder->getInt32(1), rhs, "addition");
+        // builder->CreateRet(add);
+
         // int Type
-        auto *b = new llvm::AllocaInst(builder->getInt32Ty(), 0, "b", block);
-        auto *sb = new llvm::StoreInst(llvm::ConstantInt::get(builder->getInt32Ty(), 432), b, block);
+        // auto *b = new llvm::AllocaInst(builder->getInt32Ty(), 0, "b", block);
+        // auto *sb = new llvm::StoreInst(llvm::ConstantInt::get(builder->getInt32Ty(), 432), b, block);
 
-        auto *funPrintf = context->getModule()->getFunction("puts");
-        if (!funPrintf)
-        {
-            std::cout << "Printf not exist\n";
-        }
-        else
-        {
-            auto *calling = llvm::CallInst::Create(funPrintf, callParams, "callthing", block);
-            std::cout << "Printf exist\n";
-        }
-    };
-
-    auto end = [&]()
-    {
-        builder->CreateRetVoid();
-        // llvm::ReturnInst::Create(*context->getContext(), llvm::ConstantInt::get(builder->getInt32Ty(), 10), block);
+        // auto *funPrintf = context->getModule()->getFunction("puts");
+        // if (!funPrintf)
+        // {
+        //     std::cout << "Printf not exist\n";
+        // }
+        // else
+        // {
+        //     auto *calling = llvm::CallInst::Create(funPrintf, callParams, "callthing", block);
+        //     std::cout << "Printf exist\n";
+        // }
     };
 
     test();
-    end();
 
     // Show Module
-    llvm::errs() << *context->getModule();
+    // llvm::errs() << *context->getModule();
 
     // Verify Function
     llvm::verifyFunction(*fun);

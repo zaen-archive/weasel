@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <map>
 
 // Type of LLVM
 namespace llvm
@@ -59,6 +60,7 @@ namespace underrated
         TokenTyDecimal, // 16 byte // Floating Point
 
         // Punctuation
+        TokenOperatorStart,
         TokenPuncPlus,            // +
         TokenPuncMinus,           // -
         TokenPuncStar,            // *
@@ -89,12 +91,14 @@ namespace underrated
         TokenPuncGreaterThen,     // >
         TokenPuncLessEqual,       // <=
         TokenPuncGreaterEqual,    // >=
-        TokenPuncDot,             // .
-        TokenPuncDotThree,        // ...
-        TokenPuncComma,           // ,
-        TokenPuncPound,           // #
-        TokenPuncQuestion,        // ?
-        TokenPuncSemicolon,       // ; // optional
+        TokenOperatorEnd,
+
+        TokenPuncDot,       // .
+        TokenPuncDotThree,  // ...
+        TokenPuncComma,     // ,
+        TokenPuncPound,     // #
+        TokenPuncQuestion,  // ?
+        TokenPuncSemicolon, // ; // optional
 
         // Punctuation Delimiter Type
         TokenDelimOpenCurlyBracket,   // {
@@ -120,7 +124,36 @@ namespace underrated
         QualVolatile,
     };
 
+    // Source Location
+    struct SourceLocation
+    {
+        unsigned position;
+        unsigned row;
+        unsigned col;
+        unsigned length;
+    };
+
+    // Associativity
+    enum class Associative
+    {
+        LeftToRight,
+        RightToLeft,
+    };
+
+    // Precendence
+    struct Precedence
+    {
+        Associative associative;
+        unsigned order;
+    };
+
+    // Default Precedence Order
+    static unsigned defPrecOrder = 14;
+
 } // namespace underrated
+
+// Expression Precedence
+// TODO: Need to support Right to Left Associativity
 
 // Token Class
 namespace underrated
@@ -132,16 +165,16 @@ namespace underrated
     private:
         TokenKind _kind;
         std::string _value;
-        unsigned _start;
-        unsigned _end;
+        SourceLocation _location;
 
     public:
-        Token(TokenKind kind, std::string &value) : _kind(kind), _value(value) {}
-        Token(TokenKind kind) : _kind(kind) {}
+        Token(TokenKind kind, SourceLocation location, std::string &value) : _kind(kind), _location(location), _value(value) {}
+        Token(TokenKind kind, SourceLocation location) : _kind(kind), _location(location) {}
 
         void setValue(std::string val) { _value = val; }
-
         std::string getValue() const { return _value; }
+
+        SourceLocation getLocation() const { return _location; }
         TokenKind getTokenKind() const { return _kind; }
 
         bool isKind(TokenKind type) const { return type == _kind; }
@@ -149,8 +182,11 @@ namespace underrated
         bool isDataType() const { return _kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal; }
         bool isKeyDefinition() const { return (_kind == TokenKind::TokenKeyLet || _kind == TokenKind::TokenKeyFinal || _kind == TokenKind::TokenKeyConst); }
         bool isLiteral() const { return _kind >= TokenKind::TokenLitNil && _kind <= TokenKind::TokenLitString; }
+        bool isOperator() const { return _kind >= TokenKind::TokenOperatorStart && _kind <= TokenKind::TokenOperatorEnd; }
+        bool isNewline() const { return _kind == TokenKind::TokenSpaceNewline; }
 
-        Qualifier getQualifierDefinition();
+        Qualifier getQualifier();
+        Precedence getPrecedence();
 
     public:
         llvm::Type *toType(AnalysContext *c, Qualifier qualifier = Qualifier::QualVolatile);

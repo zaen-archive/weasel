@@ -22,6 +22,11 @@ llvm::Value *underrated::VariableExpression::codegen(AnalysContext *c)
     return c->codegen(this);
 }
 
+llvm::Value *underrated::BinaryOperatorExpression::codegen(AnalysContext *c)
+{
+    return c->codegen(this);
+}
+
 llvm::Value *underrated::ReturnExpression::codegen(AnalysContext *c)
 {
     return c->codegen(this);
@@ -72,7 +77,7 @@ underrated::Expression *underrated::logError(const char *msg)
     return nullptr;
 }
 
-underrated::Expression *underrated::logErrorV(const char *msg)
+llvm::Value *underrated::logErrorV(const char *msg)
 {
     fprintf(stderr, "LogError LLVM : %s\n", msg);
     return nullptr;

@@ -26,7 +26,9 @@
 // | BreakExpression
 // | RangeExpression
 // ReturnExpression
+
 /// Operator Expression ///
+// UnaryOperatorExpression
 // | BorrowExpression
 // | DereferenceExpression
 // | ErrorPropagationExpression
@@ -56,15 +58,18 @@ namespace underrated
     // Type
     class Type;
 
-    // Base Expression
-    class Expression;
-    class BlockExpression;
-    class OperatorExpression;
+    // Package
+    class Package;
+    class ErrorExpression;
 
     // Function
     class FunctionArgument;
     class FunctionType;
     class Function;
+
+    // Base Expression
+    class Expression;
+    class BlockExpression;
 
     // Expression Without Block
     class AssignmentExpression;
@@ -72,6 +77,7 @@ namespace underrated
     class ReturnExpression;
     class CallExpression;
     class VariableExpression;
+    class UnaryOperatorExpression;
 
     // Expression With Block
     class StatementExpression;
@@ -113,9 +119,10 @@ namespace underrated
     protected:
         LiteralType _type;
         unsigned _width;
+        unsigned _size;
 
     public:
-        LiteralExpression(LiteralType type, unsigned width) : _type(type), _width(width) {}
+        LiteralExpression(LiteralType type, unsigned width, unsigned size = 1) : _type(type), _width(width), _size(size) {}
     };
 
     // Block Expression
@@ -207,15 +214,96 @@ namespace underrated
     // Number Literal Expression
     class NumberLiteralExpression : public LiteralExpression
     {
+    private:
         long long _value; // 64 bit(8 bytes)
 
     public:
-        NumberLiteralExpression(long long value) : _value(value), LiteralExpression(LiteralType::LiteralNumber, 64) {}
+        NumberLiteralExpression(long long value, unsigned width = 32) : _value(value), LiteralExpression(LiteralType::LiteralNumber, width) {}
 
         long long getValue() const { return _value; }
 
         llvm::Value *codegen(AnalysContext *context);
     };
+
+    // Boolean Literal Expression
+    class BoolLiteralExpression : public LiteralExpression
+    {
+    private:
+        bool _value;
+
+    public:
+        BoolLiteralExpression(bool value) : _value(value), LiteralExpression(LiteralType::LiteralBool, 1) {}
+
+        bool getValue() const { return _value; }
+
+        llvm::Value *codegen(AnalysContext *context)
+        {
+            return nullptr;
+        }
+    };
+
+    // String Literal Expression
+    class StringLiteralExpression : public LiteralExpression
+    {
+    private:
+        std::string _value;
+
+    public:
+        StringLiteralExpression(std::string value) : _value(value), LiteralExpression(LiteralType::LiteralString, 8, value.size()) {}
+
+        std::string getValue() const { return _value; }
+
+        llvm::Value *codegen(AnalysContext *context)
+        {
+            return nullptr;
+        }
+    };
+
+    class NilLiteralExpression : public LiteralExpression
+    {
+    public:
+        NilLiteralExpression() : LiteralExpression(LiteralType::LiteralNil, 64) {}
+
+        llvm::Value *codegen(AnalysContext *context)
+        {
+            return nullptr;
+        }
+    };
+
+    // Binary Operator Expression
+    class BinaryOperatorExpression : public Expression
+    {
+    private:
+        Token *_operator;
+        Expression *_lhs;
+        Expression *_rhs;
+
+    public:
+        BinaryOperatorExpression(Token *op, Expression *lhs, Expression *rhs) : _operator(op), _lhs(lhs), _rhs(rhs) {}
+
+        Token *getOperator() const { return _operator; }
+        Expression *getLHS() const { return _lhs; }
+        Expression *getRHS() const { return _rhs; }
+
+        llvm::Value *codegen(AnalysContext *context);
+    };
+
+    // Unary Operator Expression
+    class UnaryOperatorExpression : public Expression
+    {
+    private:
+        Token *_lhs;
+        Expression *_rhs;
+
+    public:
+        UnaryOperatorExpression(Token *lhs, Expression *rhs) : _lhs(lhs), _rhs(rhs) {}
+
+        llvm::Value *codegen(AnalysContext *context)
+        {
+            return nullptr;
+        }
+    };
+
 } // namespace underrated
 
 //
@@ -244,6 +332,7 @@ namespace underrated
 
         llvm::Value *codegen(AnalysContext *context);
     };
+
 } // namespace underrated
 
 //
@@ -307,6 +396,33 @@ namespace underrated
     public:
         llvm::Function *codegen(AnalysContext *c);
     };
+
+} // namespace underrated
+
+//
+
+//
+
+namespace underrated
+{
+    class ErrorExpression : public Expression
+    {
+    private:
+        std::vector<Token *> _tokens;
+
+    public:
+        llvm::Value *codegen(AnalysContext *c) { return nullptr; }
+    };
+
+    class Package
+    {
+    private:
+        std::vector<Function *> _functions;
+
+    public:
+        std::vector<ErrorExpression *> codegen(AnalysContext *c) { return {}; }
+    };
+
 } // namespace underrated
 
 //
@@ -317,6 +433,7 @@ namespace underrated
 namespace underrated
 {
     Expression *logError(const char *msg);
-    Expression *logErrorV(const char *msg);
+    llvm::Value *logErrorV(const char *msg);
     Function *logErrorF(const char *msg);
+
 } // namespace underrated

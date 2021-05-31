@@ -5,6 +5,7 @@
 // Codegen
 void underrated::Parser::codegen()
 {
+    std::cout << "Functions : " << _funcs.size() << "\n";
     for (auto &item : _funcs)
     {
         auto *func = getModule()->getFunction(item->getIdentifier());
@@ -18,8 +19,6 @@ void underrated::Parser::codegen()
 // parse
 void underrated::Parser::parse()
 {
-    getNextToken(); // start parsing
-
     // Debugging
     if (getCurrentToken()->isDebug())
     {
@@ -53,13 +52,7 @@ void underrated::Parser::parse()
         return;
     }
 
-    std::cout << enumToInt(getCurrentToken()->getTokenKind()) << ":" << getCurrentToken()->getValue() << "\n";
-}
-
-// getLLVMContext
-llvm::LLVMContext *underrated::Parser::getLLVMContext() const
-{
-    return _context->getContext();
+    std::cout << "Parser : " << enumToInt(getCurrentToken()->getTokenKind()) << ":" << getCurrentToken()->getValue() << "\n";
 }
 
 // getModule

@@ -6,16 +6,16 @@ underrated::Token *underrated::Lexer::getStringLiteral()
 
     while (true)
     {
-        if (_lastChar == '\n')
+        if (_currentChar == '\n')
         {
             return nullptr;
         }
 
-        if (_lastChar == '"')
+        if (_currentChar == '"')
         {
             if (text.back() == '\\')
             {
-                text[text.size() - 1] = _lastChar;
+                text[text.size() - 1] = _currentChar;
             }
             else
             {
@@ -23,24 +23,24 @@ underrated::Token *underrated::Lexer::getStringLiteral()
             }
         }
 
-        text += _lastChar;
+        text += _currentChar;
 
         getNextChar();
     }
 
     getNextToken(); // eat '"'
 
-    return new Token(TokenKind::TokenLitString, text);
+    return createToken(TokenKind::TokenLitString, text);
 }
 
 underrated::Token *underrated::Lexer::getCharacterLiteral()
 {
-    auto c = _lastChar;
+    auto c = _currentChar;
     if (getNextChar() != '\'')
     {
         return nullptr;
     }
     getNextChar(); // eat '''
 
-    return new Token(TokenKind::TokenLitChar, std::string(1, c));
+    return createToken(TokenKind::TokenLitChar, std::string(1, c));
 }

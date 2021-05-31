@@ -10,6 +10,15 @@
 
 namespace underrated
 {
+    // Compare Type
+    enum class CompareType
+    {
+        Equal,
+        Casting,
+        Different,
+    };
+
+    // Analysis Context
     class AnalysContext
     {
     private:
@@ -27,6 +36,9 @@ namespace underrated
         llvm::Module *getModule() const { return _module; }
         llvm::IRBuilder<> *getBuilder() const { return _builder; }
 
+        llvm::Value castIntegerType(llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *castIntegerType(llvm::Value *value, llvm::Type *castTy);
+        CompareType compareType(llvm::Type *lhsType, llvm::Type *rhsType);
         std::string getDefaultLabel();
 
     public:
@@ -35,6 +47,7 @@ namespace underrated
         llvm::Value *codegen(NumberLiteralExpression *expr);
         llvm::Value *codegen(StatementExpression *expr);
         llvm::Value *codegen(ReturnExpression *expr);
+        llvm::Value *codegen(BinaryOperatorExpression *expr); // TODO: Need to implement modulo operator
         llvm::Function *codegen(Function *func);
     };
 } // namespace underrated
