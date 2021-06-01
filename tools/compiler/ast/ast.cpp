@@ -7,6 +7,11 @@ llvm::Value *underrated::NumberLiteralExpression::codegen(AnalysContext *c)
     return c->codegen(this);
 }
 
+llvm::Value *underrated::DeclarationExpression::codegen(AnalysContext *c)
+{
+    return c->codegen(this);
+}
+
 llvm::Value *underrated::StatementExpression::codegen(AnalysContext *c)
 {
     return c->codegen(this);

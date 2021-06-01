@@ -77,6 +77,11 @@ llvm::Value *underrated::AnalysContext::codegen(NumberLiteralExpression *expr)
     return getBuilder()->getInt32(expr->getValue());
 }
 
+llvm::Value *underrated::AnalysContext::codegen(DeclarationExpression *expr)
+{
+    return nullptr;
+}
+
 underrated::CompareType underrated::AnalysContext::compareType(llvm::Type *lhsType, llvm::Type *rhsType)
 {
     if (lhsType->getTypeID() != rhsType->getTypeID())
@@ -194,5 +199,6 @@ llvm::Value *underrated::AnalysContext::codegen(ReturnExpression *expr)
 // TODO: Handle just definition variable
 llvm::Value *underrated::AnalysContext::codegen(VariableExpression *expr)
 {
-    return getBuilder()->CreateAlloca(getBuilder()->getInt64Ty(), 0, expr->getIdentifier());
+    auto *val = getBuilder()->CreateAlloca(getBuilder()->getInt64Ty(), 0, expr->getIdentifier());
+    return val;
 }

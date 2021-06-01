@@ -47,6 +47,7 @@ namespace underrated
         llvm::Value *codegen(NumberLiteralExpression *expr);
         llvm::Value *codegen(StatementExpression *expr);
         llvm::Value *codegen(ReturnExpression *expr);
+        llvm::Value *codegen(DeclarationExpression *expr);
         llvm::Value *codegen(BinaryOperatorExpression *expr); // TODO: Need to implement modulo operator
         llvm::Function *codegen(Function *func);
     };

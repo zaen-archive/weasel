@@ -78,6 +78,7 @@ namespace underrated
     class CallExpression;
     class VariableExpression;
     class UnaryOperatorExpression;
+    class DeclarationExpression;
 
     // Expression With Block
     class StatementExpression;
@@ -90,6 +91,12 @@ namespace underrated
 // Expression Base Type
 namespace underrated
 {
+    // LLVM Type Metadata
+    enum MetaKind
+    {
+        MetaUnsignedInteger,
+    };
+
     // Type
     class Type
     {
@@ -211,6 +218,22 @@ namespace underrated
         llvm::Value *codegen(AnalysContext *context);
     };
 
+    // Declaration Expression
+    class DeclarationExpression : public Expression
+    {
+    private:
+        std::string _identifier;
+        llvm::Type *_type;
+
+    public:
+        DeclarationExpression(std::string identifier, llvm::Type *type = nullptr) : _identifier(identifier), _type(type) {}
+
+        std::string getIdentifier() const { return _identifier; }
+        llvm::Type *getType() const { return _type; }
+
+        llvm::Value *codegen(AnalysContext *context);
+    };
+
     // Number Literal Expression
     class NumberLiteralExpression : public LiteralExpression
     {
@@ -259,6 +282,7 @@ namespace underrated
         }
     };
 
+    // Nil Literal Expression
     class NilLiteralExpression : public LiteralExpression
     {
     public:
