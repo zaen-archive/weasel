@@ -36,7 +36,7 @@ namespace underrated
         llvm::Module *getModule() const { return _module; }
         llvm::IRBuilder<> *getBuilder() const { return _builder; }
 
-        llvm::Value castIntegerType(llvm::Value *lhs, llvm::Value *rhs);
+        llvm::Value *castIntegerType(llvm::Value *lhs, llvm::Value *rhs);
         llvm::Value *castIntegerType(llvm::Value *value, llvm::Type *castTy);
         CompareType compareType(llvm::Type *lhsType, llvm::Type *rhsType);
         std::string getDefaultLabel();

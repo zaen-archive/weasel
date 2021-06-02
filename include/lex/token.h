@@ -3,6 +3,12 @@
 #include <string>
 #include <map>
 
+template <typename Enumeration>
+auto enumToInt(Enumeration const value) -> typename std::underlying_type<Enumeration>::type
+{
+    return static_cast<typename std::underlying_type<Enumeration>::type>(value);
+}
+
 // Type of LLVM
 namespace llvm
 {
@@ -111,8 +117,7 @@ namespace underrated
         // Space Token
         TokenSpaceNewline, // '\n'
 
-        // Debug
-        TokenDebug,
+        // Wild card Token
         TokenUndefined,
     };
 
@@ -127,10 +132,10 @@ namespace underrated
     // Source Location
     struct SourceLocation
     {
-        unsigned position;
-        unsigned row;
-        unsigned col;
-        unsigned length;
+        unsigned position = 1;
+        unsigned row = 1;
+        unsigned col = 1;
+        unsigned length = 0;
     };
 
     // Associativity
@@ -168,17 +173,17 @@ namespace underrated
         SourceLocation _location;
 
     public:
-        Token(TokenKind kind, SourceLocation location, std::string &value) : _kind(kind), _location(location), _value(value) {}
-        Token(TokenKind kind, SourceLocation location) : _kind(kind), _location(location) {}
+        Token(TokenKind kind, SourceLocation &location, std::string &value) : _kind(kind), _location(location), _value(value) {}
+        Token(TokenKind kind, SourceLocation &location) : _kind(kind), _location(location) {}
 
         void setValue(std::string val) { _value = val; }
         std::string getValue() const { return _value; }
 
         SourceLocation getLocation() const { return _location; }
         TokenKind getTokenKind() const { return _kind; }
+        int getTokenKindToInt() { return enumToInt(_kind); }
 
         bool isKind(TokenKind type) const { return type == _kind; }
-        bool isDebug() const { return _kind == TokenKind::TokenDebug; }
         bool isDataType() const { return _kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal; }
         bool isKeyDefinition() const { return (_kind == TokenKind::TokenKeyLet || _kind == TokenKind::TokenKeyFinal || _kind == TokenKind::TokenKeyConst); }
         bool isLiteral() const { return _kind >= TokenKind::TokenLitNil && _kind <= TokenKind::TokenLitString; }
@@ -189,12 +194,6 @@ namespace underrated
         Precedence getPrecedence();
 
     public:
-        llvm::Type *toType(AnalysContext *c, Qualifier qualifier = Qualifier::QualVolatile);
+        llvm::Type *toType(AnalysContext *c);
     };
 } // namespace underrated
-
-template <typename Enumeration>
-auto enumToInt(Enumeration const value) -> typename std::underlying_type<Enumeration>::type
-{
-    return static_cast<typename std::underlying_type<Enumeration>::type>(value);
-}

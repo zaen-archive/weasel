@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fstream>
 #include "lex/token.h"
 
 namespace underrated
@@ -9,7 +10,9 @@ namespace underrated
     private:
         char _currentChar = ' ';
         Token *_currentToken;
+        Token *_lastToken;
         SourceLocation _location;
+        std::ifstream *_stream;
 
     private:
         bool isIdentifier(char c, bool num = false);
@@ -35,8 +38,13 @@ namespace underrated
         Token *createToken(TokenKind kind);
 
     public:
+        Lexer(std::ifstream *stream) : _stream(stream) {}
+
         Token *getNextToken(bool skipSpace = false);
-        Token *getCurrentToken();
+        Token *getCurrentToken() const { return _currentToken; }
+        Token *getLastToken() const { return _lastToken; }
+
+        void setLastToken(Token *token) { _lastToken = token; }
     };
 
 } // namespace underrated

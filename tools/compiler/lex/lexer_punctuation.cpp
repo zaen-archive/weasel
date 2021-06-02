@@ -218,6 +218,6 @@ underrated::Token *underrated::Lexer::getPunctuation(char leftChar)
     }
 
     default:
-        return createToken(TokenKind::TokenUndefined, std::string(1, leftChar));
+        return nullptr;
     }
 }

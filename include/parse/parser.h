@@ -14,11 +14,16 @@ namespace underrated
         Lexer *_lexer;
         AnalysContext *_context;
         std::vector<Function *> _funcs;
+        std::vector<Expression *> _global;
 
     public:
         void addFunction(Function *func) { _funcs.push_back(func); }
+        void setLastToken(Token *token) { _lexer->setLastToken(token); }
+
         Token *getCurrentToken() const { return _lexer->getCurrentToken(); }
-        Token *getNextToken(bool skipSpace = false) const { return _lexer->getNextToken(skipSpace); }
+        Token *getLastToken() const { return _lexer->getLastToken(); }
+        Token *getNextToken(bool skipSpace = false);
+        Token *getNextTokenUntil(TokenKind kind);
         Qualifier getQualifier() const { return getCurrentToken()->getQualifier(); }
 
         // Function
@@ -64,7 +69,7 @@ namespace underrated
 
     public:
         // Parse Library in single file
-        void parse();
+        bool parse();
 
         // Codegen every function inside library
         void codegen();

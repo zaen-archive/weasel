@@ -76,19 +76,13 @@ llvm::Value *underrated::DebugExpression::codegen(AnalysContext *context)
 }
 
 /// Log Error
-underrated::Expression *underrated::logError(const char *msg)
-{
-    fprintf(stderr, "LogError: %s\n", msg);
-    return nullptr;
-}
-
-llvm::Value *underrated::logErrorV(const char *msg)
+llvm::Value *underrated::logErrorV(std::string &msg)
 {
     fprintf(stderr, "LogError LLVM : %s\n", msg);
     return nullptr;
 }
 
-underrated::Function *underrated::logErrorF(const char *msg)
+underrated::Function *underrated::logErrorF(std::string &msg)
 {
     fprintf(stderr, "LogError Func : %s\n", msg);
     return nullptr;

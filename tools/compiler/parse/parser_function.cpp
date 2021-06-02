@@ -1,5 +1,6 @@
 #include "parse/parser.h"
 #include "analysis/context.h"
+#include "symbol/symbol.h"
 
 // define
 // 'fun' identifier '(' args ')' funTy '{' stmt '}'
@@ -10,7 +11,6 @@ underrated::Function *underrated::Parser::parseFunction()
     {
         return nullptr;
     }
-
     func->setIsDefine(true);
 
     // Ignore new line
@@ -21,17 +21,34 @@ underrated::Function *underrated::Parser::parseFunction()
 
     if (!getCurrentToken()->isKind(TokenKind::TokenDelimOpenCurlyBracket))
     {
-        return logErrorF("Expected '{'");
+        return logErrorF(std::string("Expected '{'"));
+    }
+
+    // Set Symbol for parameters and enter a scope
+    {
+        SymbolTable::getInstance()->enterScope();
+        for (auto *arg : func->getArgs())
+        {
+            auto argName = arg->getArgumentName();
+            auto *ty = arg->getArgumentType();
+            auto *attr = new Attribute(argName, AttributeScope::ScopeParam, AttributeKind::SymbolParameter, ty);
+
+            SymbolTable::getInstance()->insert(argName, attr);
+        }
     }
 
     auto *body = parseFunctionBody();
     if (!body)
     {
-        return logErrorF("Expected valid body statement!.");
+        return logErrorF(std::string("Expected valid body statement!."));
+    }
+
+    // Exit parameter scope
+    {
+        SymbolTable::getInstance()->exitScope();
     }
 
     func->setBody(body);
-
     return func;
 }
 
@@ -40,13 +57,13 @@ underrated::Function *underrated::Parser::parseDeclareFunction()
 {
     if (!getCurrentToken()->isKind(TokenKind::TokenKeyFun))
     {
-        return logErrorF("Expected fun keyword");
+        return logErrorF(std::string("Expected fun keyword"));
     }
 
     getNextToken(); // eat 'fun'
     if (!getCurrentToken()->isKind(TokenKind::TokenIdentifier))
     {
-        return logErrorF("Expected an identifier");
+        return logErrorF(std::string("Expected an identifier"));
     }
 
     auto identifier = getCurrentToken()->getValue();
@@ -54,7 +71,7 @@ underrated::Function *underrated::Parser::parseDeclareFunction()
     getNextToken(); // eat 'identifier'
     if (!getCurrentToken()->isKind(TokenKind::TokenDelimOpenParen))
     {
-        return logErrorF("Expected an open paren");
+        return logErrorF(std::string("Expected an open paren"));
     }
 
     getNextToken(); // eat '('
@@ -63,7 +80,7 @@ underrated::Function *underrated::Parser::parseDeclareFunction()
     {
         if (!args.back())
         {
-            return logErrorF("Expected an function argument");
+            return logErrorF(std::string("Expected an function argument"));
         }
     }
 
@@ -77,8 +94,18 @@ underrated::Function *underrated::Parser::parseDeclareFunction()
         retTy = new Token(TokenKind::TokenTyVoid, retTy->getLocation());
     }
 
-    auto *funcTy = new FunctionType(retTy->toType(getContext()), args);
+    auto *returnType = retTy->toType(getContext());
+    auto *funcTy = new FunctionType(returnType, args);
     auto *func = new Function(identifier, funcTy);
+
+    // Check Symbol Table
+    if (SymbolTable::getInstance()->get(identifier))
+    {
+        return logErrorF(std::string("Function already declared"));
+    }
+
+    // Create Symbol for the function
+    SymbolTable::getInstance()->insert(identifier, new Attribute(identifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
 
     return func;
 }

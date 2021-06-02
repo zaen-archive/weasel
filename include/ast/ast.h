@@ -60,7 +60,6 @@ namespace underrated
 
     // Package
     class Package;
-    class ErrorExpression;
 
     // Function
     class FunctionArgument;
@@ -114,7 +113,11 @@ namespace underrated
     // Expression
     class Expression
     {
+    protected:
+        Token *_token; // Token each expression
+
     public:
+        Expression(Token *token) : _token(token) {}
         Expression() {}
 
         virtual llvm::Value *codegen(AnalysContext *context) = 0;
@@ -129,7 +132,7 @@ namespace underrated
         unsigned _size;
 
     public:
-        LiteralExpression(LiteralType type, unsigned width, unsigned size = 1) : _type(type), _width(width), _size(size) {}
+        LiteralExpression(Token *token, LiteralType type, unsigned width, unsigned size = 1) : Expression(token), _type(type), _width(width), _size(size) {}
     };
 
     // Block Expression
@@ -183,9 +186,10 @@ namespace underrated
         Expression *_value;
 
     public:
-        ReturnExpression(Expression *value) : _value(value) {}
+        ReturnExpression(Token *token, Expression *value) : Expression(token), _value(value) {}
 
         Expression *getValue() const { return _value; }
+
         llvm::Value *codegen(AnalysContext *context);
     };
 
@@ -211,7 +215,7 @@ namespace underrated
         bool _declare;
 
     public:
-        VariableExpression(std::string identifier, bool declare = false) : _identifier(identifier), _declare(declare) {}
+        VariableExpression(Token *token, std::string identifier, bool declare = false) : Expression(token), _identifier(identifier), _declare(declare) {}
 
         std::string getIdentifier() const { return _identifier; }
 
@@ -224,12 +228,16 @@ namespace underrated
     private:
         std::string _identifier;
         llvm::Type *_type;
+        Expression *_value;
+        Qualifier _qualifier;
 
     public:
-        DeclarationExpression(std::string identifier, llvm::Type *type = nullptr) : _identifier(identifier), _type(type) {}
+        DeclarationExpression(Token *token, std::string identifier, Qualifier qualifier, llvm::Type *type = nullptr, Expression *value = nullptr) : Expression(token), _identifier(identifier), _type(type), _qualifier(qualifier), _value(value) {}
 
         std::string getIdentifier() const { return _identifier; }
         llvm::Type *getType() const { return _type; }
+        Expression *getValue() const { return _value; }
+        Qualifier getQualifier() const { return _qualifier; }
 
         llvm::Value *codegen(AnalysContext *context);
     };
@@ -241,7 +249,7 @@ namespace underrated
         long long _value; // 64 bit(8 bytes)
 
     public:
-        NumberLiteralExpression(long long value, unsigned width = 32) : _value(value), LiteralExpression(LiteralType::LiteralNumber, width) {}
+        NumberLiteralExpression(Token *token, long long value, unsigned width = 32) : _value(value), LiteralExpression(token, LiteralType::LiteralNumber, width) {}
 
         long long getValue() const { return _value; }
 
@@ -255,7 +263,7 @@ namespace underrated
         bool _value;
 
     public:
-        BoolLiteralExpression(bool value) : _value(value), LiteralExpression(LiteralType::LiteralBool, 1) {}
+        BoolLiteralExpression(Token *token, bool value) : _value(value), LiteralExpression(token, LiteralType::LiteralBool, 1) {}
 
         bool getValue() const { return _value; }
 
@@ -272,7 +280,7 @@ namespace underrated
         std::string _value;
 
     public:
-        StringLiteralExpression(std::string value) : _value(value), LiteralExpression(LiteralType::LiteralString, 8, value.size()) {}
+        StringLiteralExpression(Token *token, std::string value) : _value(value), LiteralExpression(token, LiteralType::LiteralString, 8, value.size()) {}
 
         std::string getValue() const { return _value; }
 
@@ -286,7 +294,7 @@ namespace underrated
     class NilLiteralExpression : public LiteralExpression
     {
     public:
-        NilLiteralExpression() : LiteralExpression(LiteralType::LiteralNil, 64) {}
+        NilLiteralExpression() : LiteralExpression(nullptr, LiteralType::LiteralNil, 64) {}
 
         llvm::Value *codegen(AnalysContext *context)
         {
@@ -427,37 +435,10 @@ namespace underrated
 
 //
 
-namespace underrated
-{
-    class ErrorExpression : public Expression
-    {
-    private:
-        std::vector<Token *> _tokens;
-
-    public:
-        llvm::Value *codegen(AnalysContext *c) { return nullptr; }
-    };
-
-    class Package
-    {
-    private:
-        std::vector<Function *> _functions;
-
-    public:
-        std::vector<ErrorExpression *> codegen(AnalysContext *c) { return {}; }
-    };
-
-} // namespace underrated
-
-//
-
-//
-
 // Log Error for expression and Function
 namespace underrated
 {
-    Expression *logError(const char *msg);
-    llvm::Value *logErrorV(const char *msg);
-    Function *logErrorF(const char *msg);
+    llvm::Value *logErrorV(std::string &msg);
+    Function *logErrorF(std::string &msg);
 
 } // namespace underrated

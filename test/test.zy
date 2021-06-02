@@ -1,0 +1,11 @@
+fun test() int {
+    let i = 23
+
+    return 123
+
+f
+
+    let n = 123 + 43
+
+    return 321
+}

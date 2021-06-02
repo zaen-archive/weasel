@@ -1,6 +1,7 @@
 #include <iostream>
 #include "parse/parser.h"
 #include "analysis/context.h"
+#include "symbol/symbol.h"
 
 // Codegen
 void underrated::Parser::codegen()
@@ -17,15 +18,12 @@ void underrated::Parser::codegen()
 }
 
 // parse
-void underrated::Parser::parse()
+bool underrated::Parser::parse()
 {
-    // Debugging
-    if (getCurrentToken()->isDebug())
+    // EOF FILE
+    if (getCurrentToken()->isKind(TokenKind::TokenEOF))
     {
-        getNextToken(); // Eat 'debug' away
-        codegen();      // change ast to llvm IR
-        (new DebugExpression())->codegen(getContext());
-        return;
+        return false;
     }
 
     // Extern Function
@@ -38,7 +36,7 @@ void underrated::Parser::parse()
         {
             addFunction(func);
         }
-        return;
+        return true;
     }
 
     // Function
@@ -49,10 +47,46 @@ void underrated::Parser::parse()
         {
             addFunction(func);
         }
-        return;
+        return true;
     }
 
-    std::cout << "Parser : " << enumToInt(getCurrentToken()->getTokenKind()) << ":" << getCurrentToken()->getValue() << "\n";
+    // Doing Global Variable
+    // For latter implementation
+    std::cout << "Parser -> " << enumToInt(getCurrentToken()->getTokenKind()) << " : " << getCurrentToken()->getValue() << "\n";
+    return true;
+}
+
+// get Next Token Until
+underrated::Token *underrated::Parser::getNextTokenUntil(underrated::TokenKind kind)
+{
+    if (getCurrentToken()->isKind(kind))
+    {
+        return getCurrentToken();
+    }
+
+    while (auto *token = getNextToken())
+    {
+        if (token->isKind(kind))
+        {
+            return token;
+        }
+
+        if (token->isKind(TokenKind::TokenEOF))
+        {
+            break;
+        }
+
+        delete token; // Delete Last Token
+    }
+
+    return nullptr;
+}
+
+// Get Next Token
+underrated::Token *underrated::Parser::getNextToken(bool skipSpace)
+{
+    setLastToken(getCurrentToken());
+    return _lexer->getNextToken(skipSpace);
 }
 
 // getModule

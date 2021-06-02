@@ -11,11 +11,15 @@ bool underrated::Lexer::isIdentifier(char c, bool num)
 
 char underrated::Lexer::getNextChar()
 {
-    _currentChar = getchar();
+    if (!_stream->get(_currentChar))
+    {
+        return _currentChar = 0;
+    }
+
     if (_currentChar == '\n')
     {
         _location.row++;
-        _location.col = 0;
+        _location.col = 1;
     }
     else
     {
@@ -62,6 +66,11 @@ underrated::Token *underrated::Lexer::getToken()
         getNextChar();
     }
 
+    if (_currentChar == 0)
+    {
+        return createToken(TokenKind::TokenEOF);
+    }
+
     // Check if identifier
     if (isIdentifier(_currentChar))
     {
@@ -95,12 +104,6 @@ underrated::Token *underrated::Lexer::getToken()
         if (identifier == "true" || identifier == "false")
         {
             return createToken(TokenKind::TokenLitBool);
-        }
-
-        // debug
-        if (identifier == "debug")
-        {
-            return createToken(TokenKind::TokenDebug);
         }
 
         // Identifier
@@ -139,12 +142,6 @@ underrated::Token *underrated::Lexer::getToken()
     auto currentChar = _currentChar;
     getNextChar();
 
-    // Punctuation
-    if (ispunct(currentChar))
-    {
-        return getPunctuation(currentChar);
-    }
-
     // TODO: You need to save some comment to make a documentation
     // Single Line Comment
     if (currentChar == '/' && _currentChar == '/')
@@ -153,7 +150,6 @@ underrated::Token *underrated::Lexer::getToken()
             ;
 
         getNextChar(); // eat '\n'
-
         return getToken();
     }
 
@@ -170,7 +166,26 @@ underrated::Token *underrated::Lexer::getToken()
         return getToken();
     }
 
-    return createToken(TokenKind::TokenUndefined, std::string(1, currentChar));
+    // Punctuation
+    if (ispunct(currentChar))
+    {
+        auto *puncToken = getPunctuation(currentChar);
+        if (puncToken)
+        {
+            return puncToken;
+        }
+    }
+
+    // Undefined
+    std::string msg = std::string(1, currentChar);
+
+    while (!isspace(_currentChar))
+    {
+        msg += _currentChar;
+        getNextChar();
+    }
+
+    return createToken(TokenKind::TokenUndefined, msg);
 }
 
 underrated::Token *underrated::Lexer::getNextToken(bool skipSpace)
@@ -180,10 +195,5 @@ underrated::Token *underrated::Lexer::getNextToken(bool skipSpace)
         _currentToken = getToken();
     } while (_currentToken->isKind(TokenKind::TokenSpaceNewline) && skipSpace);
 
-    return _currentToken;
-}
-
-underrated::Token *underrated::Lexer::getCurrentToken()
-{
     return _currentToken;
 }

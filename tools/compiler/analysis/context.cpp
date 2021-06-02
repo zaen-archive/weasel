@@ -79,7 +79,26 @@ llvm::Value *underrated::AnalysContext::codegen(NumberLiteralExpression *expr)
 
 llvm::Value *underrated::AnalysContext::codegen(DeclarationExpression *expr)
 {
-    return nullptr;
+    // Get Value Representation
+    auto *value = expr->getValue()->codegen(this);
+
+    // Checking Type
+    auto declTy = expr->getType() != nullptr ? expr->getType() : value->getType();
+    auto compareTy = compareType(declTy, value->getType());
+    if (compareTy == CompareType::Different)
+    {
+        return logErrorV(std::string("Cannot assign, expression type is different"));
+    }
+    if (compareTy == CompareType::Casting)
+    {
+        value = castIntegerType(value, declTy);
+    }
+
+    // Allocating Address for declaration
+    auto *alloc = getBuilder()->CreateAlloca(declTy);
+
+    // TODO: Add Variable Table Here
+    return getBuilder()->CreateStore(value, alloc);
 }
 
 underrated::CompareType underrated::AnalysContext::compareType(llvm::Type *lhsType, llvm::Type *rhsType)
@@ -112,7 +131,7 @@ llvm::Value *underrated::AnalysContext::castIntegerType(llvm::Value *value, llvm
     }
 }
 
-llvm::Value underrated::AnalysContext::castIntegerType(llvm::Value *lhs, llvm::Value *rhs)
+llvm::Value *underrated::AnalysContext::castIntegerType(llvm::Value *lhs, llvm::Value *rhs)
 {
     if (lhs->getType()->getIntegerBitWidth() > rhs->getType()->getIntegerBitWidth())
     {
@@ -133,7 +152,7 @@ llvm::Value *underrated::AnalysContext::codegen(BinaryOperatorExpression *expr)
 
     if (compareTy == CompareType::Different)
     {
-        return logErrorV("type LHS != type RHS");
+        return logErrorV(std::string("type LHS != type RHS"));
     }
 
     if (compareTy == CompareType::Casting)
@@ -162,7 +181,7 @@ llvm::Value *underrated::AnalysContext::codegen(AssignmentExpression *expr)
     auto *lhs = expr->getLHS()->codegen(this);
     if (!lhs->getType()->isPointerTy())
     {
-        return logErrorV("LHS should be a pointer to an address");
+        return logErrorV(std::string("LHS should be a pointer to an address"));
     }
 
     auto *rhs = expr->getRHS()->codegen(this);
@@ -172,12 +191,11 @@ llvm::Value *underrated::AnalysContext::codegen(AssignmentExpression *expr)
 
     if (compareTy == CompareType::Different)
     {
-        return logErrorV("Cannot assign, expression type is different");
+        return logErrorV(std::string("Cannot assign, expression type is different"));
     }
 
     if (compareTy == CompareType::Casting)
     {
-        std::cout << "Casting\n";
         rhs = castIntegerType(rhs, lhs->getType()->getContainedType(0));
     }
 
@@ -188,12 +206,11 @@ llvm::Value *underrated::AnalysContext::codegen(ReturnExpression *expr)
 {
     if (expr->getValue())
     {
-        return getBuilder()->CreateRet(expr->getValue()->codegen(this));
+        auto *val = expr->getValue()->codegen(this);
+        return getBuilder()->CreateRet(val);
     }
-    else
-    {
-        return getBuilder()->CreateRetVoid();
-    }
+
+    return getBuilder()->CreateRetVoid();
 }
 
 // TODO: Handle just definition variable

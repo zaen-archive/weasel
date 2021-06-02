@@ -1,5 +1,6 @@
 #include "parse/parser.h"
 #include "analysis/context.h"
+#include "symbol/symbol.h"
 
 void underrated::Parser::ignoreNewline()
 {
@@ -13,6 +14,11 @@ underrated::StatementExpression *underrated::Parser::parseFunctionBody()
 {
     auto *stmt = new StatementExpression();
 
+    // Enter statement scope
+    {
+        SymbolTable::getInstance()->enterScope();
+    }
+
     getNextToken(true); // eat '{'
     while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseCurlyBracket))
     {
@@ -20,19 +26,21 @@ underrated::StatementExpression *underrated::Parser::parseFunctionBody()
 
         if (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseCurlyBracket))
         {
-            if (!expr)
+            if (expr)
             {
-                delete stmt;
-                return nullptr;
+                stmt->addBody(expr);
             }
-
-            stmt->addBody(expr);
         }
 
         ignoreNewline();
     }
-
     getNextToken(); // eat '}'
+
+    // Exit statement scope
+    {
+        SymbolTable::getInstance()->exitScope();
+    }
+
     return stmt;
 }
 
@@ -56,7 +64,17 @@ underrated::Expression *underrated::Parser::parseStatement()
         return parseReturnStatement();
     }
 
-    return parseExpression();
+    auto *expr = parseExpression();
+    if (!expr)
+    {
+        auto *err = new Error(getCurrentToken(), "Invalid expression statement");
+
+        getNextTokenUntil(TokenKind::TokenSpaceNewline);
+
+        return ErrorTable::addError(err);
+    }
+
+    return expr;
 }
 
 underrated::Expression *underrated::Parser::parseLiteralExpression()
@@ -64,24 +82,24 @@ underrated::Expression *underrated::Parser::parseLiteralExpression()
     auto *token = getCurrentToken();
     if (token->isKind(TokenKind::TokenLitBool))
     {
-        return new BoolLiteralExpression(token->getValue() == "true");
+        return new BoolLiteralExpression(token, token->getValue() == "true");
     }
 
     if (token->isKind(TokenKind::TokenLitChar))
     {
         auto val = std::stoi(token->getValue());
-        return new NumberLiteralExpression(val, 8);
+        return new NumberLiteralExpression(token, val, 8);
     }
 
     if (token->isKind(TokenKind::TokenLitNumber))
     {
         auto value = strtoll(token->getValue().c_str(), 0, 10);
-        return new NumberLiteralExpression(value);
+        return new NumberLiteralExpression(token, value);
     }
 
     if (token->isKind(TokenKind::TokenLitString))
     {
-        return new StringLiteralExpression(token->getValue());
+        return new StringLiteralExpression(token, token->getValue());
     }
 
     return new NilLiteralExpression();
@@ -89,7 +107,18 @@ underrated::Expression *underrated::Parser::parseLiteralExpression()
 
 underrated::Expression *underrated::Parser::parseVariableExpression()
 {
-    return new VariableExpression(getCurrentToken()->getValue());
+    auto identifier = getCurrentToken()->getValue();
+
+    // Check Variable exit
+    {
+        auto *attr = SymbolTable::getInstance()->get(identifier);
+        if (!attr)
+        {
+            return ErrorTable::addError(new Error(getCurrentToken(), "Variable not yet declared"));
+        }
+    }
+
+    return new VariableExpression(getCurrentToken(), identifier);
 }
 
 underrated::Expression *underrated::Parser::parsePrimaryExpression()
@@ -112,7 +141,7 @@ underrated::Expression *underrated::Parser::parseExpression()
     auto *lhs = parsePrimaryExpression();
     if (!lhs)
     {
-        return logError("Expected LHS Expression");
+        return ErrorTable::addError(new Error(getCurrentToken(), "Expected a LHS Expression"));
     }
 
     getNextToken(); // Eat 'LHS' Expression
@@ -139,7 +168,7 @@ underrated::Expression *underrated::Parser::parseBinaryOperator(int precOrder, u
         auto *rhs = parsePrimaryExpression();
         if (!rhs)
         {
-            return logError("Expected RHS Expression");
+            return ErrorTable::addError(new Error(getCurrentToken(), "Expected RHS Expression"));
         }
 
         getNextToken(); // eat 'rhs'
@@ -156,25 +185,36 @@ underrated::Expression *underrated::Parser::parseBinaryOperator(int precOrder, u
 
 underrated::Expression *underrated::Parser::parseReturnStatement()
 {
+    auto *retToken = getCurrentToken();
+
     getNextToken(); // eat 'return'
     if (getCurrentToken()->isKind(TokenKind::TokenSpaceNewline))
     {
         getNextToken(); // eat '\n'
-        return new ReturnExpression(nullptr);
+        return new ReturnExpression(retToken, nullptr);
     }
 
     auto *expr = parseExpression();
     if (!expr)
     {
-        return logError("Expected expression for return statement.");
+        auto *err = new Error(getCurrentToken(), "Expected expression for return statement.");
+
+        getNextTokenUntil(TokenKind::TokenSpaceNewline);
+
+        return ErrorTable::addError(err);
     }
 
-    return new ReturnExpression(expr);
+    return new ReturnExpression(retToken, expr);
 }
 
 underrated::Expression *underrated::Parser::parseCompoundStatement()
 {
     auto *stmt = new StatementExpression();
+
+    // Enter Statement Scope
+    {
+        SymbolTable::getInstance()->enterScope();
+    }
 
     getNextToken(true); // eat '{'
     while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseCurlyBracket))
@@ -188,8 +228,12 @@ underrated::Expression *underrated::Parser::parseCompoundStatement()
 
         stmt->addBody(expr);
     }
-
     getNextToken(true); // eat '}'
+
+    // Exit Statement Scope
+    {
+        SymbolTable::getInstance()->exitScope();
+    }
 
     return stmt;
 }
@@ -200,11 +244,16 @@ underrated::Expression *underrated::Parser::parseCompoundStatement()
 underrated::Expression *underrated::Parser::parseDefinitionExpression()
 {
     auto qualifier = getQualifier();
+    auto *qualToken = getCurrentToken();
 
     getNextToken(); // eat qualifier(let, final, const)
     if (!getCurrentToken()->isKind(TokenKind::TokenIdentifier))
     {
-        return logError("Expected an identifier");
+        auto *err = new Error(getCurrentToken(), "Expected an identifier but got {" + getCurrentToken()->getValue() + "}");
+
+        getNextTokenUntil(TokenKind::TokenSpaceNewline);
+
+        return ErrorTable::addError(err);
     }
 
     auto identifier = getCurrentToken()->getValue();
@@ -221,38 +270,63 @@ underrated::Expression *underrated::Parser::parseDefinitionExpression()
     {
         if (!tokenTy)
         {
-            return logError("Data Type Expected");
+            return ErrorTable::addError(new Error(getCurrentToken(), "Data Type Expected for default value declaration"));
         }
 
         if (qualifier != Qualifier::QualVolatile)
         {
-            return logError("No Default Value for Non Volatile variable");
+            return ErrorTable::addError(new Error(getCurrentToken(), "No Default Value for Non Volatile variable"));
+        }
+        auto *type = tokenTy->toType(getContext());
+
+        // Insert Symbol Table
+        {
+            auto *attr = new Attribute(identifier, AttributeScope::ScopeLocal, AttributeKind::SymbolVariable, type);
+            SymbolTable::getInstance()->insert(identifier, attr);
         }
 
         // Create Variable with Default Value
-        // TODO: Support wide default data type
-        return new AssignmentExpression(new VariableExpression(identifier, true), new NumberLiteralExpression(0));
+        return new DeclarationExpression(qualToken, identifier, qualifier, type);
     }
 
     // Equal
-    // TODO: Should support another type of equal sign
     if (!getCurrentToken()->isKind(TokenKind::TokenPuncEqual))
     {
-        return logError("Equal sign expected");
+        auto *err = new Error(getCurrentToken(), "Equal sign expected but got {" + getCurrentToken()->getValue() + "}");
+
+        getNextTokenUntil(TokenKind::TokenSpaceNewline);
+
+        return ErrorTable::addError(err);
     }
 
     // Get Value
     getNextToken(); // eat 'Equal Sign'
     if (getCurrentToken()->isKind(TokenKind::TokenSpaceNewline))
     {
-        return logError("Expected Value");
+        return ErrorTable::addError(new Error(getCurrentToken(), "Expected RHS Value Expression but got 'New line'"));
     }
 
     auto *val = parseExpression();
     if (!val)
     {
-        return logError("Expected Value Expression");
+        auto *err = new Error(getCurrentToken(), "Expected RHS Value Expression but got not valid expression");
+
+        getNextTokenUntil(TokenKind::TokenSpaceNewline);
+
+        return ErrorTable::addError(err);
     }
 
-    return new AssignmentExpression(new VariableExpression(identifier, true), val);
+    llvm::Type *type = nullptr;
+    if (tokenTy)
+    {
+        type = tokenTy->toType(getContext());
+    }
+
+    // Insert Symbol Table
+    {
+        auto *attr = new Attribute(identifier, AttributeScope::ScopeLocal, AttributeKind::SymbolVariable, type);
+        SymbolTable::getInstance()->insert(identifier, attr);
+    }
+
+    return new DeclarationExpression(qualToken, identifier, qualifier, type, val);
 }

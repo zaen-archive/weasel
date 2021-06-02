@@ -2,7 +2,7 @@
 #include "lex/token.h"
 #include "ast/ast.h"
 
-llvm::Type *underrated::Token::toType(AnalysContext *c, Qualifier qualifier)
+llvm::Type *underrated::Token::toType(AnalysContext *c)
 {
     auto *builder = c->getBuilder();
 
