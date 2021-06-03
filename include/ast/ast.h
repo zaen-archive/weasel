@@ -120,6 +120,8 @@ namespace underrated
         Expression(Token *token) : _token(token) {}
         Expression() {}
 
+        Token *getToken() const { return _token; }
+
         virtual llvm::Value *codegen(AnalysContext *context) = 0;
     };
 
@@ -147,13 +149,6 @@ namespace underrated
 
         BlockExpression *getParent() const { return _parent; }
         Type *getVariable(std::string name);
-    };
-
-    // TODO: Debug Expression
-    class DebugExpression : public Expression
-    {
-    public:
-        llvm::Value *codegen(AnalysContext *c);
     };
 } // namespace underrated
 

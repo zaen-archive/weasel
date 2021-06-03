@@ -16,7 +16,7 @@ underrated::StatementExpression *underrated::Parser::parseFunctionBody()
 
     // Enter statement scope
     {
-        SymbolTable::getInstance()->enterScope();
+        SymbolTable::getInstance().enterScope();
     }
 
     getNextToken(true); // eat '{'
@@ -38,7 +38,7 @@ underrated::StatementExpression *underrated::Parser::parseFunctionBody()
 
     // Exit statement scope
     {
-        SymbolTable::getInstance()->exitScope();
+        SymbolTable::getInstance().exitScope();
     }
 
     return stmt;
@@ -111,7 +111,7 @@ underrated::Expression *underrated::Parser::parseVariableExpression()
 
     // Check Variable exit
     {
-        auto *attr = SymbolTable::getInstance()->get(identifier);
+        auto *attr = SymbolTable::getInstance().get(identifier);
         if (!attr)
         {
             return ErrorTable::addError(new Error(getCurrentToken(), "Variable not yet declared"));
@@ -213,7 +213,7 @@ underrated::Expression *underrated::Parser::parseCompoundStatement()
 
     // Enter Statement Scope
     {
-        SymbolTable::getInstance()->enterScope();
+        SymbolTable::getInstance().enterScope();
     }
 
     getNextToken(true); // eat '{'
@@ -232,7 +232,7 @@ underrated::Expression *underrated::Parser::parseCompoundStatement()
 
     // Exit Statement Scope
     {
-        SymbolTable::getInstance()->exitScope();
+        SymbolTable::getInstance().exitScope();
     }
 
     return stmt;
@@ -282,7 +282,7 @@ underrated::Expression *underrated::Parser::parseDefinitionExpression()
         // Insert Symbol Table
         {
             auto *attr = new Attribute(identifier, AttributeScope::ScopeLocal, AttributeKind::SymbolVariable, type);
-            SymbolTable::getInstance()->insert(identifier, attr);
+            SymbolTable::getInstance().insert(identifier, attr);
         }
 
         // Create Variable with Default Value
@@ -325,7 +325,7 @@ underrated::Expression *underrated::Parser::parseDefinitionExpression()
     // Insert Symbol Table
     {
         auto *attr = new Attribute(identifier, AttributeScope::ScopeLocal, AttributeKind::SymbolVariable, type);
-        SymbolTable::getInstance()->insert(identifier, attr);
+        SymbolTable::getInstance().insert(identifier, attr);
     }
 
     return new DeclarationExpression(qualToken, identifier, qualifier, type, val);

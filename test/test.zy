@@ -1,11 +1,11 @@
+extern fun puts(param byte)
+
 fun test() int {
-    let i = 23
-
     return 123
+}
 
-f
-
-    let n = 123 + 43
-
-    return 321
+fun tut() long {
+    let n = 123
+    // n  = n + 12
+    return n
 }

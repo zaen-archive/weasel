@@ -2,11 +2,7 @@
 #include <map>
 #include <string>
 #include "lex/token.h"
-
-namespace llvm
-{
-    class Type;
-} // namespace llvm
+#include "llvm/IR/Value.h"
 
 namespace underrated
 {
@@ -33,44 +29,52 @@ namespace underrated
         AttributeKind _kind;
         AttributeScope _scope;
         std::string _identifier;
-        llvm::Type *_type;
+        llvm::Type *_type;   // Used when lexical process
+        llvm::Value *_value; // used when LLVM Codegen process or semantical process
 
     public:
         Attribute(std::string &identifier, AttributeScope scope, AttributeKind kind, llvm::Type *type) : _identifier(identifier), _scope(scope), _kind(kind), _type(type) {}
+        Attribute(std::string &identifier, AttributeScope scope, AttributeKind kind, llvm::Value *value) : _identifier(identifier), _scope(scope), _kind(kind), _value(value) {}
 
         AttributeKind getKind() const { return _kind; }
         AttributeScope getScope() const { return _scope; }
         std::string getIdentifier() const { return _identifier; }
         llvm::Type *getType() const { return _type; }
+        llvm::Value *getValue() const { return _value; }
     };
 
-    // Symbol Table
+    // Lexical Symbol
     class SymbolTable
     {
     private:
+        SymbolTable();
+
         std::vector<Attribute *> _table;
         std::vector<unsigned> _lookup;
 
-    private:
-        static SymbolTable *_instance;
-
-        SymbolTable();
-
     public:
+        void reset();
         void enterScope();
         bool exitScope();
         void insert(std::string key, Attribute *att);
         Attribute *get(std::string key);
-        Attribute *lastFunction();
+        Attribute *getLastFunction();
 
         std::vector<unsigned> getLookup() const { return _lookup; }
 
     public:
-        static SymbolTable *getInstance() { return SymbolTable::_instance; }
+        SymbolTable(const SymbolTable &) = delete;
+        SymbolTable &operator=(const SymbolTable &) = delete;
+        static SymbolTable &SymbolTable::getInstance()
+        {
+            static SymbolTable instance;
+            return instance;
+        }
     };
 
 } // namespace underrated
 
+// Error
 namespace underrated
 {
     // Error

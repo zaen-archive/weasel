@@ -67,14 +67,6 @@ void underrated::Function::setBody(StatementExpression *body)
     _body = body;
 }
 
-/// TODO: Debug
-llvm::Value *underrated::DebugExpression::codegen(AnalysContext *context)
-{
-    llvm::errs() << *context->getModule();
-
-    return nullptr;
-}
-
 /// Log Error
 llvm::Value *underrated::logErrorV(std::string &msg)
 {

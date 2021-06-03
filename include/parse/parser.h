@@ -42,8 +42,8 @@ namespace underrated
         Expression *parseExpression();
         Expression *parsePrimaryExpression();
         Expression *parseDefinitionExpression();
+
         // Expression Literal
-        // TODO: Just suport 64 bit integer
         Expression *parseLiteralExpression();
         Expression *parseVariableExpression();
 

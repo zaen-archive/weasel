@@ -157,9 +157,6 @@ namespace underrated
 
 } // namespace underrated
 
-// Expression Precedence
-// TODO: Need to support Right to Left Associativity
-
 // Token Class
 namespace underrated
 {
@@ -191,6 +188,8 @@ namespace underrated
         bool isNewline() const { return _kind == TokenKind::TokenSpaceNewline; }
 
         Qualifier getQualifier();
+
+        // TODO: Need to support Right to Left Associativity
         Precedence getPrecedence();
 
     public:

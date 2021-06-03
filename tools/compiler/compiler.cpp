@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
     if (!stream.is_open())
     {
         std::cout << filePath << " Not exist\n";
+        return 0;
     }
 
     // Initialize LLVM
@@ -31,17 +32,10 @@ int main(int argc, char *argv[])
     auto *parser = new underrated::Parser(context, lexer);
 
     /// Compiler ///
-    while (true)
+    do
     {
         parser->getNextToken(true);
-        if (!parser->parse())
-        {
-            break;
-        }
-    }
+    } while (parser->parse());
 
     parser->codegen(); // change ast to llvm IR
-    (new underrated::DebugExpression())->codegen(context);
-
-    underrated::ErrorTable::showErrors();
 }

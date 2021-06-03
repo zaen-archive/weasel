@@ -26,14 +26,14 @@ underrated::Function *underrated::Parser::parseFunction()
 
     // Set Symbol for parameters and enter a scope
     {
-        SymbolTable::getInstance()->enterScope();
+        SymbolTable::getInstance().enterScope();
         for (auto *arg : func->getArgs())
         {
             auto argName = arg->getArgumentName();
             auto *ty = arg->getArgumentType();
             auto *attr = new Attribute(argName, AttributeScope::ScopeParam, AttributeKind::SymbolParameter, ty);
 
-            SymbolTable::getInstance()->insert(argName, attr);
+            SymbolTable::getInstance().insert(argName, attr);
         }
     }
 
@@ -45,7 +45,7 @@ underrated::Function *underrated::Parser::parseFunction()
 
     // Exit parameter scope
     {
-        SymbolTable::getInstance()->exitScope();
+        SymbolTable::getInstance().exitScope();
     }
 
     func->setBody(body);
@@ -99,13 +99,13 @@ underrated::Function *underrated::Parser::parseDeclareFunction()
     auto *func = new Function(identifier, funcTy);
 
     // Check Symbol Table
-    if (SymbolTable::getInstance()->get(identifier))
+    if (SymbolTable::getInstance().get(identifier))
     {
         return logErrorF(std::string("Function already declared"));
     }
 
     // Create Symbol for the function
-    SymbolTable::getInstance()->insert(identifier, new Attribute(identifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
+    SymbolTable::getInstance().insert(identifier, new Attribute(identifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
 
     return func;
 }

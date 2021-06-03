@@ -1,5 +1,7 @@
 #include <iostream>
 #include "analysis/context.h"
+#include "symbol/symbol.h"
+#include "llvm/IR/Function.h"
 
 underrated::AnalysContext::AnalysContext()
 {
@@ -20,53 +22,96 @@ std::string underrated::AnalysContext::getDefaultLabel()
     return std::to_string(_counter++);
 }
 
-llvm::Function *underrated::AnalysContext::codegen(Function *func)
+llvm::Function *underrated::AnalysContext::codegen(Function *funAST)
 {
-    if (getModule()->getFunction(func->getIdentifier()))
+    auto funName = funAST->getIdentifier();
+    if (getModule()->getFunction(funName))
     {
         return nullptr;
     }
 
-    auto funcArgs = func->getArgs();
-    auto *retTy = func->getFunctionType()->getReturnType();
+    auto funArgs = funAST->getArgs();
+    auto *retTy = funAST->getFunctionType()->getReturnType();
     auto args = std::vector<llvm::Type *>();
-    if (funcArgs.size() > 0)
+    if (funArgs.size() > 0)
     {
-        for (auto &item : funcArgs)
+        for (auto &item : funArgs)
         {
             args.push_back(item->getArgumentType());
         }
     }
 
-    auto *funcTy = llvm::FunctionType::get(retTy, args, false);
-    auto *f = llvm::Function::Create(funcTy, llvm::Function::ExternalWeakLinkage, func->getIdentifier(), *getModule());
+    auto *funTyLLVM = llvm::FunctionType::get(retTy, args, false);
+    auto *funLLVM = llvm::Function::Create(funTyLLVM, llvm::Function::ExternalWeakLinkage, funName, *getModule());
     auto idx = 0;
-    for (auto &item : f->args())
+    for (auto &item : funLLVM->args())
     {
-        item.setName(funcArgs[idx++]->getArgumentName());
+        item.setName(funArgs[idx++]->getArgumentName());
     }
 
-    if (func->getIsDefine())
+    // Add Function to symbol table
     {
-        auto *entry = llvm::BasicBlock::Create(*getContext(), "entry", f);
+        auto *attr = new Attribute(funName, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, funLLVM);
+
+        SymbolTable::getInstance().insert(funName, attr);
+    }
+
+    if (funAST->getIsDefine())
+    {
+        // Add Parameter to symbol table
+        {
+            // Enter to parameter scope
+            SymbolTable::getInstance().enterScope();
+
+            for (auto &item : funLLVM->args())
+            {
+                auto refName = item.getName();
+                auto paramName = std::string(refName.begin(), refName.end());
+                auto *attr = new Attribute(paramName, AttributeScope::ScopeParam, AttributeKind::SymbolParameter, &item);
+
+                SymbolTable::getInstance().insert(paramName, attr);
+            }
+        }
+
+        auto *entry = llvm::BasicBlock::Create(*getContext(), "entry", funLLVM);
         getBuilder()->SetInsertPoint(entry);
 
         // Create Block
-        if (func->getBody())
+        if (funAST->getBody())
         {
-            func->getBody()->codegen(this);
+            funAST->getBody()->codegen(this);
+        }
+
+        // Exit from parameter scope
+        {
+            auto exit = SymbolTable::getInstance().exitScope();
+            if (!exit)
+            {
+                return nullptr;
+            }
         }
     }
 
-    return f;
+    return funLLVM;
 }
 
 llvm::Value *underrated::AnalysContext::codegen(StatementExpression *expr)
 {
     std::cout << "Statements : " << expr->getBody().size() << "\n";
+
+    // Enter to new statement
+    {
+        SymbolTable::getInstance().enterScope();
+    }
+
     for (auto &item : expr->getBody())
     {
         item->codegen(this);
+    }
+
+    // Exit from statement
+    {
+        SymbolTable::getInstance().exitScope();
     }
 
     return nullptr;
@@ -95,52 +140,17 @@ llvm::Value *underrated::AnalysContext::codegen(DeclarationExpression *expr)
     }
 
     // Allocating Address for declaration
-    auto *alloc = getBuilder()->CreateAlloca(declTy);
+    auto varName = expr->getIdentifier();
+    auto *alloc = getBuilder()->CreateAlloca(declTy, 0, varName);
 
-    // TODO: Add Variable Table Here
+    // Add Variable Declaration to symbol table
+    {
+        auto *attr = new Attribute(varName, AttributeScope::ScopeLocal, AttributeKind::SymbolVariable, alloc);
+
+        SymbolTable::getInstance().insert(varName, attr);
+    }
+
     return getBuilder()->CreateStore(value, alloc);
-}
-
-underrated::CompareType underrated::AnalysContext::compareType(llvm::Type *lhsType, llvm::Type *rhsType)
-{
-    if (lhsType->getTypeID() != rhsType->getTypeID())
-    {
-        return CompareType::Different;
-    }
-
-    if (lhsType->isIntegerTy())
-    {
-        if (lhsType->getIntegerBitWidth() != rhsType->getIntegerBitWidth())
-        {
-            return CompareType::Casting;
-        }
-    }
-
-    return CompareType::Equal;
-}
-
-llvm::Value *underrated::AnalysContext::castIntegerType(llvm::Value *value, llvm::Type *castTy)
-{
-    if (value->getType()->getIntegerBitWidth() < castTy->getIntegerBitWidth())
-    {
-        return getBuilder()->CreateCast(llvm::Instruction::CastOps::SExt, value, castTy);
-    }
-    else
-    {
-        return getBuilder()->CreateCast(llvm::Instruction::CastOps::Trunc, value, castTy);
-    }
-}
-
-llvm::Value *underrated::AnalysContext::castIntegerType(llvm::Value *lhs, llvm::Value *rhs)
-{
-    if (lhs->getType()->getIntegerBitWidth() > rhs->getType()->getIntegerBitWidth())
-    {
-        return getBuilder()->CreateCast(llvm::Instruction::CastOps::SExt, rhs, lhs->getType());
-    }
-    else
-    {
-        return getBuilder()->CreateCast(llvm::Instruction::CastOps::SExt, lhs, rhs->getType());
-    }
 }
 
 llvm::Value *underrated::AnalysContext::codegen(BinaryOperatorExpression *expr)
@@ -176,6 +186,8 @@ llvm::Value *underrated::AnalysContext::codegen(BinaryOperatorExpression *expr)
     }
 }
 
+// TODO: Assignment Expression Already Changed to Declaration Expression
+// Remove it in future
 llvm::Value *underrated::AnalysContext::codegen(AssignmentExpression *expr)
 {
     auto *lhs = expr->getLHS()->codegen(this);
@@ -186,8 +198,6 @@ llvm::Value *underrated::AnalysContext::codegen(AssignmentExpression *expr)
 
     auto *rhs = expr->getRHS()->codegen(this);
     auto compareTy = compareType(lhs->getType()->getContainedType(0), rhs->getType());
-
-    // rhs = getBuilder()->CreateCast(llvm::Instruction::CastOps::SExt, rhs, getBuilder()->getInt64Ty());
 
     if (compareTy == CompareType::Different)
     {
@@ -204,18 +214,91 @@ llvm::Value *underrated::AnalysContext::codegen(AssignmentExpression *expr)
 
 llvm::Value *underrated::AnalysContext::codegen(ReturnExpression *expr)
 {
-    if (expr->getValue())
+    if (!expr->getValue())
     {
-        auto *val = expr->getValue()->codegen(this);
-        return getBuilder()->CreateRet(val);
+        return getBuilder()->CreateRetVoid();
     }
 
-    return getBuilder()->CreateRetVoid();
+    auto *val = expr->getValue()->codegen(this);
+
+    // Get Last Function from symbol table
+    auto *funAttr = SymbolTable::getInstance().getLastFunction();
+    if (!funAttr)
+    {
+        return ErrorTable::addError(new Error(expr->getToken(), "Return Statement cannot find last function from symbol table"));
+    }
+    auto *fun = llvm::dyn_cast<llvm::Function>(funAttr->getValue());
+    auto *returnTy = fun->getReturnType();
+    auto compareTy = compareType(returnTy, val->getType());
+
+    if (compareTy == CompareType::Different)
+    {
+        return ErrorTable::addError(new Error(expr->getToken(), "Return Type with value type is different"));
+    }
+
+    if (compareTy == CompareType::Casting)
+    {
+        val = castIntegerType(val, returnTy);
+    }
+
+    return getBuilder()->CreateRet(val);
 }
 
-// TODO: Handle just definition variable
 llvm::Value *underrated::AnalysContext::codegen(VariableExpression *expr)
 {
-    auto *val = getBuilder()->CreateAlloca(getBuilder()->getInt64Ty(), 0, expr->getIdentifier());
-    return val;
+    // Get Allocator from Symbol Table
+    auto varName = expr->getIdentifier();
+    auto *alloc = SymbolTable::getInstance().get(varName);
+    if (!alloc)
+    {
+        return ErrorTable::addError(new Error(expr->getToken(), "Variable " + varName + " Not declared"));
+    }
+
+    return getBuilder()->CreateLoad(alloc->getValue(), varName);
+}
+
+/// HELPER ///
+// Compare Type Helpter
+underrated::CompareType underrated::AnalysContext::compareType(llvm::Type *lhsType, llvm::Type *rhsType)
+{
+    if (lhsType->getTypeID() != rhsType->getTypeID())
+    {
+        return CompareType::Different;
+    }
+
+    if (lhsType->isIntegerTy())
+    {
+        if (lhsType->getIntegerBitWidth() != rhsType->getIntegerBitWidth())
+        {
+            return CompareType::Casting;
+        }
+    }
+
+    return CompareType::Equal;
+}
+
+// Cast Integer Type Helper
+llvm::Value *underrated::AnalysContext::castIntegerType(llvm::Value *value, llvm::Type *castTy)
+{
+    if (value->getType()->getIntegerBitWidth() < castTy->getIntegerBitWidth())
+    {
+        return getBuilder()->CreateCast(llvm::Instruction::CastOps::SExt, value, castTy);
+    }
+    else
+    {
+        return getBuilder()->CreateCast(llvm::Instruction::CastOps::Trunc, value, castTy);
+    }
+}
+
+// Cast Integer Type Helper
+llvm::Value *underrated::AnalysContext::castIntegerType(llvm::Value *lhs, llvm::Value *rhs)
+{
+    if (lhs->getType()->getIntegerBitWidth() > rhs->getType()->getIntegerBitWidth())
+    {
+        return getBuilder()->CreateCast(llvm::Instruction::CastOps::SExt, rhs, lhs->getType());
+    }
+    else
+    {
+        return getBuilder()->CreateCast(llvm::Instruction::CastOps::SExt, lhs, rhs->getType());
+    }
 }

@@ -1,4 +1,5 @@
 #include <iostream>
+#include "llvm/IR/Verifier.h"
 #include "parse/parser.h"
 #include "analysis/context.h"
 #include "symbol/symbol.h"
@@ -6,15 +7,61 @@
 // Codegen
 void underrated::Parser::codegen()
 {
+    {
+        if (SymbolTable::getInstance().getLookup().size() != 1)
+        {
+            std::cout << "\nSomething wrong with lookup table\n";
+            for (auto item : SymbolTable::getInstance().getLookup())
+            {
+                std::cout << item << " ";
+            }
+            std::cout << "\n\n";
+
+            return;
+        }
+
+        SymbolTable::getInstance().reset(); // We need to reset symbol table
+    }
+
+    auto ok = true;
     std::cout << "Functions : " << _funcs.size() << "\n";
     for (auto &item : _funcs)
     {
-        auto *func = getModule()->getFunction(item->getIdentifier());
-        if (!func)
+        auto identifier = item->getIdentifier();
+        if (getModule()->getFunction(identifier))
         {
-            item->codegen(getContext());
+            std::cout << "Function " << identifier << " already declared\n";
+
+            ok = false;
+            break;
+        }
+
+        auto *fun = item->codegen(getContext());
+        if (!fun)
+        {
+            std::cout << "\nSomthing happend to function symbol\n\n";
+            return;
+        }
+
+        // Verify each function
+        if (llvm::verifyFunction(*fun, &llvm::errs()))
+        {
+            std::cout << "\nError when verifying Function " << identifier << "\n";
+
+            ok = false;
+            break;
         }
     }
+
+    if (!ok || llvm::verifyModule(*getContext()->getModule()))
+    {
+        std::cout << "Error when constructing functions\n";
+    }
+
+    llvm::errs() << *getContext()->getModule();
+
+    std::cerr << "\n=> Error Information\n";
+    ErrorTable::showErrors();
 }
 
 // parse

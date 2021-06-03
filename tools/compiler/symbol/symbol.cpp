@@ -2,8 +2,6 @@
 #include "symbol/symbol.h"
 
 /// SYMBOL ///
-underrated::SymbolTable *underrated::SymbolTable::_instance = new underrated::SymbolTable();
-
 std::vector<underrated::Error *> underrated::ErrorTable::_errors;
 
 underrated::SymbolTable::SymbolTable()
@@ -54,7 +52,7 @@ underrated::Attribute *underrated::SymbolTable::get(std::string key)
     return nullptr;
 }
 
-underrated::Attribute *underrated::SymbolTable::lastFunction()
+underrated::Attribute *underrated::SymbolTable::getLastFunction()
 {
     auto i = _table.size() - 1;
     for (; i >= 0; i--)
@@ -70,20 +68,43 @@ underrated::Attribute *underrated::SymbolTable::lastFunction()
     return nullptr;
 }
 
-void underrated::ErrorTable::showErrors()
+void underrated::SymbolTable::reset()
 {
-    for (auto *item : _errors)
+    while (!_table.empty())
     {
-        auto *token = item->getToken();
-        auto loc = token->getLocation();
-
-        std::cerr << "Error : Location (" << loc.row << ":" << loc.col << ") Length (" << loc.length << ") Position (" << loc.position << ")\n";
-        std::cerr << "Error Message : " << item->getMessage() << "\n";
+        delete _table.back();
+        _table.pop_back();
     }
+
+    while (!_lookup.empty())
+    {
+        _lookup.pop_back();
+    }
+
+    enterScope(); // Enter Global Scope
 }
 
 std::nullptr_t underrated::ErrorTable::addError(Error *err)
 {
     _errors.push_back(err);
     return nullptr;
+}
+
+void underrated::ErrorTable::showErrors()
+{
+    if (_errors.empty())
+    {
+        std::cerr << "No Error found\n";
+    }
+    else
+    {
+        for (auto *item : _errors)
+        {
+            auto *token = item->getToken();
+            auto loc = token->getLocation();
+
+            std::cerr << "Error : Location (" << loc.row << ":" << loc.col << ") Length (" << loc.length << ") Position (" << loc.position << ")\n";
+            std::cerr << "Error Message : " << item->getMessage() << "\n";
+        }
+    }
 }
