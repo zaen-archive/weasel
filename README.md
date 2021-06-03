@@ -1,3 +1,11 @@
+# BACKGROUND
+
+Underrated Project is a project i created to prove of concept that we can support heterogenous internally inside a language. We can use GPGPU Code without need any external library. And just directly to the language and just works.
+
+Which mean we can create computationally task that very easyly solved. Like Machine Learning even AI, because you can switch which program or code need to run on GPU or CPU without hassle.
+
+We also can binding library created by this language into another language like python to create better environment for end user for creating fast program.
+
 # SETUP (see LLVM Documentation)
 
 - Add LLVM Project
