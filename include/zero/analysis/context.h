@@ -6,9 +6,9 @@
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/IRBuilder.h"
-#include "ast/ast.h"
+#include "zero/ast/ast.h"
 
-namespace underrated
+namespace zero
 {
     // Compare Type
     enum class CompareType
@@ -51,4 +51,4 @@ namespace underrated
         llvm::Value *codegen(BinaryOperatorExpression *expr); // TODO: Need to implement modulo operator
         llvm::Function *codegen(Function *func);
     };
-} // namespace underrated
+} // namespace zero

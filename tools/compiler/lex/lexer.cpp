@@ -1,7 +1,7 @@
 #include <iostream>
-#include "lex/lexer.h"
+#include "zero/lex/lexer.h"
 
-bool underrated::Lexer::isIdentifier(char c, bool num)
+bool zero::Lexer::isIdentifier(char c, bool num)
 {
     if (c == '_')
         return true;
@@ -9,7 +9,7 @@ bool underrated::Lexer::isIdentifier(char c, bool num)
     return num ? isalnum(c) : isalpha(c);
 }
 
-char underrated::Lexer::getNextChar()
+char zero::Lexer::getNextChar()
 {
     if (!_stream->get(_currentChar))
     {
@@ -30,7 +30,7 @@ char underrated::Lexer::getNextChar()
     return _currentChar;
 }
 
-underrated::Token *underrated::Lexer::createToken(underrated::TokenKind kind)
+zero::Token *zero::Lexer::createToken(zero::TokenKind kind)
 {
     auto loc = _location;
     loc.length = 1;
@@ -38,7 +38,7 @@ underrated::Token *underrated::Lexer::createToken(underrated::TokenKind kind)
     return new Token(kind, loc);
 }
 
-underrated::Token *underrated::Lexer::createToken(underrated::TokenKind kind, std::string val)
+zero::Token *zero::Lexer::createToken(zero::TokenKind kind, std::string val)
 {
     auto loc = _location;
     loc.length = val.size();
@@ -47,7 +47,7 @@ underrated::Token *underrated::Lexer::createToken(underrated::TokenKind kind, st
     return new Token(kind, loc, val);
 }
 
-underrated::Token *underrated::Lexer::getToken()
+zero::Token *zero::Lexer::getToken()
 {
     while (isspace(_currentChar))
     {
@@ -188,7 +188,7 @@ underrated::Token *underrated::Lexer::getToken()
     return createToken(TokenKind::TokenUndefined, msg);
 }
 
-underrated::Token *underrated::Lexer::getNextToken(bool skipSpace)
+zero::Token *zero::Lexer::getNextToken(bool skipSpace)
 {
     do
     {

@@ -1,11 +1,11 @@
 #include <iostream>
 #include "llvm/IR/Verifier.h"
-#include "parse/parser.h"
-#include "analysis/context.h"
-#include "symbol/symbol.h"
+#include "zero/parse/parser.h"
+#include "zero/analysis/context.h"
+#include "zero/symbol/symbol.h"
 
 // Codegen
-void underrated::Parser::codegen()
+void zero::Parser::codegen()
 {
     {
         if (SymbolTable::getInstance().getLookup().size() != 1)
@@ -65,7 +65,7 @@ void underrated::Parser::codegen()
 }
 
 // parse
-bool underrated::Parser::parse()
+bool zero::Parser::parse()
 {
     // EOF FILE
     if (getCurrentToken()->isKind(TokenKind::TokenEOF))
@@ -104,7 +104,7 @@ bool underrated::Parser::parse()
 }
 
 // get Next Token Until
-underrated::Token *underrated::Parser::getNextTokenUntil(underrated::TokenKind kind)
+zero::Token *zero::Parser::getNextTokenUntil(zero::TokenKind kind)
 {
     if (getCurrentToken()->isKind(kind))
     {
@@ -130,20 +130,20 @@ underrated::Token *underrated::Parser::getNextTokenUntil(underrated::TokenKind k
 }
 
 // Get Next Token
-underrated::Token *underrated::Parser::getNextToken(bool skipSpace)
+zero::Token *zero::Parser::getNextToken(bool skipSpace)
 {
     setLastToken(getCurrentToken());
     return _lexer->getNextToken(skipSpace);
 }
 
 // getModule
-llvm::Module *underrated::Parser::getModule() const
+llvm::Module *zero::Parser::getModule() const
 {
     return _context->getModule();
 }
 
 // getBuilder
-llvm::IRBuilder<> *underrated::Parser::getBuilder() const
+llvm::IRBuilder<> *zero::Parser::getBuilder() const
 {
     return _context->getBuilder();
 }

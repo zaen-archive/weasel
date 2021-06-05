@@ -13,6 +13,7 @@ add_llvm_example(compiler
   # test_lex.cpp
   # test_expr.cpp
   # test_llvm.cpp
+  basic/filemanager.cpp
   analysis/context.cpp
   lex/lexer.cpp
   lex/lexer_type.cpp

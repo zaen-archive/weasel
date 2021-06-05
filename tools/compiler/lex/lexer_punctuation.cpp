@@ -1,6 +1,6 @@
-#include "lex/lexer.h"
+#include "zero/lex/lexer.h"
 
-underrated::Token *underrated::Lexer::getPunctuation(char leftChar)
+zero::Token *zero::Lexer::getPunctuation(char leftChar)
 {
     switch (leftChar)
     {
@@ -10,9 +10,9 @@ underrated::Token *underrated::Lexer::getPunctuation(char leftChar)
         {
             getNextChar();
 
-            return createToken(TokenKind::TokenPuncPlusEqual);
+            return createToken(TokenKind::TokenOperatorPlusEqual);
         }
-        return createToken(TokenKind::TokenPuncPlus);
+        return createToken(TokenKind::TokenOperatorPlus);
     }
     case '-':
     {
@@ -20,9 +20,9 @@ underrated::Token *underrated::Lexer::getPunctuation(char leftChar)
         {
             getNextChar();
 
-            return createToken(TokenKind::TokenPuncMinusEqual);
+            return createToken(TokenKind::TokenOperatorMinusEqual);
         }
-        return createToken(TokenKind::TokenPuncMinus);
+        return createToken(TokenKind::TokenOperatorMinus);
     }
     case '*':
     {
@@ -30,9 +30,9 @@ underrated::Token *underrated::Lexer::getPunctuation(char leftChar)
         {
             getNextChar();
 
-            return createToken(TokenKind::TokenPuncStarEqual);
+            return createToken(TokenKind::TokenOperatorStarEqual);
         }
-        return createToken(TokenKind::TokenPuncStar);
+        return createToken(TokenKind::TokenOperatorStar);
     }
     case '/':
     {
@@ -40,9 +40,9 @@ underrated::Token *underrated::Lexer::getPunctuation(char leftChar)
         {
             getNextChar();
 
-            return createToken(TokenKind::TokenPuncSlashEqual);
+            return createToken(TokenKind::TokenOperatorSlashEqual);
         }
-        return createToken(TokenKind::TokenPuncSlash);
+        return createToken(TokenKind::TokenOperatorSlash);
     }
     case '%':
     {
@@ -50,9 +50,9 @@ underrated::Token *underrated::Lexer::getPunctuation(char leftChar)
         {
             getNextChar();
 
-            return createToken(TokenKind::TokenPuncPercentEqual);
+            return createToken(TokenKind::TokenOperatorPercentEqual);
         }
-        return createToken(TokenKind::TokenPuncPercent);
+        return createToken(TokenKind::TokenOperatorPercent);
     }
     case '^':
     {
@@ -60,9 +60,9 @@ underrated::Token *underrated::Lexer::getPunctuation(char leftChar)
         {
             getNextChar();
 
-            return createToken(TokenKind::TokenPuncCaretEqual);
+            return createToken(TokenKind::TokenOperatorCaretEqual);
         }
-        return createToken(TokenKind::TokenPuncCaret);
+        return createToken(TokenKind::TokenOperatorCaret);
     }
     case '!':
     {
@@ -70,9 +70,9 @@ underrated::Token *underrated::Lexer::getPunctuation(char leftChar)
         {
             getNextChar();
 
-            return createToken(TokenKind::TokenPuncNotEqual);
+            return createToken(TokenKind::TokenOperatorNotEqual);
         }
-        return createToken(TokenKind::TokenPuncNot);
+        return createToken(TokenKind::TokenOperatorNot);
     }
     case '&':
     {
@@ -80,15 +80,15 @@ underrated::Token *underrated::Lexer::getPunctuation(char leftChar)
         {
             getNextChar();
 
-            return createToken(TokenKind::TokenPuncAndEqual);
+            return createToken(TokenKind::TokenOperatorAndEqual);
         }
         if (_currentChar == '&')
         {
             getNextChar();
 
-            return createToken(TokenKind::TokenPuncAndAnd);
+            return createToken(TokenKind::TokenOperatorAndAnd);
         }
-        return createToken(TokenKind::TokenPuncAnd);
+        return createToken(TokenKind::TokenOperatorAnd);
     }
     case '|':
     {
@@ -96,15 +96,15 @@ underrated::Token *underrated::Lexer::getPunctuation(char leftChar)
         {
             getNextChar();
 
-            return createToken(TokenKind::TokenPuncOrEqual);
+            return createToken(TokenKind::TokenOperatorOrEqual);
         }
         if (_currentChar == '|')
         {
             getNextChar();
 
-            return createToken(TokenKind::TokenPuncOror);
+            return createToken(TokenKind::TokenOperatorOror);
         }
-        return createToken(TokenKind::TokenPuncOr);
+        return createToken(TokenKind::TokenOperatorOr);
     }
     case '<':
     {
@@ -112,7 +112,7 @@ underrated::Token *underrated::Lexer::getPunctuation(char leftChar)
         {
             getNextChar();
 
-            return createToken(TokenKind::TokenPuncLessEqual);
+            return createToken(TokenKind::TokenOperatorLessEqual);
         }
         if (_currentChar == '<')
         {
@@ -121,12 +121,12 @@ underrated::Token *underrated::Lexer::getPunctuation(char leftChar)
             {
                 getNextChar();
 
-                return createToken(TokenKind::TokenPuncShiftLeftEqual);
+                return createToken(TokenKind::TokenOperatorShiftLeftEqual);
             }
 
-            return createToken(TokenKind::TokenPuncShiftLeft);
+            return createToken(TokenKind::TokenOperatorShiftLeft);
         }
-        return createToken(TokenKind::TokenPuncLessThan);
+        return createToken(TokenKind::TokenOperatorLessThan);
     }
     case '>':
     {
@@ -134,7 +134,7 @@ underrated::Token *underrated::Lexer::getPunctuation(char leftChar)
         {
             getNextChar();
 
-            return createToken(TokenKind::TokenPuncGreaterEqual);
+            return createToken(TokenKind::TokenOperatorGreaterEqual);
         }
         if (_currentChar == '>')
         {
@@ -143,12 +143,12 @@ underrated::Token *underrated::Lexer::getPunctuation(char leftChar)
             {
                 getNextChar();
 
-                return createToken(TokenKind::TokenPuncShiftRightEqual);
+                return createToken(TokenKind::TokenOperatorShiftRightEqual);
             }
 
-            return createToken(TokenKind::TokenPuncShiftRight);
+            return createToken(TokenKind::TokenOperatorShiftRight);
         }
-        return createToken(TokenKind::TokenPuncGreaterThen);
+        return createToken(TokenKind::TokenOperatorGreaterThen);
     }
     case '.':
     {
@@ -180,9 +180,9 @@ underrated::Token *underrated::Lexer::getPunctuation(char leftChar)
         {
             getNextChar();
 
-            return createToken(TokenKind::TokenPuncEqualEqual);
+            return createToken(TokenKind::TokenOperatorEqualEqual);
         }
-        return createToken(TokenKind::TokenPuncEqual);
+        return createToken(TokenKind::TokenOperatorEqual);
     }
     case ',':
     {

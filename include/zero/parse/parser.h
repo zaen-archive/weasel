@@ -1,10 +1,10 @@
 #pragma once
 
 #include "llvm/IR/IRBuilder.h"
-#include "ast/ast.h"
-#include "lex/lexer.h"
+#include "zero/ast/ast.h"
+#include "zero/lex/lexer.h"
 
-namespace underrated
+namespace zero
 {
     class AnalysContext;
 
@@ -47,7 +47,7 @@ namespace underrated
         Expression *parseLiteralExpression();
         Expression *parseVariableExpression();
 
-        Expression *parseBinaryOperator(int prec, underrated::Expression *lhs);
+        Expression *parseBinaryOperator(int prec, zero::Expression *lhs);
 
         // Helper
         void ignoreNewline();
@@ -74,4 +74,4 @@ namespace underrated
         // Codegen every function inside library
         void codegen();
     };
-} // namespace underrated
+} // namespace zero

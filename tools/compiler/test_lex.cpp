@@ -3,7 +3,7 @@
 
 int main()
 {
-    auto *lexer = new underrated::Lexer();
+    auto *lexer = new zero::Lexer();
 
     while (true)
     {

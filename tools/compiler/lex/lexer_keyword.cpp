@@ -1,6 +1,6 @@
-#include "lex/lexer.h"
+#include "zero/lex/lexer.h"
 
-underrated::Token *underrated::Lexer::getKeyword(std::string key)
+zero::Token *zero::Lexer::getKeyword(std::string key)
 {
     if (key == "fun")
     {

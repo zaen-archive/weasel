@@ -1,6 +1,6 @@
-#include "lex/lexer.h"
+#include "zero/lex/lexer.h"
 
-underrated::Token *underrated::Lexer::getStringLiteral()
+zero::Token *zero::Lexer::getStringLiteral()
 {
     std::string text = "";
 
@@ -33,7 +33,7 @@ underrated::Token *underrated::Lexer::getStringLiteral()
     return createToken(TokenKind::TokenLitString, text);
 }
 
-underrated::Token *underrated::Lexer::getCharacterLiteral()
+zero::Token *zero::Lexer::getCharacterLiteral()
 {
     auto c = _currentChar;
     if (getNextChar() != '\'')

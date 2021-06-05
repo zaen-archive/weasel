@@ -1,10 +1,9 @@
 #include <vector>
-#include <map>
 #include <string>
-#include "lex/token.h"
+#include "zero/lex/token.h"
 #include "llvm/IR/Value.h"
 
-namespace underrated
+namespace zero
 {
     enum class AttributeKind
     {
@@ -72,10 +71,10 @@ namespace underrated
         }
     };
 
-} // namespace underrated
+} // namespace zero
 
 // Error
-namespace underrated
+namespace zero
 {
     // Error
     class Error
@@ -106,4 +105,4 @@ namespace underrated
         static std::nullptr_t addError(Error *err);
     };
 
-} // namespace underrated
+} // namespace zero

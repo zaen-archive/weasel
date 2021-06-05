@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <map>
 
 template <typename Enumeration>
 auto enumToInt(Enumeration const value) -> typename std::underlying_type<Enumeration>::type
@@ -16,7 +15,7 @@ namespace llvm
 } // namespace llvm
 
 // Base
-namespace underrated
+namespace zero
 {
     // Token Kind
     enum class TokenKind
@@ -67,36 +66,36 @@ namespace underrated
 
         // Punctuation
         TokenOperatorStart,
-        TokenPuncPlus,            // +
-        TokenPuncMinus,           // -
-        TokenPuncStar,            // *
-        TokenPuncSlash,           // /
-        TokenPuncPercent,         // %
-        TokenPuncCaret,           // ^
-        TokenPuncNot,             // !
-        TokenPuncAnd,             // &
-        TokenPuncOr,              // |
-        TokenPuncAndAnd,          // &&
-        TokenPuncOror,            // ||
-        TokenPuncShiftLeft,       // <<
-        TokenPuncShiftRight,      // >>
-        TokenPuncPlusEqual,       // +=
-        TokenPuncMinusEqual,      // -=
-        TokenPuncStarEqual,       // *=
-        TokenPuncSlashEqual,      // /=
-        TokenPuncPercentEqual,    // %=
-        TokenPuncCaretEqual,      // ^=
-        TokenPuncNotEqual,        // !=
-        TokenPuncAndEqual,        // &=
-        TokenPuncOrEqual,         // |=
-        TokenPuncShiftLeftEqual,  // <<=
-        TokenPuncShiftRightEqual, // >>=
-        TokenPuncEqual,           // =
-        TokenPuncEqualEqual,      // ==
-        TokenPuncLessThan,        // <
-        TokenPuncGreaterThen,     // >
-        TokenPuncLessEqual,       // <=
-        TokenPuncGreaterEqual,    // >=
+        TokenOperatorPlus,            // +
+        TokenOperatorMinus,           // -
+        TokenOperatorStar,            // *
+        TokenOperatorSlash,           // /
+        TokenOperatorPercent,         // %
+        TokenOperatorCaret,           // ^
+        TokenOperatorNot,             // !
+        TokenOperatorAnd,             // &
+        TokenOperatorOr,              // |
+        TokenOperatorAndAnd,          // &&
+        TokenOperatorOror,            // ||
+        TokenOperatorShiftLeft,       // <<
+        TokenOperatorShiftRight,      // >>
+        TokenOperatorPlusEqual,       // +=
+        TokenOperatorMinusEqual,      // -=
+        TokenOperatorStarEqual,       // *=
+        TokenOperatorSlashEqual,      // /=
+        TokenOperatorPercentEqual,    // %=
+        TokenOperatorCaretEqual,      // ^=
+        TokenOperatorNotEqual,        // !=
+        TokenOperatorAndEqual,        // &=
+        TokenOperatorOrEqual,         // |=
+        TokenOperatorShiftLeftEqual,  // <<=
+        TokenOperatorShiftRightEqual, // >>=
+        TokenOperatorEqual,           // =
+        TokenOperatorEqualEqual,      // ==
+        TokenOperatorLessThan,        // <
+        TokenOperatorGreaterThen,     // >
+        TokenOperatorLessEqual,       // <=
+        TokenOperatorGreaterEqual,    // >=
         TokenOperatorEnd,
 
         TokenPuncDot,       // .
@@ -153,12 +152,12 @@ namespace underrated
     };
 
     // Default Precedence Order
-    static unsigned defPrecOrder = 14;
+    static unsigned defPrecOrder = 18;
 
-} // namespace underrated
+} // namespace zero
 
 // Token Class
-namespace underrated
+namespace zero
 {
     class AnalysContext;
 
@@ -195,4 +194,4 @@ namespace underrated
     public:
         llvm::Type *toType(AnalysContext *c);
     };
-} // namespace underrated
+} // namespace zero

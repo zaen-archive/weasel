@@ -1,10 +1,11 @@
 #include <fstream>
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
-#include "parse/parser.h"
-#include "analysis/context.h"
-#include "ast/ast.h"
-#include "symbol/symbol.h"
+#include "zero/parse/parser.h"
+#include "zero/analysis/context.h"
+#include "zero/ast/ast.h"
+#include "zero/symbol/symbol.h"
+#include "zero/basic/filemanager.h"
 
 // Parser => Recursive descent parser
 int main(int argc, char *argv[])
@@ -15,27 +16,38 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    char *filePath = argv[1];
-    std::ifstream stream(filePath);
-    if (!stream.is_open())
+    auto *filePath = argv[1];
+    auto *fileManager = new zero::FileManager(filePath);
+
+    if (!fileManager->isValid())
     {
         std::cout << filePath << " Not exist\n";
         return 0;
     }
 
+    // std::cout << std::string(fileManager->getSource()) << "\n";
+
+    // char *filePath = argv[1];
+    // std::ifstream stream(filePath);
+    // if (!stream.is_open())
+    // {
+    //     std::cout << filePath << " Not exist\n";
+    //     return 0;
+    // }
+
     // Initialize LLVM
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmPrinter();
+    // llvm::InitializeNativeTarget();
+    // llvm::InitializeNativeTargetAsmPrinter();
 
-    auto *lexer = new underrated::Lexer(&stream);
-    auto *context = new underrated::AnalysContext("UnderratedModule");
-    auto *parser = new underrated::Parser(context, lexer);
+    // auto *lexer = new zero::Lexer(&stream);
+    // auto *context = new zero::AnalysContext("UnderratedModule");
+    // auto *parser = new zero::Parser(context, lexer);
 
-    /// Compiler ///
-    do
-    {
-        parser->getNextToken(true);
-    } while (parser->parse());
+    // /// Compiler ///
+    // do
+    // {
+    //     parser->getNextToken(true);
+    // } while (parser->parse());
 
-    parser->codegen(); // change ast to llvm IR
+    // parser->codegen(); // change ast to llvm IR
 }

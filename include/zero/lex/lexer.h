@@ -1,9 +1,9 @@
 #pragma once
 
 #include <fstream>
-#include "lex/token.h"
+#include "zero/lex/token.h"
 
-namespace underrated
+namespace zero
 {
     class Lexer
     {
@@ -16,8 +16,6 @@ namespace underrated
 
     private:
         bool isIdentifier(char c, bool num = false);
-
-    private:
         char getNextChar();
 
         Token *getToken();
@@ -47,4 +45,4 @@ namespace underrated
         void setLastToken(Token *token) { _lastToken = token; }
     };
 
-} // namespace underrated
+} // namespace zero

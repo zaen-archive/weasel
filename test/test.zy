@@ -5,7 +5,8 @@ fun test() int {
 }
 
 fun tut() long {
-    let n = 123
-    // n  = n + 12
-    return n
+    let a = 1
+    // let *b = 2
+    // a = b = a + 2
+    return a
 }

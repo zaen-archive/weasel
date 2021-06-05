@@ -1,20 +1,20 @@
 #include <iostream>
-#include "symbol/symbol.h"
+#include "zero/symbol/symbol.h"
 
 /// SYMBOL ///
-std::vector<underrated::Error *> underrated::ErrorTable::_errors;
+std::vector<zero::Error *> zero::ErrorTable::_errors;
 
-underrated::SymbolTable::SymbolTable()
+zero::SymbolTable::SymbolTable()
 {
     enterScope();
 }
 
-void underrated::SymbolTable::enterScope()
+void zero::SymbolTable::enterScope()
 {
     _lookup.push_back(0);
 }
 
-bool underrated::SymbolTable::exitScope()
+bool zero::SymbolTable::exitScope()
 {
     if (_lookup.size() == 1)
     {
@@ -32,13 +32,13 @@ bool underrated::SymbolTable::exitScope()
     return true;
 }
 
-void underrated::SymbolTable::insert(std::string key, Attribute *att)
+void zero::SymbolTable::insert(std::string key, Attribute *att)
 {
     _table.push_back(att);
     _lookup[_lookup.size() - 1]++;
 }
 
-underrated::Attribute *underrated::SymbolTable::get(std::string key)
+zero::Attribute *zero::SymbolTable::get(std::string key)
 {
     auto n = _table.size() - 1;
     for (int i = n; i >= 0; i--)
@@ -52,7 +52,7 @@ underrated::Attribute *underrated::SymbolTable::get(std::string key)
     return nullptr;
 }
 
-underrated::Attribute *underrated::SymbolTable::getLastFunction()
+zero::Attribute *zero::SymbolTable::getLastFunction()
 {
     auto i = _table.size() - 1;
     for (; i >= 0; i--)
@@ -68,7 +68,7 @@ underrated::Attribute *underrated::SymbolTable::getLastFunction()
     return nullptr;
 }
 
-void underrated::SymbolTable::reset()
+void zero::SymbolTable::reset()
 {
     while (!_table.empty())
     {
@@ -84,13 +84,13 @@ void underrated::SymbolTable::reset()
     enterScope(); // Enter Global Scope
 }
 
-std::nullptr_t underrated::ErrorTable::addError(Error *err)
+std::nullptr_t zero::ErrorTable::addError(Error *err)
 {
     _errors.push_back(err);
     return nullptr;
 }
 
-void underrated::ErrorTable::showErrors()
+void zero::ErrorTable::showErrors()
 {
     if (_errors.empty())
     {

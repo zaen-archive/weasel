@@ -4,7 +4,7 @@
 #include <vector>
 #include <map>
 #include "llvm/IR/Value.h"
-#include "lex/token.h"
+#include "zero/lex/token.h"
 
 ///// Expression /////
 // VariableExpression
@@ -39,21 +39,11 @@
 // | TypeCastExpression
 // | AssignmentExpression
 // | CompoundAssignmentExpression
-// Declaration of underrated Class
-namespace underrated
+// Declaration of zero Class
+namespace zero
 {
     // Analysis Context
     class AnalysContext;
-
-    // Literal Type
-    enum class LiteralType
-    {
-        LiteralNil,
-        LiteralBool,
-        LiteralNumber,
-        LiteralChar,
-        LiteralString,
-    };
 
     // Type
     class Type;
@@ -81,35 +71,25 @@ namespace underrated
 
     // Expression With Block
     class StatementExpression;
-} // namespace underrated
+
+    // Literal Type
+    enum class LiteralType
+    {
+        LiteralNil,
+        LiteralBool,
+        LiteralNumber,
+        LiteralChar,
+        LiteralString,
+    };
+} // namespace zero
 
 //
 
 //
 
 // Expression Base Type
-namespace underrated
+namespace zero
 {
-    // LLVM Type Metadata
-    enum MetaKind
-    {
-        MetaUnsignedInteger,
-    };
-
-    // Type
-    class Type
-    {
-    private:
-        llvm::Type *_llvmType;
-        Qualifier _qual;
-        bool _isSigned;
-
-    public:
-        Type(llvm::Type *llvmType, Qualifier qualifier = Qualifier::QualVolatile, bool isSigned = true) : _llvmType(llvmType), _qual(qualifier), _isSigned(isSigned) {}
-
-        llvm::Type *getLLVMType() const { return _llvmType; }
-    };
-
     // Expression
     class Expression
     {
@@ -150,14 +130,14 @@ namespace underrated
         BlockExpression *getParent() const { return _parent; }
         Type *getVariable(std::string name);
     };
-} // namespace underrated
+} // namespace zero
 
 //
 
 //
 
 // Expression Without Block PART
-namespace underrated
+namespace zero
 {
     // Assignment Expression
     class AssignmentExpression : public Expression
@@ -331,14 +311,14 @@ namespace underrated
         }
     };
 
-} // namespace underrated
+} // namespace zero
 
 //
 
 //
 
 // Expression With Block Function PART
-namespace underrated
+namespace zero
 {
     // TODO: The StatementExpression should link to past Statement Expression
     // Statement Expression
@@ -360,7 +340,7 @@ namespace underrated
         llvm::Value *codegen(AnalysContext *context);
     };
 
-} // namespace underrated
+} // namespace zero
 
 //
 
@@ -368,7 +348,7 @@ namespace underrated
 
 // TODO: Just support sign operation
 // Function PART
-namespace underrated
+namespace zero
 {
     // Func Arg
     class FunctionArgument
@@ -424,16 +404,16 @@ namespace underrated
         llvm::Function *codegen(AnalysContext *c);
     };
 
-} // namespace underrated
+} // namespace zero
 
 //
 
 //
 
 // Log Error for expression and Function
-namespace underrated
+namespace zero
 {
     llvm::Value *logErrorV(std::string &msg);
     Function *logErrorF(std::string &msg);
 
-} // namespace underrated
+} // namespace zero

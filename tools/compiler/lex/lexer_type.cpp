@@ -1,6 +1,6 @@
-#include "lex/lexer.h"
+#include "zero/lex/lexer.h"
 
-underrated::Token *underrated::Lexer::getType(std::string type)
+zero::Token *zero::Lexer::getType(std::string type)
 {
     if (type == "rune")
     {

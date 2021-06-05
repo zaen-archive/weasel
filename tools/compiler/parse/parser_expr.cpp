@@ -1,8 +1,8 @@
-#include "parse/parser.h"
-#include "analysis/context.h"
-#include "symbol/symbol.h"
+#include "zero/parse/parser.h"
+#include "zero/analysis/context.h"
+#include "zero/symbol/symbol.h"
 
-void underrated::Parser::ignoreNewline()
+void zero::Parser::ignoreNewline()
 {
     if (getCurrentToken()->isNewline())
     {
@@ -10,7 +10,7 @@ void underrated::Parser::ignoreNewline()
     }
 }
 
-underrated::StatementExpression *underrated::Parser::parseFunctionBody()
+zero::StatementExpression *zero::Parser::parseFunctionBody()
 {
     auto *stmt = new StatementExpression();
 
@@ -44,7 +44,7 @@ underrated::StatementExpression *underrated::Parser::parseFunctionBody()
     return stmt;
 }
 
-underrated::Expression *underrated::Parser::parseStatement()
+zero::Expression *zero::Parser::parseStatement()
 {
     // Compound Statement Expression
     if (getCurrentToken()->isKind(TokenKind::TokenDelimOpenCurlyBracket))
@@ -77,7 +77,7 @@ underrated::Expression *underrated::Parser::parseStatement()
     return expr;
 }
 
-underrated::Expression *underrated::Parser::parseLiteralExpression()
+zero::Expression *zero::Parser::parseLiteralExpression()
 {
     auto *token = getCurrentToken();
     if (token->isKind(TokenKind::TokenLitBool))
@@ -105,7 +105,7 @@ underrated::Expression *underrated::Parser::parseLiteralExpression()
     return new NilLiteralExpression();
 }
 
-underrated::Expression *underrated::Parser::parseVariableExpression()
+zero::Expression *zero::Parser::parseVariableExpression()
 {
     auto identifier = getCurrentToken()->getValue();
 
@@ -121,7 +121,7 @@ underrated::Expression *underrated::Parser::parseVariableExpression()
     return new VariableExpression(getCurrentToken(), identifier);
 }
 
-underrated::Expression *underrated::Parser::parsePrimaryExpression()
+zero::Expression *zero::Parser::parsePrimaryExpression()
 {
     if (getCurrentToken()->isLiteral())
     {
@@ -136,19 +136,19 @@ underrated::Expression *underrated::Parser::parsePrimaryExpression()
     return nullptr;
 }
 
-underrated::Expression *underrated::Parser::parseExpression()
+zero::Expression *zero::Parser::parseExpression()
 {
     auto *lhs = parsePrimaryExpression();
     if (!lhs)
     {
-        return ErrorTable::addError(new Error(getCurrentToken(), "Expected a LHS Expression"));
+        return ErrorTable::addError(new Error(getCurrentToken(), "Expected LHS Expression"));
     }
 
     getNextToken(); // Eat 'LHS' Expression
-    return parseBinaryOperator(underrated::defPrecOrder, lhs);
+    return parseBinaryOperator(zero::defPrecOrder, lhs);
 }
 
-underrated::Expression *underrated::Parser::parseBinaryOperator(int precOrder, underrated::Expression *lhs)
+zero::Expression *zero::Parser::parseBinaryOperator(int precOrder, zero::Expression *lhs)
 {
     while (true)
     {
@@ -183,7 +183,7 @@ underrated::Expression *underrated::Parser::parseBinaryOperator(int precOrder, u
     }
 }
 
-underrated::Expression *underrated::Parser::parseReturnStatement()
+zero::Expression *zero::Parser::parseReturnStatement()
 {
     auto *retToken = getCurrentToken();
 
@@ -207,7 +207,7 @@ underrated::Expression *underrated::Parser::parseReturnStatement()
     return new ReturnExpression(retToken, expr);
 }
 
-underrated::Expression *underrated::Parser::parseCompoundStatement()
+zero::Expression *zero::Parser::parseCompoundStatement()
 {
     auto *stmt = new StatementExpression();
 
@@ -241,7 +241,7 @@ underrated::Expression *underrated::Parser::parseCompoundStatement()
 // let 'identifier' 'datatype'  = 'expr'
 // let 'identifier' 'datatype'
 // let 'identifier'             = 'expr'
-underrated::Expression *underrated::Parser::parseDefinitionExpression()
+zero::Expression *zero::Parser::parseDefinitionExpression()
 {
     auto qualifier = getQualifier();
     auto *qualToken = getCurrentToken();
@@ -290,7 +290,7 @@ underrated::Expression *underrated::Parser::parseDefinitionExpression()
     }
 
     // Equal
-    if (!getCurrentToken()->isKind(TokenKind::TokenPuncEqual))
+    if (!getCurrentToken()->isKind(TokenKind::TokenOperatorEqual))
     {
         auto *err = new Error(getCurrentToken(), "Equal sign expected but got {" + getCurrentToken()->getValue() + "}");
 

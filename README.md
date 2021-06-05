@@ -1,10 +1,12 @@
+# Zero Language
+
 # BACKGROUND
 
-Underrated Project is a project i created to prove of concept that we can support heterogenous internally inside a language. We can use GPGPU Code without need any external library. And just directly to the language and just works.
+Underrated Project or zero language is a project i created to prove of concept that we can support heterogenous internally inside a language. We can use GPGPU Computing directly supported by the language. Which mean you just directly code to the language and just works.
 
-Which mean we can create computationally task that very easyly solved. Like Machine Learning even AI, because you can switch which program or code need to run on GPU or CPU without hassle.
+And we can create computationally task easyly solved. Like Machine Learning and even AI, because you can switch which program or code need to run on GPU or CPU or any compute hardware without hassle.
 
-We also can binding library created by this language into another language like python to create better environment for end user for creating fast program.
+We also can binding the library created by zero language into another languages like python to create better environment for end user to create fast program.
 
 # SETUP (see LLVM Documentation)
 
@@ -19,6 +21,7 @@ We also can binding library created by this language into another language like 
 - include (folder header)
 - test (program for to be compiled)
 - tools (tools program)
+- lib (Library of the header. But i get a difficulty to configure the project)
 
 # ROADMAP
 
@@ -35,9 +38,10 @@ We also can binding library created by this language into another language like 
 
 - [x] Variable Lookup
 - [x] Function Lookup
-- [ ] Variable names and constants
-- [ ] Procedure and function names
-- [ ] Literal constants and strings
+- [x] Variable names and constants
+- [x] Procedure and function names
+- [x] Literal constants
+- [ ] Strings Literal
 - [ ] Compiler generated temporaries
 - [ ] Labels in source languages
 
@@ -51,12 +55,12 @@ We also can binding library created by this language into another language like 
 
 ### Variable definition
 
-- [ ] Re-assign variable
+- [x] Re-assign variable
 
 ### Binary Expression
 
 - [x] Simple Binary Expression
-- [ ] Support variable re-assign
+- [x] Support variable re-assign
 
 ### Variable Type (signed and unsigned)
 
@@ -68,6 +72,7 @@ We also can binding library created by this language into another language like 
 
 ### Array
 
+- [ ] Support pointer
 - [ ] Support data Sequence
 
 ### IO console (input/output)
@@ -87,3 +92,5 @@ We also can binding library created by this language into another language like 
 # BUGS
 
 - [ ] Weird Lexeme Location(row, col, position)
+- [ ] I implemented binaryexpression for precedence associative right to left wrongly
+- [ ] Library inside lib folder instead of inside tools folder

@@ -1,10 +1,10 @@
-#include "parse/parser.h"
-#include "analysis/context.h"
-#include "symbol/symbol.h"
+#include "zero/parse/parser.h"
+#include "zero/analysis/context.h"
+#include "zero/symbol/symbol.h"
 
 // define
 // 'fun' identifier '(' args ')' funTy '{' stmt '}'
-underrated::Function *underrated::Parser::parseFunction()
+zero::Function *zero::Parser::parseFunction()
 {
     auto *func = parseDeclareFunction();
     if (!func)
@@ -53,7 +53,7 @@ underrated::Function *underrated::Parser::parseFunction()
 }
 
 // extern 'fun' identifier '(' args ')' funTy
-underrated::Function *underrated::Parser::parseDeclareFunction()
+zero::Function *zero::Parser::parseDeclareFunction()
 {
     if (!getCurrentToken()->isKind(TokenKind::TokenKeyFun))
     {
@@ -110,9 +110,9 @@ underrated::Function *underrated::Parser::parseDeclareFunction()
     return func;
 }
 
-std::vector<underrated::FunctionArgument *> underrated::Parser::parseFunctionArguments()
+std::vector<zero::FunctionArgument *> zero::Parser::parseFunctionArguments()
 {
-    std::vector<underrated::FunctionArgument *> args;
+    std::vector<zero::FunctionArgument *> args;
 
     while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
     {
@@ -130,7 +130,7 @@ std::vector<underrated::FunctionArgument *> underrated::Parser::parseFunctionArg
     return args;
 }
 
-underrated::FunctionArgument *underrated::Parser::parseFunctionArgument()
+zero::FunctionArgument *zero::Parser::parseFunctionArgument()
 {
     auto *token = getCurrentToken();
     if (!token->isKind(TokenKind::TokenIdentifier))

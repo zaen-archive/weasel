@@ -1,28 +1,28 @@
 #include <iostream>
-#include "analysis/context.h"
-#include "symbol/symbol.h"
 #include "llvm/IR/Function.h"
+#include "zero/analysis/context.h"
+#include "zero/symbol/symbol.h"
 
-underrated::AnalysContext::AnalysContext()
+zero::AnalysContext::AnalysContext()
 {
     _context = new llvm::LLVMContext();
-    _module = new llvm::Module("underrated", *getContext());
+    _module = new llvm::Module("zero", *getContext());
     _builder = new llvm::IRBuilder<>(*getContext());
 }
 
-underrated::AnalysContext::AnalysContext(std::string moduleName)
+zero::AnalysContext::AnalysContext(std::string moduleName)
 {
     _context = new llvm::LLVMContext();
     _module = new llvm::Module(moduleName, *getContext());
     _builder = new llvm::IRBuilder<>(*getContext());
 }
 
-std::string underrated::AnalysContext::getDefaultLabel()
+std::string zero::AnalysContext::getDefaultLabel()
 {
     return std::to_string(_counter++);
 }
 
-llvm::Function *underrated::AnalysContext::codegen(Function *funAST)
+llvm::Function *zero::AnalysContext::codegen(Function *funAST)
 {
     auto funName = funAST->getIdentifier();
     if (getModule()->getFunction(funName))
@@ -95,7 +95,7 @@ llvm::Function *underrated::AnalysContext::codegen(Function *funAST)
     return funLLVM;
 }
 
-llvm::Value *underrated::AnalysContext::codegen(StatementExpression *expr)
+llvm::Value *zero::AnalysContext::codegen(StatementExpression *expr)
 {
     std::cout << "Statements : " << expr->getBody().size() << "\n";
 
@@ -117,12 +117,12 @@ llvm::Value *underrated::AnalysContext::codegen(StatementExpression *expr)
     return nullptr;
 }
 
-llvm::Value *underrated::AnalysContext::codegen(NumberLiteralExpression *expr)
+llvm::Value *zero::AnalysContext::codegen(NumberLiteralExpression *expr)
 {
     return getBuilder()->getInt32(expr->getValue());
 }
 
-llvm::Value *underrated::AnalysContext::codegen(DeclarationExpression *expr)
+llvm::Value *zero::AnalysContext::codegen(DeclarationExpression *expr)
 {
     // Get Value Representation
     auto *value = expr->getValue()->codegen(this);
@@ -153,7 +153,7 @@ llvm::Value *underrated::AnalysContext::codegen(DeclarationExpression *expr)
     return getBuilder()->CreateStore(value, alloc);
 }
 
-llvm::Value *underrated::AnalysContext::codegen(BinaryOperatorExpression *expr)
+llvm::Value *zero::AnalysContext::codegen(BinaryOperatorExpression *expr)
 {
     auto *token = expr->getOperator();
     auto *rhs = expr->getRHS()->codegen(this);
@@ -172,15 +172,32 @@ llvm::Value *underrated::AnalysContext::codegen(BinaryOperatorExpression *expr)
 
     switch (token->getTokenKind())
     {
-    case TokenKind::TokenPuncStar:
+    case TokenKind::TokenOperatorStar:
         return getBuilder()->CreateMul(lhs, rhs, "multiply");
-    case TokenKind::TokenPuncSlash:
+    case TokenKind::TokenOperatorSlash:
         return getBuilder()->CreateSDiv(lhs, rhs, "division");
     // case TokenKind::TokenPuncPercent: return llvm::BinaryOperator::
-    case TokenKind::TokenPuncPlus:
+    case TokenKind::TokenOperatorPlus:
         return getBuilder()->CreateAdd(lhs, rhs, "addition");
-    case TokenKind::TokenPuncMinus:
+    case TokenKind::TokenOperatorMinus:
         return getBuilder()->CreateSub(lhs, rhs, "subtraction");
+    case TokenKind::TokenOperatorEqual:
+    {
+        auto *loadLhs = llvm::dyn_cast<llvm::LoadInst>(lhs);
+        if (!loadLhs)
+        {
+            return ErrorTable::addError(new Error(expr->getLHS()->getToken(), "LHS not valid"));
+        }
+
+        auto *allocLhs = llvm::dyn_cast<llvm::AllocaInst>(loadLhs->getPointerOperand());
+        if (!allocLhs)
+        {
+            return ErrorTable::addError(new Error(expr->getLHS()->getToken(), "LHS is not a valid address pointer"));
+        }
+
+        getBuilder()->CreateStore(rhs, allocLhs);
+        return getBuilder()->CreateLoad(allocLhs);
+    }
     default:
         return nullptr;
     }
@@ -188,7 +205,7 @@ llvm::Value *underrated::AnalysContext::codegen(BinaryOperatorExpression *expr)
 
 // TODO: Assignment Expression Already Changed to Declaration Expression
 // Remove it in future
-llvm::Value *underrated::AnalysContext::codegen(AssignmentExpression *expr)
+llvm::Value *zero::AnalysContext::codegen(AssignmentExpression *expr)
 {
     auto *lhs = expr->getLHS()->codegen(this);
     if (!lhs->getType()->isPointerTy())
@@ -198,7 +215,6 @@ llvm::Value *underrated::AnalysContext::codegen(AssignmentExpression *expr)
 
     auto *rhs = expr->getRHS()->codegen(this);
     auto compareTy = compareType(lhs->getType()->getContainedType(0), rhs->getType());
-
     if (compareTy == CompareType::Different)
     {
         return logErrorV(std::string("Cannot assign, expression type is different"));
@@ -212,7 +228,7 @@ llvm::Value *underrated::AnalysContext::codegen(AssignmentExpression *expr)
     return getBuilder()->CreateStore(rhs, lhs);
 }
 
-llvm::Value *underrated::AnalysContext::codegen(ReturnExpression *expr)
+llvm::Value *zero::AnalysContext::codegen(ReturnExpression *expr)
 {
     if (!expr->getValue())
     {
@@ -244,7 +260,7 @@ llvm::Value *underrated::AnalysContext::codegen(ReturnExpression *expr)
     return getBuilder()->CreateRet(val);
 }
 
-llvm::Value *underrated::AnalysContext::codegen(VariableExpression *expr)
+llvm::Value *zero::AnalysContext::codegen(VariableExpression *expr)
 {
     // Get Allocator from Symbol Table
     auto varName = expr->getIdentifier();
@@ -259,7 +275,7 @@ llvm::Value *underrated::AnalysContext::codegen(VariableExpression *expr)
 
 /// HELPER ///
 // Compare Type Helpter
-underrated::CompareType underrated::AnalysContext::compareType(llvm::Type *lhsType, llvm::Type *rhsType)
+zero::CompareType zero::AnalysContext::compareType(llvm::Type *lhsType, llvm::Type *rhsType)
 {
     if (lhsType->getTypeID() != rhsType->getTypeID())
     {
@@ -278,7 +294,7 @@ underrated::CompareType underrated::AnalysContext::compareType(llvm::Type *lhsTy
 }
 
 // Cast Integer Type Helper
-llvm::Value *underrated::AnalysContext::castIntegerType(llvm::Value *value, llvm::Type *castTy)
+llvm::Value *zero::AnalysContext::castIntegerType(llvm::Value *value, llvm::Type *castTy)
 {
     if (value->getType()->getIntegerBitWidth() < castTy->getIntegerBitWidth())
     {
@@ -291,7 +307,7 @@ llvm::Value *underrated::AnalysContext::castIntegerType(llvm::Value *value, llvm
 }
 
 // Cast Integer Type Helper
-llvm::Value *underrated::AnalysContext::castIntegerType(llvm::Value *lhs, llvm::Value *rhs)
+llvm::Value *zero::AnalysContext::castIntegerType(llvm::Value *lhs, llvm::Value *rhs)
 {
     if (lhs->getType()->getIntegerBitWidth() > rhs->getType()->getIntegerBitWidth())
     {
