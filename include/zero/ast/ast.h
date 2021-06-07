@@ -314,7 +314,7 @@ namespace zero
         Function *_func;
 
     public:
-        StatementExpression() : BlockExpression(nullptr) {}
+        StatementExpression() {}
 
         void addBody(Expression *expr) { _body.push_back(expr); }
         std::vector<Expression *> getBody() const { return _body; }

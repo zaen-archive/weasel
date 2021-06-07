@@ -42,23 +42,6 @@ llvm::Function *zero::Function::codegen(AnalysContext *c)
     return c->codegen(this);
 }
 
-// Expression
-zero::Type *zero::BlockExpression::getVariable(std::string name)
-{
-    auto *ty = _variable[name];
-    if (ty)
-    {
-        return ty;
-    }
-
-    if (getParent())
-    {
-        return getParent()->getVariable(name);
-    }
-
-    return nullptr;
-}
-
 // Function
 void zero::Function::setBody(StatementExpression *body)
 {
