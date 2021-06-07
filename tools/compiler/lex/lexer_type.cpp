@@ -1,63 +1,68 @@
 #include "zero/lex/lexer.h"
 
-zero::Token *zero::Lexer::getType(std::string type)
+zero::Token *zero::Lexer::getType(char *startBuffer, char *endBuffer)
 {
-    if (type == "rune")
+    TokenKind kind;
+    if (compareBuffer(startBuffer, endBuffer, "rune"))
     {
-        return createToken(TokenKind::TokenTyRune, type);
+        kind = TokenKind::TokenTyRune;
     }
-    if (type == "byte")
+    else if (compareBuffer(startBuffer, endBuffer, "byte"))
     {
-        return createToken(TokenKind::TokenTyByte, type);
+        kind = TokenKind::TokenTyByte;
     }
-    if (type == "sbyte")
+    else if (compareBuffer(startBuffer, endBuffer, "sbyte"))
     {
-        return createToken(TokenKind::TokenTySbyte, type);
+        kind = TokenKind::TokenTySbyte;
     }
-    if (type == "short")
+    else if (compareBuffer(startBuffer, endBuffer, "short"))
     {
-        return createToken(TokenKind::TokenTyShort, type);
+        kind = TokenKind::TokenTyShort;
     }
-    if (type == "ushort")
+    else if (compareBuffer(startBuffer, endBuffer, "ushort"))
     {
-        return createToken(TokenKind::TokenTyUshort, type);
+        kind = TokenKind::TokenTyUshort;
     }
-    if (type == "int")
+    else if (compareBuffer(startBuffer, endBuffer, "int"))
     {
-        return createToken(TokenKind::TokenTyInt, type);
+        kind = TokenKind::TokenTyInt;
     }
-    if (type == "uint")
+    else if (compareBuffer(startBuffer, endBuffer, "uint"))
     {
-        return createToken(TokenKind::TokenTyUint, type);
+        kind = TokenKind::TokenTyUint;
     }
-    if (type == "long")
+    else if (compareBuffer(startBuffer, endBuffer, "long"))
     {
-        return createToken(TokenKind::TokenTyLong, type);
+        kind = TokenKind::TokenTyLong;
     }
-    if (type == "ulong")
+    else if (compareBuffer(startBuffer, endBuffer, "ulong"))
     {
-        return createToken(TokenKind::TokenTyUlong, type);
+        kind = TokenKind::TokenTyUlong;
     }
-    if (type == "int128")
+    else if (compareBuffer(startBuffer, endBuffer, "int128"))
     {
-        return createToken(TokenKind::TokenTyInt128, type);
+        kind = TokenKind::TokenTyInt128;
     }
-    if (type == "bool")
+    else if (compareBuffer(startBuffer, endBuffer, "bool"))
     {
-        return createToken(TokenKind::TokenTyBool, type);
+        kind = TokenKind::TokenTyBool;
     }
-    if (type == "float")
+    else if (compareBuffer(startBuffer, endBuffer, "float"))
     {
-        return createToken(TokenKind::TokenTyFloat, type);
+        kind = TokenKind::TokenTyFloat;
     }
-    if (type == "double")
+    else if (compareBuffer(startBuffer, endBuffer, "double"))
     {
-        return createToken(TokenKind::TokenTyDouble, type);
+        kind = TokenKind::TokenTyDouble;
     }
-    if (type == "decimal")
+    else if (compareBuffer(startBuffer, endBuffer, "decimal"))
     {
-        return createToken(TokenKind::TokenTyDecimal, type);
+        kind = TokenKind::TokenTyDecimal;
+    }
+    else
+    {
+        return nullptr;
     }
 
-    return nullptr;
+    return createToken(kind, startBuffer, endBuffer);
 }

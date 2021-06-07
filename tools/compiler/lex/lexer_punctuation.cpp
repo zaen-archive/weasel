@@ -1,220 +1,219 @@
 #include "zero/lex/lexer.h"
 
-zero::Token *zero::Lexer::getPunctuation(char leftChar)
+zero::Token *zero::Lexer::getPunctuation()
 {
-    switch (leftChar)
+    auto *lastBuffer = _currentBuffer - 1;
+
+    switch (*lastBuffer)
     {
     case '+':
     {
-        if (_currentChar == '=')
+        if (*(lastBuffer + 1) == '=')
         {
-            getNextChar();
-
-            return createToken(TokenKind::TokenOperatorPlusEqual);
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorPlusEqual, lastBuffer, lastBuffer + 2);
         }
-        return createToken(TokenKind::TokenOperatorPlus);
+
+        return createToken(TokenKind::TokenOperatorPlus, lastBuffer, lastBuffer + 1);
     }
     case '-':
     {
-        if (_currentChar == '=')
+        if (*(lastBuffer + 1) == '=')
         {
-            getNextChar();
-
-            return createToken(TokenKind::TokenOperatorMinusEqual);
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorMinusEqual, lastBuffer, lastBuffer + 2);
         }
-        return createToken(TokenKind::TokenOperatorMinus);
+
+        return createToken(TokenKind::TokenOperatorMinus, lastBuffer, lastBuffer + 1);
     }
     case '*':
     {
-        if (_currentChar == '=')
+        if (*(lastBuffer + 1) == '=')
         {
-            getNextChar();
-
-            return createToken(TokenKind::TokenOperatorStarEqual);
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorStarEqual, lastBuffer, lastBuffer + 2);
         }
-        return createToken(TokenKind::TokenOperatorStar);
+
+        return createToken(TokenKind::TokenOperatorStar, lastBuffer, lastBuffer + 1);
     }
     case '/':
     {
-        if (_currentChar == '=')
+        if (*(lastBuffer + 1) == '=')
         {
-            getNextChar();
-
-            return createToken(TokenKind::TokenOperatorSlashEqual);
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorSlashEqual, lastBuffer, lastBuffer + 2);
         }
-        return createToken(TokenKind::TokenOperatorSlash);
+
+        return createToken(TokenKind::TokenOperatorSlash, lastBuffer, lastBuffer + 1);
     }
     case '%':
     {
-        if (_currentChar == '=')
+        if (*(lastBuffer + 1) == '=')
         {
-            getNextChar();
-
-            return createToken(TokenKind::TokenOperatorPercentEqual);
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorPercentEqual, lastBuffer, lastBuffer + 2);
         }
-        return createToken(TokenKind::TokenOperatorPercent);
+
+        return createToken(TokenKind::TokenOperatorPercent, lastBuffer, lastBuffer + 1);
     }
     case '^':
     {
-        if (_currentChar == '=')
+        if (*(lastBuffer + 1) == '=')
         {
-            getNextChar();
-
-            return createToken(TokenKind::TokenOperatorCaretEqual);
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorCaretEqual, lastBuffer, lastBuffer + 2);
         }
-        return createToken(TokenKind::TokenOperatorCaret);
+
+        return createToken(TokenKind::TokenOperatorCaret, lastBuffer, lastBuffer + 1);
     }
     case '!':
     {
-        if (_currentChar == '=')
+        if (*(lastBuffer + 1) == '=')
         {
-            getNextChar();
-
-            return createToken(TokenKind::TokenOperatorNotEqual);
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorNotEqual, lastBuffer, lastBuffer + 2);
         }
-        return createToken(TokenKind::TokenOperatorNot);
+
+        return createToken(TokenKind::TokenOperatorNot, lastBuffer, lastBuffer + 1);
     }
     case '&':
     {
-        if (_currentChar == '=')
+        if (*(lastBuffer + 1) == '=')
         {
-            getNextChar();
-
-            return createToken(TokenKind::TokenOperatorAndEqual);
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorAndEqual, lastBuffer, lastBuffer + 2);
         }
-        if (_currentChar == '&')
+        if (*(lastBuffer + 1) == '&')
         {
-            getNextChar();
-
-            return createToken(TokenKind::TokenOperatorAndAnd);
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorAndAnd, lastBuffer, lastBuffer + 2);
         }
-        return createToken(TokenKind::TokenOperatorAnd);
+
+        return createToken(TokenKind::TokenOperatorAnd, lastBuffer, lastBuffer + 1);
     }
     case '|':
     {
-        if (_currentChar == '=')
+        if (*(lastBuffer + 1) == '=')
         {
-            getNextChar();
-
-            return createToken(TokenKind::TokenOperatorOrEqual);
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorOrEqual, lastBuffer, lastBuffer + 2);
         }
-        if (_currentChar == '|')
+        if (*(lastBuffer + 1) == '|')
         {
-            getNextChar();
-
-            return createToken(TokenKind::TokenOperatorOror);
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorOror, lastBuffer, lastBuffer + 2);
         }
-        return createToken(TokenKind::TokenOperatorOr);
+
+        return createToken(TokenKind::TokenOperatorOr, lastBuffer, lastBuffer + 1);
     }
     case '<':
     {
-        if (_currentChar == '=')
+        if (*(lastBuffer + 1) == '=')
         {
-            getNextChar();
-
-            return createToken(TokenKind::TokenOperatorLessEqual);
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorLessEqual, lastBuffer, lastBuffer + 2);
         }
-        if (_currentChar == '<')
-        {
-            getNextChar();
-            if (_currentChar == '=')
-            {
-                getNextChar();
 
-                return createToken(TokenKind::TokenOperatorShiftLeftEqual);
+        if (*(lastBuffer + 1) == '<')
+        {
+            if (*(lastBuffer + 2) == '=')
+            {
+                getNextBuffer(2);
+                return createToken(TokenKind::TokenOperatorShiftLeftEqual, lastBuffer, lastBuffer + 3);
             }
 
-            return createToken(TokenKind::TokenOperatorShiftLeft);
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorShiftLeft, lastBuffer, lastBuffer + 2);
         }
-        return createToken(TokenKind::TokenOperatorLessThan);
+
+        return createToken(TokenKind::TokenOperatorLessThan, lastBuffer, lastBuffer + 1);
     }
     case '>':
     {
-        if (_currentChar == '=')
+        if (*(lastBuffer + 1) == '=')
         {
-            getNextChar();
-
-            return createToken(TokenKind::TokenOperatorGreaterEqual);
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorGreaterEqual, lastBuffer, lastBuffer + 2);
         }
-        if (_currentChar == '>')
-        {
-            getNextChar();
-            if (_currentChar == '=')
-            {
-                getNextChar();
 
-                return createToken(TokenKind::TokenOperatorShiftRightEqual);
+        if (*(lastBuffer + 1) == '>')
+        {
+            if (*(lastBuffer + 2) == '=')
+            {
+                getNextBuffer(2);
+                return createToken(TokenKind::TokenOperatorShiftRightEqual, lastBuffer, lastBuffer + 3);
             }
 
-            return createToken(TokenKind::TokenOperatorShiftRight);
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorShiftRight, lastBuffer, lastBuffer + 2);
         }
-        return createToken(TokenKind::TokenOperatorGreaterThen);
+
+        return createToken(TokenKind::TokenOperatorGreaterThen, lastBuffer, lastBuffer + 1);
     }
     case '.':
     {
-        if (_currentChar == '.')
+        if (*(lastBuffer + 1) == '.')
         {
-            if (getNextChar() == '.')
+            if (*(lastBuffer + 2) == '.')
             {
-                getNextChar();
-
-                return createToken(TokenKind::TokenPuncDotThree);
+                getNextBuffer(2);
+                return createToken(TokenKind::TokenPuncDotThree, lastBuffer, lastBuffer + 3);
             }
 
             return nullptr;
         }
 
-        return createToken(TokenKind::TokenPuncDot);
+        return createToken(TokenKind::TokenPuncDot, lastBuffer, lastBuffer + 1);
     }
     case '#':
     {
-        return createToken(TokenKind::TokenPuncPound);
+        return createToken(TokenKind::TokenPuncPound, lastBuffer, lastBuffer + 1);
     }
     case '?':
     {
-        return createToken(TokenKind::TokenPuncQuestion);
+        return createToken(TokenKind::TokenPuncQuestion, lastBuffer, lastBuffer + 1);
     }
     case '=':
     {
-        if (_currentChar == '=')
+        if (*(lastBuffer + 1) == '=')
         {
-            getNextChar();
-
-            return createToken(TokenKind::TokenOperatorEqualEqual);
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorEqualEqual, lastBuffer, lastBuffer + 2);
         }
-        return createToken(TokenKind::TokenOperatorEqual);
+
+        return createToken(TokenKind::TokenOperatorEqual, lastBuffer, lastBuffer + 1);
     }
     case ',':
     {
-        return createToken(TokenKind::TokenPuncComma);
+        return createToken(TokenKind::TokenPuncComma, lastBuffer, lastBuffer + 1);
     }
     case '(':
     {
-        return createToken(TokenKind::TokenDelimOpenParen);
+        return createToken(TokenKind::TokenDelimOpenParen, lastBuffer, lastBuffer + 1);
     }
     case ')':
     {
-        return createToken(TokenKind::TokenDelimCloseParen);
+        return createToken(TokenKind::TokenDelimCloseParen, lastBuffer, lastBuffer + 1);
     }
     case '[':
     {
-        return createToken(TokenKind::TokenDelimOpenSquareBracket);
+        return createToken(TokenKind::TokenDelimOpenSquareBracket, lastBuffer, lastBuffer + 1);
     }
     case ']':
     {
-        return createToken(TokenKind::TokenDelimCloseSquareBracket);
+        return createToken(TokenKind::TokenDelimCloseSquareBracket, lastBuffer, lastBuffer + 1);
     }
     case '{':
     {
-        return createToken(TokenKind::TokenDelimOpenCurlyBracket);
+        return createToken(TokenKind::TokenDelimOpenCurlyBracket, lastBuffer, lastBuffer + 1);
     }
     case '}':
     {
-        return createToken(TokenKind::TokenDelimCloseCurlyBracket);
+        return createToken(TokenKind::TokenDelimCloseCurlyBracket, lastBuffer, lastBuffer + 1);
     }
     case ';':
     {
-        return createToken(TokenKind::TokenPuncSemicolon);
+        return createToken(TokenKind::TokenPuncSemicolon, lastBuffer, lastBuffer + 1);
     }
 
     default:

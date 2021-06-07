@@ -2,45 +2,27 @@
 
 zero::Token *zero::Lexer::getStringLiteral()
 {
-    std::string text = "";
+    auto *start = getNextBuffer(); // eat double quote (")
+    while (*getNextBuffer() != '"')
+        ;
 
-    while (true)
-    {
-        if (_currentChar == '\n')
-        {
-            return nullptr;
-        }
-
-        if (_currentChar == '"')
-        {
-            if (text.back() == '\\')
-            {
-                text[text.size() - 1] = _currentChar;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        text += _currentChar;
-
-        getNextChar();
-    }
-
-    getNextToken(); // eat '"'
-
-    return createToken(TokenKind::TokenLitString, text);
+    getNextToken(); // double quote (")
+    return createToken(TokenKind::TokenLitString, start, _currentBuffer);
 }
 
 zero::Token *zero::Lexer::getCharacterLiteral()
 {
-    auto c = _currentChar;
-    if (getNextChar() != '\'')
+    auto *start = getNextBuffer(); // eat single quote (')
+    if (*start == '\'')
     {
         return nullptr;
     }
-    getNextChar(); // eat '''
 
-    return createToken(TokenKind::TokenLitChar, std::string(1, c));
+    if (*getNextBuffer() != '\'')
+    {
+        return nullptr;
+    }
+
+    getNextBuffer(); // eat single quote (')
+    return createToken(TokenKind::TokenLitChar, start, start + 1);
 }

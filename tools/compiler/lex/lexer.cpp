@@ -1,5 +1,32 @@
 #include <iostream>
+#include <cassert>
 #include "zero/lex/lexer.h"
+
+zero::Lexer::Lexer(FileManager *fileManager)
+{
+    _currentBuffer = _startBuffer = fileManager->getStartBuffer();
+    _endBuffer = _startBuffer + fileManager->getSize();
+}
+
+bool zero::Lexer::compareBuffer(char *startBuffer, char *endBuffer, const char *compareBuffer)
+{
+    auto length = endBuffer - startBuffer;
+
+    if (length != strlen(compareBuffer))
+    {
+        return false;
+    }
+
+    for (auto i = 0; i < length; i++)
+    {
+        if (startBuffer[i] != compareBuffer[i])
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 bool zero::Lexer::isIdentifier(char c, bool num)
 {
@@ -9,183 +36,53 @@ bool zero::Lexer::isIdentifier(char c, bool num)
     return num ? isalnum(c) : isalpha(c);
 }
 
-char zero::Lexer::getNextChar()
+char *zero::Lexer::getNextBuffer(size_t slide)
 {
-    if (!_stream->get(_currentChar))
-    {
-        return _currentChar = 0;
-    }
+    _currentBuffer += slide; // get next buffer
 
-    if (_currentChar == '\n')
+    if (*_currentBuffer == '\n')
     {
         _location.row++;
-        _location.col = 1;
+        _location.col = 0; // new line didn't produce column value
     }
     else
     {
         _location.col++;
     }
-    _location.position++;
 
-    return _currentChar;
+    return _currentBuffer;
 }
 
-zero::Token *zero::Lexer::createToken(zero::TokenKind kind)
+void zero::Lexer::setCurrentBuffer(char *buffer)
 {
-    auto loc = _location;
-    loc.length = 1;
-
-    return new Token(kind, loc);
+    assert(buffer < _currentBuffer);
+    _currentBuffer -= _currentBuffer - buffer;
 }
 
-zero::Token *zero::Lexer::createToken(zero::TokenKind kind, std::string val)
+zero::Token *zero::Lexer::createToken(zero::TokenKind kind, char *startBuffer, char *endBuffer)
 {
-    auto loc = _location;
-    loc.length = val.size();
-    loc.col -= loc.length;
-
-    return new Token(kind, loc, val);
+    return new Token(kind, _location, startBuffer, endBuffer);
 }
 
-zero::Token *zero::Lexer::getToken()
+bool zero::Lexer::expect(zero::TokenKind kind)
 {
-    while (isspace(_currentChar))
+    auto *lastBuffer = _currentBuffer;
+    auto ok = true;
+    auto *token = getToken();
+    while (token->isKind(TokenKind::TokenSpaceNewline))
     {
-        // New Line
-        if (_currentChar == '\n')
-        {
-            // New Line always come at the end of code
-            // getNextChar will force new character from user input
-            // And that's not what we want
-            // Instead make lastChar empty char will not need new character
-            // And next iteration will be ignored
-            _currentChar = ' ';
-            return createToken(TokenKind::TokenSpaceNewline);
-        }
-
-        getNextChar();
+        token = getToken();
     }
 
-    if (_currentChar == 0)
+    if (!token->isKind(kind))
     {
-        return createToken(TokenKind::TokenEOF);
+        ok = false;
     }
 
-    // Check if identifier
-    if (isIdentifier(_currentChar))
-    {
-        std::string identifier = std::string(1, _currentChar);
-        while (isIdentifier(getNextChar(), true))
-        {
-            identifier += _currentChar;
-        }
+    setCurrentBuffer(lastBuffer);
 
-        /// Check Keyword ///
-        auto *ty = getKeyword(identifier);
-        if (ty)
-        {
-            return ty;
-        }
-
-        // Check if data type
-        ty = getType(identifier);
-        if (ty)
-        {
-            return ty;
-        }
-
-        // Check NIl Literal
-        if (identifier == "nil")
-        {
-            return createToken(TokenKind::TokenLitNil);
-        }
-
-        // Check Boolean Literal
-        if (identifier == "true" || identifier == "false")
-        {
-            return createToken(TokenKind::TokenLitBool);
-        }
-
-        // Identifier
-        return createToken(TokenKind::TokenIdentifier, identifier);
-    }
-
-    // Check if Number
-    if (isdigit(_currentChar))
-    {
-        std::string numVal = std::string(1, _currentChar);
-        while (isdigit(getNextChar()) || _currentChar == '.')
-        {
-            numVal += _currentChar;
-        }
-
-        // Number Literal
-        return createToken(TokenKind::TokenLitNumber, numVal);
-    }
-
-    // String Literal
-    if (_currentChar == '"')
-    {
-        getNextChar(); // eat '"'
-        return getStringLiteral();
-    }
-
-    // Character Literal
-    if (_currentChar == '\'')
-    {
-        getNextChar(); // eat '''
-
-        return getCharacterLiteral();
-    }
-
-    // Save Last Char
-    auto currentChar = _currentChar;
-    getNextChar();
-
-    // TODO: You need to save some comment to make a documentation
-    // Single Line Comment
-    if (currentChar == '/' && _currentChar == '/')
-    {
-        while (getNextChar() != '\n')
-            ;
-
-        getNextChar(); // eat '\n'
-        return getToken();
-    }
-
-    // TODO: You need to save some comment to make a documentation
-    // Multiple Line Comment
-    if (currentChar == '/' && _currentChar == '*')
-    {
-        currentChar = getNextChar();
-        while (getNextChar() != '/' && currentChar != '*')
-        {
-            currentChar = _currentChar;
-        }
-
-        return getToken();
-    }
-
-    // Punctuation
-    if (ispunct(currentChar))
-    {
-        auto *puncToken = getPunctuation(currentChar);
-        if (puncToken)
-        {
-            return puncToken;
-        }
-    }
-
-    // Undefined
-    std::string msg = std::string(1, currentChar);
-
-    while (!isspace(_currentChar))
-    {
-        msg += _currentChar;
-        getNextChar();
-    }
-
-    return createToken(TokenKind::TokenUndefined, msg);
+    // delete token;
+    return ok;
 }
 
 zero::Token *zero::Lexer::getNextToken(bool skipSpace)
@@ -196,4 +93,147 @@ zero::Token *zero::Lexer::getNextToken(bool skipSpace)
     } while (_currentToken->isKind(TokenKind::TokenSpaceNewline) && skipSpace);
 
     return _currentToken;
+}
+
+zero::Token *zero::Lexer::getToken()
+{
+    if (_currentBuffer == _endBuffer)
+    {
+        return createToken(TokenKind::TokenEOF, _currentBuffer, _endBuffer);
+    }
+
+    while (isspace(*_currentBuffer))
+    {
+        if (*_currentBuffer == '\n')
+        {
+            // New Line always come at the end of code
+            // getNextChar will force new character from user input
+            // And that's not what we want
+            // Instead make lastChar empty char will not need new character
+            // And next iteration will be ignored
+            getNextBuffer();
+            return createToken(TokenKind::TokenSpaceNewline, _currentBuffer - 1, _currentBuffer);
+        }
+
+        getNextBuffer();
+    }
+
+    // Check if identifier
+    if (isIdentifier(*_currentBuffer))
+    {
+        auto *start = _currentBuffer;
+        while (isIdentifier(*getNextBuffer(), true))
+            ;
+
+        /// Check Keyword ///
+        auto *ty = getKeyword(start, _currentBuffer);
+        if (ty)
+        {
+            return ty;
+        }
+
+        // Check if data type
+        ty = getType(start, _currentBuffer);
+        if (ty)
+        {
+            return ty;
+        }
+
+        TokenKind kind = TokenKind::TokenIdentifier;
+        // Check NIl Literal
+        if (compareBuffer(start, _currentBuffer, "nil"))
+        {
+            kind = TokenKind::TokenLitNil;
+        }
+        else if (compareBuffer(start, _currentBuffer, "true") || compareBuffer(start, _currentBuffer, "false"))
+        {
+            // Check Boolean Literal
+            kind = TokenKind::TokenLitBool;
+        }
+
+        // Identifier
+        return createToken(kind, start, _currentBuffer);
+    }
+
+    // Check if Number
+    if (isdigit(*_currentBuffer) || (*_currentBuffer == '.' && isdigit(*(_currentBuffer + 1))))
+    {
+        auto *start = _currentBuffer;
+        while (isdigit(*getNextBuffer()) || *_currentBuffer == '.')
+            ;
+
+        // Number Literal
+        return createToken(TokenKind::TokenLitNumber, start, _currentBuffer);
+    }
+
+    // String Literal
+    if (*_currentBuffer == '"')
+    {
+        return getStringLiteral();
+    }
+
+    // Character Literal
+    if (*_currentBuffer == '\'')
+    {
+        return getCharacterLiteral();
+    }
+
+    // Save Current Buffer
+    auto *lastBuffer = _currentBuffer;
+    getNextBuffer();
+
+    // TODO: You need to save some comment to make a documentation
+    // Single Line Comment
+    if (*lastBuffer == '/' && *_currentBuffer == '/')
+    {
+        while (*getNextBuffer() != '\n' && isValidBuffer())
+            ;
+        return getToken();
+    }
+
+    // TODO: You need to save some comment to make a documentation
+    // TODO: EOF Testing
+    // Multiple Line Comment
+    if (*lastBuffer == '/' && *_currentBuffer == '*')
+    {
+        lastBuffer = getNextBuffer();
+        if (!isValidBuffer())
+        {
+            return getToken();
+        }
+
+        while (true)
+        {
+            getNextBuffer();
+            if (!isValidBuffer())
+            {
+                return getToken();
+            }
+
+            if (*lastBuffer == '*' && *_currentBuffer == '/')
+            {
+                getNextBuffer(); // eat /
+                return getToken();
+            }
+
+            lastBuffer = _currentBuffer;
+        }
+    }
+
+    if (ispunct(*lastBuffer))
+    {
+        auto *puncToken = getPunctuation();
+        if (puncToken)
+        {
+            return puncToken;
+        }
+    }
+
+    auto *start = _currentBuffer - 1;
+    while (!isspace(*_currentBuffer))
+    {
+        getNextBuffer();
+    }
+
+    return createToken(TokenKind::TokenUndefined, start, _currentBuffer);
 }

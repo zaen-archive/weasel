@@ -16,14 +16,7 @@
 // instead of using ifstream
 zero::FileManager::FileManager(const char *filePath)
 {
-    _begin = mapFile(filePath, &_size);
-    if (!_begin)
-    {
-        _ok = false;
-        return;
-    }
-
-    _end = _begin + _size;
+    _startBuffer = mapFile(filePath, &_size);
 }
 
 char *zero::FileManager::mapFile(const char *path, size_t *length)

@@ -103,8 +103,9 @@ void zero::ErrorTable::showErrors()
             auto *token = item->getToken();
             auto loc = token->getLocation();
 
-            std::cerr << "Error : Location (" << loc.row << ":" << loc.col << ") Length (" << loc.length << ") Position (" << loc.position << ")\n";
-            std::cerr << "Error Message : " << item->getMessage() << "\n";
+            std::cerr << "Error : " << item->getMessage() << " but found " << token->getValue() << " kind of " << token->getTokenKindToInt();
+            std::cerr << " At (" << loc.row << ":" << loc.col << ")"
+                      << "\n";
         }
     }
 }

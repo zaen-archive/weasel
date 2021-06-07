@@ -77,7 +77,6 @@ bool zero::Parser::parse()
     if (getCurrentToken()->isKind(TokenKind::TokenKeyExtern))
     {
         getNextToken(); // eat 'extern'
-
         auto *func = parseDeclareFunction();
         if (func)
         {
@@ -97,9 +96,10 @@ bool zero::Parser::parse()
         return true;
     }
 
-    // Doing Global Variable
+    // TODO: Doing Global Variable
     // For latter implementation
-    std::cout << "Parser -> " << enumToInt(getCurrentToken()->getTokenKind()) << " : " << getCurrentToken()->getValue() << "\n";
+    auto *token = getCurrentToken();
+    std::cout << "Parser -> " << token->getLocation().row << "/" << token->getLocation().col << "<>" << token->getTokenKindToInt() << ":" << token->getValue() << "\n";
     return true;
 }
 
@@ -132,7 +132,6 @@ zero::Token *zero::Parser::getNextTokenUntil(zero::TokenKind kind)
 // Get Next Token
 zero::Token *zero::Parser::getNextToken(bool skipSpace)
 {
-    setLastToken(getCurrentToken());
     return _lexer->getNextToken(skipSpace);
 }
 

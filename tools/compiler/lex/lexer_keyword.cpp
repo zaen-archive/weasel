@@ -1,46 +1,43 @@
+#include <iostream>
 #include "zero/lex/lexer.h"
 
-zero::Token *zero::Lexer::getKeyword(std::string key)
+zero::Token *zero::Lexer::getKeyword(char *startBuffer, char *endBuffer)
 {
-    if (key == "fun")
+    if (compareBuffer(startBuffer, endBuffer, "fun"))
     {
-        return createToken(TokenKind::TokenKeyFun, key);
+        return createToken(TokenKind::TokenKeyFun, startBuffer, endBuffer);
     }
-    if (key == "const")
+    else if (compareBuffer(startBuffer, endBuffer, "const"))
     {
-        return createToken(TokenKind::TokenKeyConst, key);
+        return createToken(TokenKind::TokenKeyConst, startBuffer, endBuffer);
     }
-    if (key == "export")
+    else if (compareBuffer(startBuffer, endBuffer, "extern"))
     {
-        return createToken(TokenKind::TokenKeyExport, key);
+        return createToken(TokenKind::TokenKeyExtern, startBuffer, endBuffer);
     }
-    if (key == "extern")
+    else if (compareBuffer(startBuffer, endBuffer, "return"))
     {
-        return createToken(TokenKind::TokenKeyExtern, key);
+        return createToken(TokenKind::TokenKeyReturn, startBuffer, endBuffer);
     }
-    if (key == "return")
+    else if (compareBuffer(startBuffer, endBuffer, "let"))
     {
-        return createToken(TokenKind::TokenKeyReturn, key);
+        return createToken(TokenKind::TokenKeyLet, startBuffer, endBuffer);
     }
-    if (key == "let")
+    else if (compareBuffer(startBuffer, endBuffer, "final"))
     {
-        return createToken(TokenKind::TokenKeyLet, key);
+        return createToken(TokenKind::TokenKeyFinal, startBuffer, endBuffer);
     }
-    if (key == "final")
+    else if (compareBuffer(startBuffer, endBuffer, "if"))
     {
-        return createToken(TokenKind::TokenKeyFinal, key);
+        return createToken(TokenKind::TokenKeyIf, startBuffer, endBuffer);
     }
-    if (key == "if")
+    else if (compareBuffer(startBuffer, endBuffer, "else"))
     {
-        return createToken(TokenKind::TokenKeyIf, key);
+        return createToken(TokenKind::TokenKeyElse, startBuffer, endBuffer);
     }
-    if (key == "else")
+    else if (compareBuffer(startBuffer, endBuffer, "for"))
     {
-        return createToken(TokenKind::TokenKeyElse, key);
-    }
-    if (key == "for")
-    {
-        return createToken(TokenKind::TokenKeyFor, key);
+        return createToken(TokenKind::TokenKeyFor, startBuffer, endBuffer);
     }
 
     return nullptr;

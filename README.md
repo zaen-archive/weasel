@@ -29,6 +29,7 @@ We also can binding the library created by zero language into another languages 
 
 - [x] Function Declaration
 - [x] Function Definition
+- [ ] Function Call
 
 ### Variable declaration
 
@@ -49,13 +50,9 @@ We also can binding the library created by zero language into another languages 
 
 - [x] Simple table
 
-### Variable access
+### Identifier
 
-- [x] Can access variable
-
-### Variable definition
-
-- [x] Re-assign variable
+- [x] variable declaration and definition
 
 ### Binary Expression
 

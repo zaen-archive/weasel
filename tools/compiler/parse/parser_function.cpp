@@ -60,10 +60,11 @@ zero::Function *zero::Parser::parseDeclareFunction()
         return logErrorF(std::string("Expected fun keyword"));
     }
 
-    getNextToken(); // eat 'fun'
-    if (!getCurrentToken()->isKind(TokenKind::TokenIdentifier))
+    // get next and eat 'fun'
+    if (!getNextToken()->isKind(TokenKind::TokenIdentifier))
     {
-        return logErrorF(std::string("Expected an identifier"));
+        std::cerr << "Error : " << getCurrentToken()->getTokenKindToInt() << "\n";
+        return logErrorF(std::string("Expected an identifier but found : " + getCurrentToken()->getValue()));
     }
 
     auto identifier = getCurrentToken()->getValue();
@@ -91,7 +92,7 @@ zero::Function *zero::Parser::parseDeclareFunction()
     }
     else
     {
-        retTy = new Token(TokenKind::TokenTyVoid, retTy->getLocation());
+        retTy = new Token(TokenKind::TokenTyVoid, retTy->getLocation(), retTy->getStartBuffer(), retTy->getEndBuffer());
     }
 
     auto *returnType = retTy->toType(getContext());

@@ -6,7 +6,13 @@ fun test() int {
 
 fun tut() long {
     let a = 1
-    // let *b = 2
-    // a = b = a + 2
+    /*
+    let *b = 2
+    a = b = a + 2
+    */
+    testing
+
     return a
 }
+
+/* testug

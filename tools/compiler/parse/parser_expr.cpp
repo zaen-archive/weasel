@@ -105,17 +105,32 @@ zero::Expression *zero::Parser::parseLiteralExpression()
     return new NilLiteralExpression();
 }
 
-zero::Expression *zero::Parser::parseVariableExpression()
+zero::Expression *zero::Parser::parseFunctionCallExpression(zero::Attribute *attr)
+{
+    // auto identifier = getCurrentToken()->getValue();
+    // auto *parenExpr = getNextToken();
+
+    // if (!parenExpr->isKind(TokenKind::TokenDelimOpenParen))
+    // {
+    // }
+
+    return nullptr;
+}
+
+zero::Expression *zero::Parser::parseIdentifierExpression()
 {
     auto identifier = getCurrentToken()->getValue();
 
     // Check Variable exit
+    auto *attr = SymbolTable::getInstance().get(identifier);
+    if (!attr)
     {
-        auto *attr = SymbolTable::getInstance().get(identifier);
-        if (!attr)
-        {
-            return ErrorTable::addError(new Error(getCurrentToken(), "Variable not yet declared"));
-        }
+        return ErrorTable::addError(new Error(getCurrentToken(), "Variable not yet declared"));
+    }
+
+    if (attr->getKind() == AttributeKind::SymbolFunction)
+    {
+        return parseFunctionCallExpression();
     }
 
     return new VariableExpression(getCurrentToken(), identifier);
@@ -130,7 +145,7 @@ zero::Expression *zero::Parser::parsePrimaryExpression()
 
     if (getCurrentToken()->isKind(TokenKind::TokenIdentifier))
     {
-        return parseVariableExpression();
+        return parseIdentifierExpression();
     }
 
     return nullptr;
@@ -141,19 +156,19 @@ zero::Expression *zero::Parser::parseExpression()
     auto *lhs = parsePrimaryExpression();
     if (!lhs)
     {
-        return ErrorTable::addError(new Error(getCurrentToken(), "Expected LHS Expression"));
+        return ErrorTable::addError(new Error(getCurrentToken(), "Expected LHS"));
     }
 
     getNextToken(); // Eat 'LHS' Expression
     return parseBinaryOperator(zero::defPrecOrder, lhs);
 }
 
-zero::Expression *zero::Parser::parseBinaryOperator(int precOrder, zero::Expression *lhs)
+zero::Expression *zero::Parser::parseBinaryOperator(unsigned precOrder, zero::Expression *lhs)
 {
     while (true)
     {
         auto *binOp = getCurrentToken();
-        if (!binOp->isOperator())
+        if (!binOp->isOperator() || binOp->isNewline())
         {
             return lhs;
         }

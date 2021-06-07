@@ -28,8 +28,7 @@ namespace zero
 
         // Keyword
         TokenKeyFun,    // fun
-        TokenKeyExport, // export
-        TokenKeyExtern,
+        TokenKeyExtern, // extern
         TokenKeyLet,    // let
         TokenKeyFinal,  // final
         TokenKeyConst,  // const
@@ -131,10 +130,8 @@ namespace zero
     // Source Location
     struct SourceLocation
     {
-        unsigned position = 1;
         unsigned row = 1;
         unsigned col = 1;
-        unsigned length = 0;
     };
 
     // Associativity
@@ -164,27 +161,35 @@ namespace zero
     class Token
     {
     private:
-        TokenKind _kind;
+        char *_startBuffer;
+        char *_endBuffer;
+
+        // TODO: Change string value to start buffer and end buffer
         std::string _value;
+
+        TokenKind _kind;
         SourceLocation _location;
 
     public:
-        Token(TokenKind kind, SourceLocation &location, std::string &value) : _kind(kind), _location(location), _value(value) {}
-        Token(TokenKind kind, SourceLocation &location) : _kind(kind), _location(location) {}
+        Token(TokenKind kind, SourceLocation &location, char *startToken, char *endToken) : _kind(kind), _location(location), _startBuffer(startToken), _endBuffer(endToken) {}
+
+        inline bool isKind(TokenKind type) const { return type == _kind; }
+        inline bool isDataType() const { return _kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal; }
+        inline bool isKeyDefinition() const { return (_kind == TokenKind::TokenKeyLet || _kind == TokenKind::TokenKeyFinal || _kind == TokenKind::TokenKeyConst); }
+        inline bool isLiteral() const { return _kind >= TokenKind::TokenLitNil && _kind <= TokenKind::TokenLitString; }
+        inline bool isOperator() const { return _kind >= TokenKind::TokenOperatorStart && _kind <= TokenKind::TokenOperatorEnd; }
+        inline bool isNewline() const { return _kind == TokenKind::TokenSpaceNewline; }
+
+        inline char *getStartBuffer() const { return _startBuffer; }
+        inline char *getEndBuffer() const { return _endBuffer; }
 
         void setValue(std::string val) { _value = val; }
-        std::string getValue() const { return _value; }
+        // std::string getValue() const { return _value; }
+        std::string getValue() const { return std::string(_startBuffer, _endBuffer); }
 
         SourceLocation getLocation() const { return _location; }
         TokenKind getTokenKind() const { return _kind; }
         int getTokenKindToInt() { return enumToInt(_kind); }
-
-        bool isKind(TokenKind type) const { return type == _kind; }
-        bool isDataType() const { return _kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal; }
-        bool isKeyDefinition() const { return (_kind == TokenKind::TokenKeyLet || _kind == TokenKind::TokenKeyFinal || _kind == TokenKind::TokenKeyConst); }
-        bool isLiteral() const { return _kind >= TokenKind::TokenLitNil && _kind <= TokenKind::TokenLitString; }
-        bool isOperator() const { return _kind >= TokenKind::TokenOperatorStart && _kind <= TokenKind::TokenOperatorEnd; }
-        bool isNewline() const { return _kind == TokenKind::TokenSpaceNewline; }
 
         Qualifier getQualifier();
 
@@ -194,4 +199,5 @@ namespace zero
     public:
         llvm::Type *toType(AnalysContext *c);
     };
+
 } // namespace zero

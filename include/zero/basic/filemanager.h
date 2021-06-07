@@ -1,12 +1,12 @@
+#pragma once
+
 namespace zero
 {
     class FileManager
     {
     protected:
-        char *_begin;
-        char *_end;
-        bool _ok = true;
-        size_t _size;
+        char *_startBuffer;
+        unsigned long long _size;
 
     private:
         // I copy paste the implementation from
@@ -16,10 +16,9 @@ namespace zero
     public:
         FileManager(const char *filePath);
 
-        bool isValid() const { return _ok; }
-        size_t getSize() const { return _size; }
-        char *getBegin() const { return _begin; }
-        char *getEnd() const { return _end; }
+        bool isValid() const { return _startBuffer != nullptr; }
+        unsigned long long getSize() const { return _size; }
+        char *getStartBuffer() const { return _startBuffer; }
     };
 
 } // namespace zero

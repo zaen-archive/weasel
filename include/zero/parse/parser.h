@@ -18,13 +18,12 @@ namespace zero
 
     public:
         void addFunction(Function *func) { _funcs.push_back(func); }
-        void setLastToken(Token *token) { _lexer->setLastToken(token); }
 
         Token *getCurrentToken() const { return _lexer->getCurrentToken(); }
-        Token *getLastToken() const { return _lexer->getLastToken(); }
         Token *getNextToken(bool skipSpace = false);
         Token *getNextTokenUntil(TokenKind kind);
         Qualifier getQualifier() const { return getCurrentToken()->getQualifier(); }
+        bool expectToken(TokenKind kind) { return _lexer->expect(kind); }
 
         // Function
         Function *parseDeclareFunction();
@@ -42,12 +41,12 @@ namespace zero
         Expression *parseExpression();
         Expression *parsePrimaryExpression();
         Expression *parseDefinitionExpression();
+        Expression *parseFunctionCallExpression(Attribute *attr);
 
         // Expression Literal
         Expression *parseLiteralExpression();
-        Expression *parseVariableExpression();
-
-        Expression *parseBinaryOperator(int prec, zero::Expression *lhs);
+        Expression *parseIdentifierExpression();
+        Expression *parseBinaryOperator(unsigned prec, zero::Expression *lhs);
 
         // Helper
         void ignoreNewline();

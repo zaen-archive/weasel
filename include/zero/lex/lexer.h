@@ -2,47 +2,47 @@
 
 #include <fstream>
 #include "zero/lex/token.h"
+#include "zero/basic/filemanager.h"
 
 namespace zero
 {
     class Lexer
     {
     private:
-        char _currentChar = ' ';
+        char *_startBuffer;
+        char *_endBuffer;
+        char *_currentBuffer;
+
         Token *_currentToken;
-        Token *_lastToken;
         SourceLocation _location;
-        std::ifstream *_stream;
 
     private:
+        // Get and Next Buffer
+        char *getNextBuffer(size_t slide = 1);
+        bool compareBuffer(char *startBuffer, char *endBuffer, const char *compareBuffer);
         bool isIdentifier(char c, bool num = false);
-        char getNextChar();
+        void setCurrentBuffer(char *buffer);
+        bool isValidBuffer() const { return _endBuffer - _currentBuffer > 0; }
 
+        // TODO: Handle special character
+        // Token section
         Token *getToken();
-        Token *getType(std::string type);
-        Token *getKeyword(std::string key);
-        Token *getPunctuation(char leftChar);
-
-        // Literal
+        Token *createToken(TokenKind kind, char *startBuffer, char *endBuffer);
+        Token *getType(char *startBuffer, char *endBuffer);
+        Token *getKeyword(char *startBuffer, char *endBuffer);
+        Token *getPunctuation();
         Token *getStringLiteral();
         Token *getCharacterLiteral();
-        // Direct implemented happend because the lexer quite simple
         // Token *getNumberLiteral();   -> Implemented at getToken directly
         // Token *getBooleanLiteral();  -> Implemented at getToken directly
         // Token *getNilLiteral();      -> Implemented at getToken directly
 
-        // Create New Token
-        Token *createToken(TokenKind kind, std::string val);
-        Token *createToken(TokenKind kind);
-
     public:
-        Lexer(std::ifstream *stream) : _stream(stream) {}
+        Lexer(FileManager *fileManager);
 
         Token *getNextToken(bool skipSpace = false);
         Token *getCurrentToken() const { return _currentToken; }
-        Token *getLastToken() const { return _lastToken; }
-
-        void setLastToken(Token *token) { _lastToken = token; }
+        bool expect(TokenKind kind);
     };
 
 } // namespace zero
