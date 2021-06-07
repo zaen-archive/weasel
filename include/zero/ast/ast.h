@@ -58,7 +58,6 @@ namespace zero
 
     // Base Expression
     class Expression;
-    class BlockExpression;
 
     // Expression Without Block
     class AssignmentExpression;
@@ -117,19 +116,6 @@ namespace zero
         LiteralExpression(Token *token, LiteralType type, unsigned width, unsigned size = 1) : Expression(token), _type(type), _width(width), _size(size) {}
     };
 
-    // Block Expression
-    class BlockExpression : public Expression
-    {
-    protected:
-        std::map<std::string, Type *> _variable;
-        BlockExpression *_parent;
-
-    public:
-        BlockExpression(BlockExpression *parent) : _parent(parent) {}
-
-        BlockExpression *getParent() const { return _parent; }
-        Type *getVariable(std::string name);
-    };
 } // namespace zero
 
 //
@@ -320,9 +306,8 @@ namespace zero
 // Expression With Block Function PART
 namespace zero
 {
-    // TODO: The StatementExpression should link to past Statement Expression
     // Statement Expression
-    class StatementExpression : public BlockExpression
+    class StatementExpression : public Expression
     {
     private:
         std::vector<Expression *> _body;
@@ -346,7 +331,6 @@ namespace zero
 
 //
 
-// TODO: Just support sign operation
 // Function PART
 namespace zero
 {

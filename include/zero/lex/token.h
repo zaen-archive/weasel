@@ -164,9 +164,6 @@ namespace zero
         char *_startBuffer;
         char *_endBuffer;
 
-        // TODO: Change string value to start buffer and end buffer
-        std::string _value;
-
         TokenKind _kind;
         SourceLocation _location;
 
@@ -183,8 +180,6 @@ namespace zero
         inline char *getStartBuffer() const { return _startBuffer; }
         inline char *getEndBuffer() const { return _endBuffer; }
 
-        void setValue(std::string val) { _value = val; }
-        // std::string getValue() const { return _value; }
         std::string getValue() const { return std::string(_startBuffer, _endBuffer); }
 
         SourceLocation getLocation() const { return _location; }

@@ -203,7 +203,6 @@ llvm::Value *zero::AnalysContext::codegen(BinaryOperatorExpression *expr)
     }
 }
 
-// TODO: Assignment Expression Already Changed to Declaration Expression
 // Remove it in future
 llvm::Value *zero::AnalysContext::codegen(AssignmentExpression *expr)
 {

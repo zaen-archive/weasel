@@ -24,7 +24,7 @@ namespace zero
         void setCurrentBuffer(char *buffer);
         bool isValidBuffer() const { return _endBuffer - _currentBuffer > 0; }
 
-        // TODO: Handle special character
+        // TODO: Handle special character fir parseCharacter or string
         // Token section
         Token *getToken();
         Token *createToken(TokenKind kind, char *startBuffer, char *endBuffer);

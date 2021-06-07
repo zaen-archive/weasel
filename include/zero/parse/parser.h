@@ -7,6 +7,7 @@
 namespace zero
 {
     class AnalysContext;
+    class Attribute;
 
     class Parser
     {

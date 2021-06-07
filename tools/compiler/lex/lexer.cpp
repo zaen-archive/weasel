@@ -192,7 +192,7 @@ zero::Token *zero::Lexer::getToken()
     }
 
     // TODO: You need to save some comment to make a documentation
-    // TODO: EOF Testing
+    // TODO: Should Error when EOF
     // Multiple Line Comment
     if (*lastBuffer == '/' && *_currentBuffer == '*')
     {

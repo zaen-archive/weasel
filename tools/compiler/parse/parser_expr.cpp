@@ -130,7 +130,7 @@ zero::Expression *zero::Parser::parseIdentifierExpression()
 
     if (attr->getKind() == AttributeKind::SymbolFunction)
     {
-        return parseFunctionCallExpression();
+        return parseFunctionCallExpression(attr);
     }
 
     return new VariableExpression(getCurrentToken(), identifier);
