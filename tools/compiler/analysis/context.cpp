@@ -4,13 +4,6 @@
 #include "zero/analysis/context.h"
 #include "zero/symbol/symbol.h"
 
-zero::AnalysContext::AnalysContext()
-{
-    _context = new llvm::LLVMContext();
-    _module = new llvm::Module("zero", *getContext());
-    _builder = new llvm::IRBuilder<>(*getContext());
-}
-
 zero::AnalysContext::AnalysContext(std::string moduleName)
 {
     _context = new llvm::LLVMContext();

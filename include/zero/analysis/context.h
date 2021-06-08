@@ -29,7 +29,6 @@ namespace zero
         unsigned long long _counter = 0;
 
     public:
-        AnalysContext();
         AnalysContext(std::string moduleName);
 
         llvm::LLVMContext *getContext() const { return _context; }
@@ -48,7 +47,9 @@ namespace zero
         llvm::Value *codegen(CallExpression *expr);
         llvm::Value *codegen(ReturnExpression *expr);
         llvm::Value *codegen(DeclarationExpression *expr);
-        llvm::Value *codegen(BinaryOperatorExpression *expr); // TODO: Need to implement modulo operator
+        // TODO: Need to implement modulo operator
+        // TODO: Paren Expression get bugs
+        llvm::Value *codegen(BinaryOperatorExpression *expr);
         llvm::Function *codegen(Function *func);
     };
 
