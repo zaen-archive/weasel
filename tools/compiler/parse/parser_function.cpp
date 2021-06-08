@@ -1,12 +1,14 @@
+#include "llvm/IR/Type.h"
+#include "llvm/IR/Instructions.h"
 #include "zero/parse/parser.h"
 #include "zero/analysis/context.h"
 #include "zero/symbol/symbol.h"
 
 // define
 // 'fun' identifier '(' args ')' funTy '{' stmt '}'
-zero::Function *zero::Parser::parseFunction()
+std::shared_ptr<zero::Function> zero::Parser::parseFunction()
 {
-    auto *func = parseDeclareFunction();
+    auto func = parseDeclareFunction();
     if (!func)
     {
         return nullptr;
@@ -27,17 +29,17 @@ zero::Function *zero::Parser::parseFunction()
     // Set Symbol for parameters and enter a scope
     {
         SymbolTable::getInstance().enterScope();
-        for (auto *arg : func->getArgs())
+        for (auto arg : func->getArgs())
         {
             auto argName = arg->getArgumentName();
-            auto *ty = arg->getArgumentType();
-            auto *attr = new Attribute(argName, AttributeScope::ScopeParam, AttributeKind::SymbolParameter, ty);
+            auto ty = arg->getArgumentType();
+            auto attr = std::make_shared<Attribute>(argName, AttributeScope::ScopeParam, AttributeKind::SymbolParameter, ty);
 
             SymbolTable::getInstance().insert(argName, attr);
         }
     }
 
-    auto *body = parseFunctionBody();
+    auto body = parseFunctionBody();
     if (!body)
     {
         return ErrorTable::addError(getCurrentToken(), "Expected valid body statement!.");
@@ -53,7 +55,7 @@ zero::Function *zero::Parser::parseFunction()
 }
 
 // extern 'fun' identifier '(' args ')' funTy
-zero::Function *zero::Parser::parseDeclareFunction()
+std::shared_ptr<zero::Function> zero::Parser::parseDeclareFunction()
 {
     if (!getCurrentToken()->isKind(TokenKind::TokenKeyFun))
     {
@@ -83,19 +85,20 @@ zero::Function *zero::Parser::parseDeclareFunction()
         }
     }
 
-    auto *retTy = getCurrentToken();
-    if (retTy->isDataType())
+    llvm::Type *returnType;
+    if (getCurrentToken()->isDataType())
     {
+        returnType = getCurrentToken()->toType(getContext());
+
         getNextToken(); // eat 'data type'
     }
     else
     {
-        retTy = new Token(TokenKind::TokenTyVoid, retTy->getLocation(), retTy->getStartBuffer(), retTy->getEndBuffer());
+        returnType = llvm::Type::getVoidTy(*getContext()->getContext());
     }
 
-    auto *returnType = retTy->toType(getContext());
-    auto *funcTy = new FunctionType(returnType, args);
-    auto *func = new Function(identifier, funcTy);
+    auto funcTy = std::make_shared<FunctionType>(returnType, args);
+    auto func = std::make_shared<Function>(identifier, funcTy);
 
     // Check Symbol Table
     if (SymbolTable::getInstance().get(identifier))
@@ -105,15 +108,15 @@ zero::Function *zero::Parser::parseDeclareFunction()
 
     // Create Symbol for the function
     {
-        SymbolTable::getInstance().insert(identifier, new Attribute(identifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
+        SymbolTable::getInstance().insert(identifier, std::make_shared<Attribute>(identifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
     }
 
     return func;
 }
 
-std::vector<zero::FunctionArgument *> zero::Parser::parseFunctionArguments()
+std::vector<std::shared_ptr<zero::FunctionArgument>> zero::Parser::parseFunctionArguments()
 {
-    std::vector<zero::FunctionArgument *> args;
+    std::vector<std::shared_ptr<zero::FunctionArgument>> args;
 
     while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
     {
@@ -131,9 +134,9 @@ std::vector<zero::FunctionArgument *> zero::Parser::parseFunctionArguments()
     return args;
 }
 
-zero::FunctionArgument *zero::Parser::parseFunctionArgument()
+std::shared_ptr<zero::FunctionArgument> zero::Parser::parseFunctionArgument()
 {
-    auto *token = getCurrentToken();
+    auto token = getCurrentToken();
     if (!token->isKind(TokenKind::TokenIdentifier))
     {
         return nullptr;
@@ -151,5 +154,5 @@ zero::FunctionArgument *zero::Parser::parseFunctionArgument()
         getNextToken(); // eat ','
     }
 
-    return new FunctionArgument(identifier, token->toType(getContext()));
+    return std::make_shared<FunctionArgument>(identifier, token->toType(getContext()));
 }

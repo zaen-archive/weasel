@@ -25,7 +25,7 @@ llvm::Function *zero::AnalysContext::codegen(Function *funAST)
     }
 
     auto funArgs = funAST->getArgs();
-    auto *retTy = funAST->getFunctionType()->getReturnType();
+    auto retTy = funAST->getFunctionType()->getReturnType();
     auto args = std::vector<llvm::Type *>();
     if (funArgs.size() > 0)
     {
@@ -45,8 +45,7 @@ llvm::Function *zero::AnalysContext::codegen(Function *funAST)
 
     // Add Function to symbol table
     {
-        auto *attr = new Attribute(funName, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, funLLVM);
-
+        auto attr = std::make_shared<Attribute>(funName, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, funLLVM);
         SymbolTable::getInstance().insert(funName, attr);
     }
 
@@ -61,7 +60,7 @@ llvm::Function *zero::AnalysContext::codegen(Function *funAST)
             {
                 auto refName = item.getName();
                 auto paramName = std::string(refName.begin(), refName.end());
-                auto *attr = new Attribute(paramName, AttributeScope::ScopeParam, AttributeKind::SymbolParameter, &item);
+                auto attr = std::make_shared<Attribute>(paramName, AttributeScope::ScopeParam, AttributeKind::SymbolParameter, &item);
 
                 SymbolTable::getInstance().insert(paramName, attr);
             }
@@ -121,10 +120,8 @@ llvm::Value *zero::AnalysContext::codegen(CallExpression *expr)
     auto identifier = expr->getIdentifier();
     auto args = expr->getArguments();
     auto *fun = getModule()->getFunction(identifier);
-    if (args.size() != fun->arg_size())
-    {
-        return ErrorTable::addError(new Error(expr->getToken(), "Argument list is not equal"));
-    }
+
+    assert(args.size() == fun->arg_size());
 
     std::vector<llvm::Value *> argsV;
     for (size_t i = 0; i < args.size(); i++)
@@ -132,7 +129,7 @@ llvm::Value *zero::AnalysContext::codegen(CallExpression *expr)
         argsV.push_back(args[i]->codegen(this));
         if (!argsV.back())
         {
-            return ErrorTable::addError(new Error(expr->getToken(), "Expected argument list index " + i));
+            return ErrorTable::addError(expr->getToken(), "Expected argument list index " + i);
         }
     }
 
@@ -187,7 +184,7 @@ llvm::Value *zero::AnalysContext::codegen(DeclarationExpression *expr)
 
     // Add Variable Declaration to symbol table
     {
-        auto *attr = new Attribute(varName, AttributeScope::ScopeLocal, AttributeKind::SymbolVariable, alloc);
+        auto attr = std::make_shared<Attribute>(varName, AttributeScope::ScopeLocal, AttributeKind::SymbolVariable, alloc);
 
         SymbolTable::getInstance().insert(varName, attr);
     }
@@ -197,7 +194,7 @@ llvm::Value *zero::AnalysContext::codegen(DeclarationExpression *expr)
 
 llvm::Value *zero::AnalysContext::codegen(BinaryOperatorExpression *expr)
 {
-    auto *token = expr->getOperator();
+    auto token = expr->getOperator();
     auto *rhs = expr->getRHS()->codegen(this);
     auto *lhs = expr->getLHS()->codegen(this);
     auto compareTy = compareType(lhs->getType(), rhs->getType());
@@ -228,13 +225,13 @@ llvm::Value *zero::AnalysContext::codegen(BinaryOperatorExpression *expr)
         auto *loadLhs = llvm::dyn_cast<llvm::LoadInst>(lhs);
         if (!loadLhs)
         {
-            return ErrorTable::addError(new Error(expr->getLHS()->getToken(), "LHS not valid"));
+            return ErrorTable::addError(expr->getLHS()->getToken(), "LHS not valid");
         }
 
         auto *allocLhs = llvm::dyn_cast<llvm::AllocaInst>(loadLhs->getPointerOperand());
         if (!allocLhs)
         {
-            return ErrorTable::addError(new Error(expr->getLHS()->getToken(), "LHS is not a valid address pointer"));
+            return ErrorTable::addError(expr->getLHS()->getToken(), "LHS is not a valid address pointer");
         }
 
         getBuilder()->CreateStore(rhs, allocLhs);
@@ -256,10 +253,10 @@ llvm::Value *zero::AnalysContext::codegen(ReturnExpression *expr)
     auto *val = expr->getValue()->codegen(this);
 
     // Get Last Function from symbol table
-    auto *funAttr = SymbolTable::getInstance().getLastFunction();
+    auto funAttr = SymbolTable::getInstance().getLastFunction();
     if (!funAttr)
     {
-        return ErrorTable::addError(new Error(expr->getToken(), "Return Statement cannot find last function from symbol table"));
+        return ErrorTable::addError(expr->getToken(), "Return Statement cannot find last function from symbol table");
     }
     auto *fun = llvm::dyn_cast<llvm::Function>(funAttr->getValue());
     auto *returnTy = fun->getReturnType();
@@ -267,7 +264,7 @@ llvm::Value *zero::AnalysContext::codegen(ReturnExpression *expr)
 
     if (compareTy == CompareType::Different)
     {
-        return ErrorTable::addError(new Error(expr->getToken(), "Return Type with value type is different"));
+        return ErrorTable::addError(expr->getToken(), "Return Type with value type is different");
     }
 
     if (compareTy == CompareType::Casting)
@@ -282,10 +279,10 @@ llvm::Value *zero::AnalysContext::codegen(VariableExpression *expr)
 {
     // Get Allocator from Symbol Table
     auto varName = expr->getIdentifier();
-    auto *alloc = SymbolTable::getInstance().get(varName);
+    auto alloc = SymbolTable::getInstance().get(varName);
     if (!alloc)
     {
-        return ErrorTable::addError(new Error(expr->getToken(), "Variable " + varName + " Not declared"));
+        return ErrorTable::addError(expr->getToken(), "Variable " + varName + " Not declared");
     }
 
     return getBuilder()->CreateLoad(alloc->getValue(), varName);

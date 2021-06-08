@@ -14,41 +14,41 @@ namespace zero
     private:
         Lexer *_lexer;
         AnalysContext *_context;
-        std::vector<Function *> _funcs;
-        std::vector<Expression *> _global;
+        std::vector<std::shared_ptr<Function>> _funcs;
+        std::vector<std::shared_ptr<Expression>> _global;
 
     public:
-        void addFunction(Function *func) { _funcs.push_back(func); }
+        void addFunction(std::shared_ptr<Function> func) { _funcs.push_back(func); }
 
-        Token *getCurrentToken() const { return _lexer->getCurrentToken(); }
-        Token *getNextToken(bool skipSpace = false);
-        Token *getNextTokenUntil(TokenKind kind);
+        std::shared_ptr<Token> getCurrentToken() const { return _lexer->getCurrentToken(); }
+        std::shared_ptr<Token> getNextToken(bool skipSpace = false);
+        std::shared_ptr<Token> getNextTokenUntil(TokenKind kind);
         Qualifier getQualifier() const { return getCurrentToken()->getQualifier(); }
         bool expectToken(TokenKind kind) { return _lexer->expect(kind); }
 
         // Function
-        Function *parseDeclareFunction();
-        Function *parseFunction();
-        std::vector<FunctionArgument *> parseFunctionArguments();
-        FunctionArgument *parseFunctionArgument();
+        std::shared_ptr<Function> parseDeclareFunction();
+        std::shared_ptr<Function> parseFunction();
+        std::vector<std::shared_ptr<FunctionArgument>> parseFunctionArguments();
+        std::shared_ptr<FunctionArgument> parseFunctionArgument();
 
         // Statement
-        StatementExpression *parseFunctionBody();
-        Expression *parseStatement();
-        Expression *parseCompoundStatement();
-        Expression *parseReturnStatement();
+        std::shared_ptr<StatementExpression> parseFunctionBody();
+        std::shared_ptr<Expression> parseStatement();
+        std::shared_ptr<Expression> parseCompoundStatement();
+        std::shared_ptr<Expression> parseReturnStatement();
 
         // Expression
-        Expression *parseExpression();
-        Expression *parsePrimaryExpression();
-        Expression *parseDeclarationExpression();
-        Expression *parseFunctionCallExpression(Attribute *attr);
-        Expression *parseParenExpression();
+        std::shared_ptr<Expression> parseExpression();
+        std::shared_ptr<Expression> parsePrimaryExpression();
+        std::shared_ptr<Expression> parseDeclarationExpression();
+        std::shared_ptr<Expression> parseFunctionCallExpression(std::shared_ptr<Attribute> attr);
+        std::shared_ptr<Expression> parseParenExpression();
 
         // Expression Literal
-        Expression *parseLiteralExpression();
-        Expression *parseIdentifierExpression();
-        Expression *parseBinaryOperator(unsigned prec, zero::Expression *lhs);
+        std::shared_ptr<Expression> parseLiteralExpression();
+        std::shared_ptr<Expression> parseIdentifierExpression();
+        std::shared_ptr<Expression> parseBinaryOperator(unsigned prec, std::shared_ptr<zero::Expression> lhs);
 
         // Helper
         void ignoreNewline();

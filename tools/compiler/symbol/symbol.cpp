@@ -2,7 +2,7 @@
 #include "zero/symbol/symbol.h"
 
 /// SYMBOL ///
-std::vector<zero::Error *> zero::ErrorTable::_errors;
+std::vector<std::shared_ptr<zero::Error>> zero::ErrorTable::_errors;
 
 zero::SymbolTable::SymbolTable()
 {
@@ -24,7 +24,6 @@ bool zero::SymbolTable::exitScope()
     auto n = _lookup.back();
     while (n--)
     {
-        delete _table.back();
         _table.pop_back();
     }
 
@@ -32,13 +31,13 @@ bool zero::SymbolTable::exitScope()
     return true;
 }
 
-void zero::SymbolTable::insert(std::string key, Attribute *att)
+void zero::SymbolTable::insert(std::string key, std::shared_ptr<Attribute> attr)
 {
-    _table.push_back(att);
+    _table.push_back(attr);
     _lookup[_lookup.size() - 1]++;
 }
 
-zero::Attribute *zero::SymbolTable::get(std::string key)
+std::shared_ptr<zero::Attribute> zero::SymbolTable::get(std::string key)
 {
     auto n = _table.size() - 1;
     for (int i = n; i >= 0; i--)
@@ -52,12 +51,12 @@ zero::Attribute *zero::SymbolTable::get(std::string key)
     return nullptr;
 }
 
-zero::Attribute *zero::SymbolTable::getLastFunction()
+std::shared_ptr<zero::Attribute> zero::SymbolTable::getLastFunction()
 {
     auto i = _table.size() - 1;
     for (; i >= 0; i--)
     {
-        auto *attr = _table[i];
+        auto attr = _table[i];
 
         if (attr->getKind() == AttributeKind::SymbolFunction)
         {
@@ -72,7 +71,6 @@ void zero::SymbolTable::reset()
 {
     while (!_table.empty())
     {
-        delete _table.back();
         _table.pop_back();
     }
 
@@ -84,15 +82,9 @@ void zero::SymbolTable::reset()
     enterScope(); // Enter Global Scope
 }
 
-std::nullptr_t zero::ErrorTable::addError(Error *err)
+std::nullptr_t zero::ErrorTable::addError(std::shared_ptr<Token> token, std::string msg)
 {
-    _errors.push_back(err);
-    return nullptr;
-}
-
-std::nullptr_t zero::ErrorTable::addError(Token *token, std::string msg)
-{
-    _errors.push_back(new Error(token, msg));
+    _errors.push_back(std::make_shared<Error>(token, msg));
     return nullptr;
 }
 
@@ -104,14 +96,13 @@ void zero::ErrorTable::showErrors()
     }
     else
     {
-        for (auto *item : _errors)
+        for (auto item : _errors)
         {
-            auto *token = item->getToken();
+            auto token = item->getToken();
             auto loc = token->getLocation();
 
             std::cerr << "Error : " << item->getMessage() << " but found " << token->getValue() << " kind of " << token->getTokenKindToInt();
-            std::cerr << " At (" << loc.row << ":" << loc.col << ")"
-                      << "\n";
+            std::cerr << " At (" << loc.row << ":" << loc.col << ")\n";
         }
     }
 }

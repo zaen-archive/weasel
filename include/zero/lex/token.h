@@ -1,18 +1,13 @@
 #pragma once
 
 #include <string>
+#include "llvm/IR/Type.h"
 
 template <typename Enumeration>
 auto enumToInt(Enumeration const value) -> typename std::underlying_type<Enumeration>::type
 {
     return static_cast<typename std::underlying_type<Enumeration>::type>(value);
 }
-
-// Type of LLVM
-namespace llvm
-{
-    class Type;
-} // namespace llvm
 
 // Base
 namespace zero

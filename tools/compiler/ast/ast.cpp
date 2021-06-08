@@ -42,22 +42,14 @@ llvm::Function *zero::Function::codegen(AnalysContext *c)
     return c->codegen(this);
 }
 
-// Function
-void zero::Function::setBody(StatementExpression *body)
-{
-    // body->setFunction(this);
-
-    _body = body;
-}
-
 /// Log Error
-llvm::Value *zero::logErrorV(std::string &msg)
+llvm::Value *zero::logErrorV(std::string msg)
 {
     fprintf(stderr, "LogError LLVM : %s\n", msg.c_str());
     return nullptr;
 }
 
-zero::Function *zero::logErrorF(std::string &msg)
+llvm::Function *zero::logErrorF(std::string msg)
 {
     fprintf(stderr, "LogError Func : %s\n", msg.c_str());
     return nullptr;

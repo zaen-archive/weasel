@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fstream>
+#include <memory>
 #include "zero/lex/token.h"
 #include "zero/basic/filemanager.h"
 
@@ -13,7 +14,7 @@ namespace zero
         char *_endBuffer;
         char *_currentBuffer;
 
-        Token *_currentToken;
+        std::shared_ptr<Token> _currentToken;
         SourceLocation _location;
 
     private:
@@ -26,22 +27,19 @@ namespace zero
 
         // TODO: Handle special character fir parseCharacter or string
         // Token section
-        Token *getToken();
-        Token *createToken(TokenKind kind, char *startBuffer, char *endBuffer);
-        Token *getType(char *startBuffer, char *endBuffer);
-        Token *getKeyword(char *startBuffer, char *endBuffer);
-        Token *getPunctuation();
-        Token *getStringLiteral();
-        Token *getCharacterLiteral();
-        // Token *getNumberLiteral();   -> Implemented at getToken directly
-        // Token *getBooleanLiteral();  -> Implemented at getToken directly
-        // Token *getNilLiteral();      -> Implemented at getToken directly
+        std::shared_ptr<Token> getToken();
+        std::shared_ptr<Token> createToken(TokenKind kind, char *startBuffer, char *endBuffer);
+        std::shared_ptr<Token> getType(char *startBuffer, char *endBuffer);
+        std::shared_ptr<Token> getKeyword(char *startBuffer, char *endBuffer);
+        std::shared_ptr<Token> getPunctuation();
+        std::shared_ptr<Token> getStringLiteral();
+        std::shared_ptr<Token> getCharacterLiteral();
 
     public:
         Lexer(FileManager *fileManager);
 
-        Token *getNextToken(bool skipSpace = false, bool eat = false);
-        Token *getCurrentToken() const { return _currentToken; }
+        std::shared_ptr<Token> getNextToken(bool skipSpace = false, bool eat = false);
+        std::shared_ptr<Token> getCurrentToken() const { return _currentToken; }
         bool expect(TokenKind kind);
     };
 

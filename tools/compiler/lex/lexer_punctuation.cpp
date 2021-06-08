@@ -1,6 +1,6 @@
 #include "zero/lex/lexer.h"
 
-zero::Token *zero::Lexer::getPunctuation()
+std::shared_ptr<zero::Token> zero::Lexer::getPunctuation()
 {
     auto *lastBuffer = _currentBuffer - 1;
 

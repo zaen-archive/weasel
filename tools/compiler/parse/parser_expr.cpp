@@ -10,9 +10,9 @@ void zero::Parser::ignoreNewline()
     }
 }
 
-zero::StatementExpression *zero::Parser::parseFunctionBody()
+std::shared_ptr<zero::StatementExpression> zero::Parser::parseFunctionBody()
 {
-    auto *stmt = new StatementExpression();
+    auto stmt = std::make_shared<StatementExpression>();
 
     // Enter statement scope
     {
@@ -22,7 +22,7 @@ zero::StatementExpression *zero::Parser::parseFunctionBody()
     getNextToken(true); // eat '{'
     while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseCurlyBracket))
     {
-        auto *expr = parseStatement();
+        auto expr = parseStatement();
 
         if (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseCurlyBracket))
         {
@@ -44,7 +44,7 @@ zero::StatementExpression *zero::Parser::parseFunctionBody()
     return stmt;
 }
 
-zero::Expression *zero::Parser::parseStatement()
+std::shared_ptr<zero::Expression> zero::Parser::parseStatement()
 {
     // Compound Statement Expression
     if (getCurrentToken()->isKind(TokenKind::TokenDelimOpenCurlyBracket))
@@ -64,64 +64,63 @@ zero::Expression *zero::Parser::parseStatement()
         return parseReturnStatement();
     }
 
-    auto *expr = parseExpression();
+    auto expr = parseExpression();
     if (!expr)
     {
-        auto *err = new Error(getCurrentToken(), "Invalid expression statement");
+        auto errToken = getCurrentToken();
 
         getNextTokenUntil(TokenKind::TokenSpaceNewline);
-
-        return ErrorTable::addError(err);
+        return ErrorTable::addError(errToken, "Invalid expression statement");
     }
 
     return expr;
 }
 
-zero::Expression *zero::Parser::parseLiteralExpression()
+std::shared_ptr<zero::Expression> zero::Parser::parseLiteralExpression()
 {
-    auto *token = getCurrentToken();
+    auto token = getCurrentToken();
     if (token->isKind(TokenKind::TokenLitBool))
     {
-        return new BoolLiteralExpression(token, token->getValue() == "true");
+        return std::make_shared<BoolLiteralExpression>(token, token->getValue() == "true");
     }
 
     if (token->isKind(TokenKind::TokenLitChar))
     {
         auto val = std::stoi(token->getValue());
-        return new NumberLiteralExpression(token, val, 8);
+        return std::make_shared<NumberLiteralExpression>(token, val, 8);
     }
 
     if (token->isKind(TokenKind::TokenLitNumber))
     {
         auto value = strtoll(token->getValue().c_str(), 0, 10);
-        return new NumberLiteralExpression(token, value);
+        return std::make_shared<NumberLiteralExpression>(token, value);
     }
 
     if (token->isKind(TokenKind::TokenLitString))
     {
-        return new StringLiteralExpression(token, token->getValue());
+        return std::make_shared<StringLiteralExpression>(token, token->getValue());
     }
 
-    return new NilLiteralExpression();
+    return std::make_shared<NilLiteralExpression>();
 }
 
-zero::Expression *zero::Parser::parseFunctionCallExpression(zero::Attribute *attr)
+std::shared_ptr<zero::Expression> zero::Parser::parseFunctionCallExpression(std::shared_ptr<zero::Attribute> attr)
 {
     auto identifier = getCurrentToken()->getValue();
     getNextToken();
 
-    std::vector<Expression *> args;
+    std::vector<std::shared_ptr<Expression>> args;
     if (!getNextToken()->isKind(TokenKind::TokenDelimCloseParen))
     {
         while (true)
         {
-            if (auto *arg = parseExpression())
+            if (auto arg = parseExpression())
             {
                 args.push_back(arg);
             }
             else
             {
-                return ErrorTable::addError(new Error(getCurrentToken(), "Expected argument expression"));
+                return ErrorTable::addError(getCurrentToken(), "Expected argument expression");
             }
 
             if (getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
@@ -131,7 +130,7 @@ zero::Expression *zero::Parser::parseFunctionCallExpression(zero::Attribute *att
 
             if (!getCurrentToken()->isKind(TokenKind::TokenPuncComma))
             {
-                return ErrorTable::addError(new Error(getCurrentToken(), "Expected ) or , in argument list"));
+                return ErrorTable::addError(getCurrentToken(), "Expected ) or , in argument list");
             }
 
             getNextToken();
@@ -139,18 +138,18 @@ zero::Expression *zero::Parser::parseFunctionCallExpression(zero::Attribute *att
     }
 
     getNextToken(); // eat )
-    return new CallExpression(identifier, args);
+    return std::make_shared<CallExpression>(identifier, args);
 }
 
-zero::Expression *zero::Parser::parseIdentifierExpression()
+std::shared_ptr<zero::Expression> zero::Parser::parseIdentifierExpression()
 {
     auto identifier = getCurrentToken()->getValue();
 
     // Check Variable exit
-    auto *attr = SymbolTable::getInstance().get(identifier);
+    auto attr = SymbolTable::getInstance().get(identifier);
     if (!attr)
     {
-        return ErrorTable::addError(new Error(getCurrentToken(), "Variable not yet declared"));
+        return ErrorTable::addError(getCurrentToken(), "Variable not yet declared");
     }
 
     if (attr->getKind() == AttributeKind::SymbolFunction)
@@ -158,30 +157,30 @@ zero::Expression *zero::Parser::parseIdentifierExpression()
         return parseFunctionCallExpression(attr);
     }
 
-    return new VariableExpression(getCurrentToken(), identifier);
+    return std::make_shared<VariableExpression>(getCurrentToken(), identifier);
 }
 
 // TODO: Remove cout
-zero::Expression *zero::Parser::parseParenExpression()
+std::shared_ptr<zero::Expression> zero::Parser::parseParenExpression()
 {
     getNextToken(); // eat (
-    auto *expr = parseExpression();
+    auto expr = parseExpression();
     if (!expr)
     {
         return ErrorTable::addError(getCurrentToken(), "Expected expression inside after (..");
     }
-    auto *val = (BinaryOperatorExpression *)expr;
-    if (val)
-    {
-        auto *lhs = (NumberLiteralExpression *)(val->getLHS());
-        auto *rhs = (NumberLiteralExpression *)(val->getRHS());
+    // auto *val = (BinaryOperatorExpression *)expr;
+    // if (val)
+    // {
+    //     auto *lhs = (NumberLiteralExpression *)(val->getLHS());
+    //     auto *rhs = (NumberLiteralExpression *)(val->getRHS());
 
-        std::cout << lhs->getValue() << " < " << val->getToken() << " > " << rhs->getValue() << "\n";
-    }
-    else
-    {
-        std::cout << "YOU STU\n";
-    }
+    //     std::cout << lhs->getValue() << " < " << val->getToken() << " > " << rhs->getValue() << "\n";
+    // }
+    // else
+    // {
+    //     std::cout << "YOU STU\n";
+    // }
 
     if (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
     {
@@ -192,7 +191,7 @@ zero::Expression *zero::Parser::parseParenExpression()
     return expr;
 }
 
-zero::Expression *zero::Parser::parsePrimaryExpression()
+std::shared_ptr<zero::Expression> zero::Parser::parsePrimaryExpression()
 {
     if (getCurrentToken()->isLiteral())
     {
@@ -212,24 +211,24 @@ zero::Expression *zero::Parser::parsePrimaryExpression()
     return ErrorTable::addError(getCurrentToken(), "Expected expression");
 }
 
-zero::Expression *zero::Parser::parseExpression()
+std::shared_ptr<zero::Expression> zero::Parser::parseExpression()
 {
-    auto *lhs = parsePrimaryExpression();
+    auto lhs = parsePrimaryExpression();
     if (!lhs)
     {
-        return ErrorTable::addError(new Error(getCurrentToken(), "Expected LHS"));
+        return ErrorTable::addError(getCurrentToken(), "Expected LHS");
     }
 
     getNextToken(); // Eat 'LHS' Expression
     return parseBinaryOperator(zero::defPrecOrder, lhs);
 }
 
-zero::Expression *zero::Parser::parseBinaryOperator(unsigned precOrder, zero::Expression *lhs)
+std::shared_ptr<zero::Expression> zero::Parser::parseBinaryOperator(unsigned precOrder, std::shared_ptr<Expression> lhs)
 {
     while (true)
     {
         // precedence =
-        auto *binOp = getCurrentToken();
+        auto binOp = getCurrentToken();
         if (!binOp->isOperator() || binOp->isNewline())
         {
             return lhs;
@@ -243,43 +242,43 @@ zero::Expression *zero::Parser::parseBinaryOperator(unsigned precOrder, zero::Ex
 
         getNextToken(); // eat 'operator'
         // eat =
-        auto *rhs = parsePrimaryExpression();
+        auto rhs = parsePrimaryExpression();
         if (!rhs)
         {
-            return ErrorTable::addError(new Error(getCurrentToken(), "Expected RHS Expression 1"));
+            return ErrorTable::addError(getCurrentToken(), "Expected RHS Expression 1");
         }
 
         getNextToken(); // eat 'rhs'
         rhs = parseBinaryOperator(prec.order, rhs);
         if (!rhs)
         {
-            return ErrorTable::addError(new Error(getCurrentToken(), "Expected RHS Expression 2"));
+            return ErrorTable::addError(getCurrentToken(), "Expected RHS Expression 2");
         }
 
-        lhs = new BinaryOperatorExpression(binOp, lhs, rhs);
+        lhs = std::make_shared<BinaryOperatorExpression>(binOp, lhs, rhs);
     }
 }
 
-zero::Expression *zero::Parser::parseReturnStatement()
+std::shared_ptr<zero::Expression> zero::Parser::parseReturnStatement()
 {
-    auto *retToken = getCurrentToken();
+    auto retToken = getCurrentToken();
     getNextToken(); // eat 'return'
-    auto *expr = parseExpression();
+
+    auto expr = parseExpression();
     if (!expr)
     {
-        auto *err = new Error(getCurrentToken(), "Expected expression for return statement.");
+        auto errToken = getCurrentToken();
 
         getNextTokenUntil(TokenKind::TokenSpaceNewline);
-
-        return ErrorTable::addError(err);
+        return ErrorTable::addError(errToken, "Expected expression for return statement.");
     }
 
-    return new ReturnExpression(retToken, expr);
+    return std::make_shared<ReturnExpression>(retToken, expr);
 }
 
-zero::Expression *zero::Parser::parseCompoundStatement()
+std::shared_ptr<zero::Expression> zero::Parser::parseCompoundStatement()
 {
-    auto *stmt = new StatementExpression();
+    auto stmt = std::make_shared<StatementExpression>();
 
     // Enter Statement Scope
     {
@@ -289,7 +288,7 @@ zero::Expression *zero::Parser::parseCompoundStatement()
     getNextToken(true); // eat '{'
     while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseCurlyBracket))
     {
-        auto *expr = parseExpression();
+        auto expr = parseExpression();
         if (!expr)
         {
             return ErrorTable::addError(getCurrentToken(), "Expected statement");
@@ -310,15 +309,15 @@ zero::Expression *zero::Parser::parseCompoundStatement()
 // let 'identifier' 'datatype'  = 'expr'
 // let 'identifier' 'datatype'
 // let 'identifier'             = 'expr'
-zero::Expression *zero::Parser::parseDeclarationExpression()
+std::shared_ptr<zero::Expression> zero::Parser::parseDeclarationExpression()
 {
     auto qualifier = getQualifier();
-    auto *qualToken = getCurrentToken();
+    auto qualToken = getCurrentToken();
 
     getNextToken(); // eat qualifier(let, final, const)
     if (!getCurrentToken()->isKind(TokenKind::TokenIdentifier))
     {
-        auto *errToken = getCurrentToken();
+        auto errToken = getCurrentToken();
 
         getNextTokenUntil(TokenKind::TokenSpaceNewline);
         return ErrorTable::addError(errToken, "Expected an identifier");
@@ -326,7 +325,7 @@ zero::Expression *zero::Parser::parseDeclarationExpression()
 
     auto identifier = getCurrentToken()->getValue();
 
-    Token *tokenTy = nullptr;
+    std::shared_ptr<Token> tokenTy = nullptr;
     getNextToken(); // eat 'identifier' and get next token
     if (getCurrentToken()->isDataType())
     {
@@ -345,22 +344,22 @@ zero::Expression *zero::Parser::parseDeclarationExpression()
         {
             return ErrorTable::addError(getCurrentToken(), "No Default Value for Non Volatile variable");
         }
-        auto *type = tokenTy->toType(getContext());
+        auto type = tokenTy->toType(getContext());
 
         // Insert Symbol Table
         {
-            auto *attr = new Attribute(identifier, AttributeScope::ScopeLocal, AttributeKind::SymbolVariable, type);
+            auto attr = std::make_shared<Attribute>(identifier, AttributeScope::ScopeLocal, AttributeKind::SymbolVariable, type);
             SymbolTable::getInstance().insert(identifier, attr);
         }
 
         // Create Variable with Default Value
-        return new DeclarationExpression(qualToken, identifier, qualifier, type);
+        return std::make_shared<DeclarationExpression>(qualToken, identifier, qualifier, type);
     }
 
     // Equal
     if (!getCurrentToken()->isKind(TokenKind::TokenOperatorEqual))
     {
-        auto *errToken = getCurrentToken();
+        auto errToken = getCurrentToken();
 
         getNextTokenUntil(TokenKind::TokenSpaceNewline);
         return ErrorTable::addError(errToken, "Expected equal sign");
@@ -370,17 +369,16 @@ zero::Expression *zero::Parser::parseDeclarationExpression()
     getNextToken(); // eat 'Equal Sign'
     if (getCurrentToken()->isKind(TokenKind::TokenSpaceNewline))
     {
-        return ErrorTable::addError(new Error(getCurrentToken(), "Expected RHS Value Expression but got 'New line'"));
+        return ErrorTable::addError(getCurrentToken(), "Expected RHS Value Expression but got 'New line'");
     }
 
-    auto *val = parseExpression();
+    auto val = parseExpression();
     if (!val)
     {
-        auto *err = new Error(getCurrentToken(), "Expected RHS Value Expression but got not valid expression");
+        auto errToken = getCurrentToken();
 
         getNextTokenUntil(TokenKind::TokenSpaceNewline);
-
-        return ErrorTable::addError(err);
+        return ErrorTable::addError(errToken, "Expected RHS Value Expression but got not valid expression");
     }
 
     llvm::Type *type = nullptr;
@@ -391,9 +389,9 @@ zero::Expression *zero::Parser::parseDeclarationExpression()
 
     // Insert Symbol Table
     {
-        auto *attr = new Attribute(identifier, AttributeScope::ScopeLocal, AttributeKind::SymbolVariable, type);
+        auto attr = std::make_shared<Attribute>(identifier, AttributeScope::ScopeLocal, AttributeKind::SymbolVariable, type);
         SymbolTable::getInstance().insert(identifier, attr);
     }
 
-    return new DeclarationExpression(qualToken, identifier, qualifier, type, val);
+    return std::make_shared<DeclarationExpression>(qualToken, identifier, qualifier, type, val);
 }

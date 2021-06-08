@@ -36,7 +36,7 @@ void zero::Parser::codegen()
             break;
         }
 
-        auto *fun = item->codegen(getContext());
+        auto fun = item->codegen(getContext());
         if (!fun)
         {
             std::cout << "\nSomthing happend to function symbol\n\n";
@@ -77,7 +77,7 @@ bool zero::Parser::parse()
     if (getCurrentToken()->isKind(TokenKind::TokenKeyExtern))
     {
         getNextToken(); // eat 'extern'
-        auto *func = parseDeclareFunction();
+        auto func = parseDeclareFunction();
         if (func)
         {
             addFunction(func);
@@ -88,7 +88,7 @@ bool zero::Parser::parse()
     // Function
     if (getCurrentToken()->isKind(TokenKind::TokenKeyFun))
     {
-        auto *func = parseFunction();
+        auto func = parseFunction();
         if (func)
         {
             addFunction(func);
@@ -98,20 +98,20 @@ bool zero::Parser::parse()
 
     // TODO: Doing Global Variable
     // For latter implementation
-    auto *token = getCurrentToken();
+    auto token = getCurrentToken();
     std::cout << "Parser -> " << token->getLocation().row << "/" << token->getLocation().col << "<>" << token->getTokenKindToInt() << ":" << token->getValue() << "\n";
     return true;
 }
 
 // get Next Token Until
-zero::Token *zero::Parser::getNextTokenUntil(zero::TokenKind kind)
+std::shared_ptr<zero::Token> zero::Parser::getNextTokenUntil(zero::TokenKind kind)
 {
     if (getCurrentToken()->isKind(kind))
     {
         return getCurrentToken();
     }
 
-    while (auto *token = getNextToken())
+    while (auto token = getNextToken())
     {
         if (token->isKind(kind))
         {
@@ -128,7 +128,7 @@ zero::Token *zero::Parser::getNextTokenUntil(zero::TokenKind kind)
 }
 
 // Get Next Token
-zero::Token *zero::Parser::getNextToken(bool skipSpace)
+std::shared_ptr<zero::Token> zero::Parser::getNextToken(bool skipSpace)
 {
     return _lexer->getNextToken(skipSpace);
 }

@@ -1,7 +1,7 @@
 #include <iostream>
 #include "zero/lex/lexer.h"
 
-zero::Token *zero::Lexer::getKeyword(char *startBuffer, char *endBuffer)
+std::shared_ptr<zero::Token> zero::Lexer::getKeyword(char *startBuffer, char *endBuffer)
 {
     if (compareBuffer(startBuffer, endBuffer, "fun"))
     {

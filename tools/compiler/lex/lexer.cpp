@@ -59,16 +59,11 @@ void zero::Lexer::setCurrentBuffer(char *buffer)
     _currentBuffer -= _currentBuffer - buffer;
 }
 
-zero::Token *zero::Lexer::createToken(zero::TokenKind kind, char *startBuffer, char *endBuffer)
-{
-    return new Token(kind, _location, startBuffer, endBuffer);
-}
-
 bool zero::Lexer::expect(zero::TokenKind kind)
 {
     auto *lastBuffer = _currentBuffer;
     auto ok = true;
-    auto *token = getToken();
+    auto token = getToken();
     while (token->isKind(TokenKind::TokenSpaceNewline))
     {
         token = getToken();
@@ -83,7 +78,12 @@ bool zero::Lexer::expect(zero::TokenKind kind)
     return ok;
 }
 
-zero::Token *zero::Lexer::getNextToken(bool skipSpace, bool eat)
+std::shared_ptr<zero::Token> zero::Lexer::createToken(zero::TokenKind kind, char *startBuffer, char *endBuffer)
+{
+    return std::make_shared<Token>(kind, _location, startBuffer, endBuffer);
+}
+
+std::shared_ptr<zero::Token> zero::Lexer::getNextToken(bool skipSpace, bool eat)
 {
     do
     {
@@ -93,7 +93,7 @@ zero::Token *zero::Lexer::getNextToken(bool skipSpace, bool eat)
     return _currentToken;
 }
 
-zero::Token *zero::Lexer::getToken()
+std::shared_ptr<zero::Token> zero::Lexer::getToken()
 {
     if (_currentBuffer == _endBuffer)
     {
@@ -124,7 +124,7 @@ zero::Token *zero::Lexer::getToken()
             ;
 
         /// Check Keyword ///
-        auto *ty = getKeyword(start, _currentBuffer);
+        auto ty = getKeyword(start, _currentBuffer);
         if (ty)
         {
             return ty;
@@ -220,7 +220,7 @@ zero::Token *zero::Lexer::getToken()
 
     if (ispunct(*lastBuffer))
     {
-        auto *puncToken = getPunctuation();
+        auto puncToken = getPunctuation();
         if (puncToken)
         {
             return puncToken;
