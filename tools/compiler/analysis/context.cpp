@@ -1,5 +1,6 @@
 #include <iostream>
 #include "llvm/IR/Function.h"
+#include "llvm/IR/Constant.h"
 #include "zero/analysis/context.h"
 #include "zero/symbol/symbol.h"
 
@@ -73,13 +74,18 @@ llvm::Function *zero::AnalysContext::codegen(Function *funAST)
             }
         }
 
-        auto *entry = llvm::BasicBlock::Create(*getContext(), "entry", funLLVM);
+        auto *entry = llvm::BasicBlock::Create(*getContext(), "", funLLVM);
         getBuilder()->SetInsertPoint(entry);
 
         // Create Block
         if (funAST->getBody())
         {
             funAST->getBody()->codegen(this);
+
+            if (funLLVM->getReturnType()->isVoidTy())
+            {
+                getBuilder()->CreateRetVoid();
+            }
         }
 
         // Exit from parameter scope
@@ -117,26 +123,69 @@ llvm::Value *zero::AnalysContext::codegen(StatementExpression *expr)
     return nullptr;
 }
 
+llvm::Value *zero::AnalysContext::codegen(CallExpression *expr)
+{
+    auto identifier = expr->getIdentifier();
+    auto args = expr->getArguments();
+    auto *fun = getModule()->getFunction(identifier);
+    if (args.size() != fun->arg_size())
+    {
+        return ErrorTable::addError(new Error(expr->getToken(), "Argument list is not equal"));
+    }
+
+    std::vector<llvm::Value *> argsV;
+    for (size_t i = 0; i < args.size(); i++)
+    {
+        argsV.push_back(args[i]->codegen(this));
+        if (!argsV.back())
+        {
+            return ErrorTable::addError(new Error(expr->getToken(), "Expected argument list index " + i));
+        }
+    }
+
+    return getBuilder()->CreateCall(fun, argsV, identifier);
+}
+
 llvm::Value *zero::AnalysContext::codegen(NumberLiteralExpression *expr)
 {
     return getBuilder()->getInt32(expr->getValue());
 }
 
+// Support another default value
 llvm::Value *zero::AnalysContext::codegen(DeclarationExpression *expr)
 {
     // Get Value Representation
-    auto *value = expr->getValue()->codegen(this);
+    llvm::Value *value;
+    llvm::Type *declTy;
+    if (expr->getValue())
+    {
+        value = expr->getValue()->codegen(this);
+        declTy = expr->getType();
 
-    // Checking Type
-    auto declTy = expr->getType() != nullptr ? expr->getType() : value->getType();
-    auto compareTy = compareType(declTy, value->getType());
-    if (compareTy == CompareType::Different)
-    {
-        return logErrorV(std::string("Cannot assign, expression type is different"));
+        if (declTy)
+        {
+            auto compareTy = compareType(declTy, value->getType());
+            if (compareTy == CompareType::Different)
+            {
+                return logErrorV(std::string("Cannot assign, expression type is different"));
+            }
+
+            if (compareTy == CompareType::Casting)
+            {
+                value = castIntegerType(value, declTy);
+            }
+        }
+        else
+        {
+            declTy = value->getType();
+        }
     }
-    if (compareTy == CompareType::Casting)
+    else
     {
-        value = castIntegerType(value, declTy);
+        assert(expr->getType());
+
+        declTy = expr->getType();
+        value = llvm::ConstantInt::get(declTy, 0);
     }
 
     // Allocating Address for declaration
@@ -173,14 +222,14 @@ llvm::Value *zero::AnalysContext::codegen(BinaryOperatorExpression *expr)
     switch (token->getTokenKind())
     {
     case TokenKind::TokenOperatorStar:
-        return getBuilder()->CreateMul(lhs, rhs, "multiply");
+        return getBuilder()->CreateMul(lhs, rhs, lhs->getName());
     case TokenKind::TokenOperatorSlash:
-        return getBuilder()->CreateSDiv(lhs, rhs, "division");
+        return getBuilder()->CreateSDiv(lhs, rhs, lhs->getName());
     // case TokenKind::TokenPuncPercent: return llvm::BinaryOperator::
     case TokenKind::TokenOperatorPlus:
-        return getBuilder()->CreateAdd(lhs, rhs, "addition");
+        return getBuilder()->CreateAdd(lhs, rhs, lhs->getName());
     case TokenKind::TokenOperatorMinus:
-        return getBuilder()->CreateSub(lhs, rhs, "subtraction");
+        return getBuilder()->CreateSub(lhs, rhs, lhs->getName());
     case TokenKind::TokenOperatorEqual:
     {
         auto *loadLhs = llvm::dyn_cast<llvm::LoadInst>(lhs);
@@ -199,32 +248,9 @@ llvm::Value *zero::AnalysContext::codegen(BinaryOperatorExpression *expr)
         return getBuilder()->CreateLoad(allocLhs);
     }
     default:
+        std::cout << "HELLO ERROR\n";
         return nullptr;
     }
-}
-
-// Remove it in future
-llvm::Value *zero::AnalysContext::codegen(AssignmentExpression *expr)
-{
-    auto *lhs = expr->getLHS()->codegen(this);
-    if (!lhs->getType()->isPointerTy())
-    {
-        return logErrorV(std::string("LHS should be a pointer to an address"));
-    }
-
-    auto *rhs = expr->getRHS()->codegen(this);
-    auto compareTy = compareType(lhs->getType()->getContainedType(0), rhs->getType());
-    if (compareTy == CompareType::Different)
-    {
-        return logErrorV(std::string("Cannot assign, expression type is different"));
-    }
-
-    if (compareTy == CompareType::Casting)
-    {
-        rhs = castIntegerType(rhs, lhs->getType()->getContainedType(0));
-    }
-
-    return getBuilder()->CreateStore(rhs, lhs);
 }
 
 llvm::Value *zero::AnalysContext::codegen(ReturnExpression *expr)

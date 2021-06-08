@@ -122,8 +122,6 @@ zero::Token *zero::Parser::getNextTokenUntil(zero::TokenKind kind)
         {
             break;
         }
-
-        delete token; // Delete Last Token
     }
 
     return nullptr;

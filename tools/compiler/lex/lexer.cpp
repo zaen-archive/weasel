@@ -80,12 +80,10 @@ bool zero::Lexer::expect(zero::TokenKind kind)
     }
 
     setCurrentBuffer(lastBuffer);
-
-    // delete token;
     return ok;
 }
 
-zero::Token *zero::Lexer::getNextToken(bool skipSpace)
+zero::Token *zero::Lexer::getNextToken(bool skipSpace, bool eat)
 {
     do
     {

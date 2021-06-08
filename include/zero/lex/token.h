@@ -149,7 +149,7 @@ namespace zero
     };
 
     // Default Precedence Order
-    static unsigned defPrecOrder = 18;
+    static unsigned defPrecOrder = 20;
 
 } // namespace zero
 

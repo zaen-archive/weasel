@@ -17,17 +17,17 @@ llvm::Value *zero::StatementExpression::codegen(AnalysContext *c)
     return c->codegen(this);
 }
 
-llvm::Value *zero::AssignmentExpression::codegen(AnalysContext *c)
-{
-    return c->codegen(this);
-}
-
 llvm::Value *zero::VariableExpression::codegen(AnalysContext *c)
 {
     return c->codegen(this);
 }
 
 llvm::Value *zero::BinaryOperatorExpression::codegen(AnalysContext *c)
+{
+    return c->codegen(this);
+}
+
+llvm::Value *zero::CallExpression::codegen(AnalysContext *c)
 {
     return c->codegen(this);
 }

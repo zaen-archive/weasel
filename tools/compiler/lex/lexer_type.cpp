@@ -59,6 +59,10 @@ zero::Token *zero::Lexer::getType(char *startBuffer, char *endBuffer)
     {
         kind = TokenKind::TokenTyDecimal;
     }
+    else if (compareBuffer(startBuffer, endBuffer, "void"))
+    {
+        kind = TokenKind::TokenTyVoid;
+    }
     else
     {
         return nullptr;

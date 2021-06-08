@@ -90,6 +90,12 @@ std::nullptr_t zero::ErrorTable::addError(Error *err)
     return nullptr;
 }
 
+std::nullptr_t zero::ErrorTable::addError(Token *token, std::string msg)
+{
+    _errors.push_back(new Error(token, msg));
+    return nullptr;
+}
+
 void zero::ErrorTable::showErrors()
 {
     if (_errors.empty())

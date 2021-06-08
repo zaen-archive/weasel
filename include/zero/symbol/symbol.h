@@ -103,6 +103,7 @@ namespace zero
         static void showErrors();
         static std::vector<Error *> getErrors() { return _errors; }
         static std::nullptr_t addError(Error *err);
+        static std::nullptr_t addError(Token *token, std::string msg);
     };
 
 } // namespace zero

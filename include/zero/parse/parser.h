@@ -41,8 +41,9 @@ namespace zero
         // Expression
         Expression *parseExpression();
         Expression *parsePrimaryExpression();
-        Expression *parseDefinitionExpression();
+        Expression *parseDeclarationExpression();
         Expression *parseFunctionCallExpression(Attribute *attr);
+        Expression *parseParenExpression();
 
         // Expression Literal
         Expression *parseLiteralExpression();

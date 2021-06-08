@@ -1,18 +1,9 @@
-extern fun puts(param byte)
-
 fun test() int {
-    return 123
-}
-
-fun tut() long {
-    let a = 1
-    /*
-    let *b = 2
-    a = b = a + 2
-    */
-    testing
-
+    let a = 123
     return a
 }
 
-/* testug
+fun tut() {
+    let a int
+    a = (12 + 12)
+}

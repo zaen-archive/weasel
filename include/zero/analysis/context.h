@@ -43,12 +43,13 @@ namespace zero
 
     public:
         llvm::Value *codegen(VariableExpression *expr);
-        llvm::Value *codegen(AssignmentExpression *expr);
         llvm::Value *codegen(NumberLiteralExpression *expr);
         llvm::Value *codegen(StatementExpression *expr);
+        llvm::Value *codegen(CallExpression *expr);
         llvm::Value *codegen(ReturnExpression *expr);
         llvm::Value *codegen(DeclarationExpression *expr);
         llvm::Value *codegen(BinaryOperatorExpression *expr); // TODO: Need to implement modulo operator
         llvm::Function *codegen(Function *func);
     };
+
 } // namespace zero

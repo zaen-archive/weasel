@@ -55,7 +55,7 @@ zero::Expression *zero::Parser::parseStatement()
     // Variable Definition Expression
     if (getCurrentToken()->isKeyDefinition())
     {
-        return parseDefinitionExpression();
+        return parseDeclarationExpression();
     }
 
     // Return Expression
@@ -107,14 +107,39 @@ zero::Expression *zero::Parser::parseLiteralExpression()
 
 zero::Expression *zero::Parser::parseFunctionCallExpression(zero::Attribute *attr)
 {
-    // auto identifier = getCurrentToken()->getValue();
-    // auto *parenExpr = getNextToken();
+    auto identifier = getCurrentToken()->getValue();
+    getNextToken();
 
-    // if (!parenExpr->isKind(TokenKind::TokenDelimOpenParen))
-    // {
-    // }
+    std::vector<Expression *> args;
+    if (!getNextToken()->isKind(TokenKind::TokenDelimCloseParen))
+    {
+        while (true)
+        {
+            if (auto *arg = parseExpression())
+            {
+                args.push_back(arg);
+            }
+            else
+            {
+                return ErrorTable::addError(new Error(getCurrentToken(), "Expected argument expression"));
+            }
 
-    return nullptr;
+            if (getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
+            {
+                break;
+            }
+
+            if (!getCurrentToken()->isKind(TokenKind::TokenPuncComma))
+            {
+                return ErrorTable::addError(new Error(getCurrentToken(), "Expected ) or , in argument list"));
+            }
+
+            getNextToken();
+        }
+    }
+
+    getNextToken(); // eat )
+    return new CallExpression(identifier, args);
 }
 
 zero::Expression *zero::Parser::parseIdentifierExpression()
@@ -136,6 +161,37 @@ zero::Expression *zero::Parser::parseIdentifierExpression()
     return new VariableExpression(getCurrentToken(), identifier);
 }
 
+// TODO: Remove cout
+zero::Expression *zero::Parser::parseParenExpression()
+{
+    getNextToken(); // eat (
+    auto *expr = parseExpression();
+    if (!expr)
+    {
+        return ErrorTable::addError(getCurrentToken(), "Expected expression inside after (..");
+    }
+    auto *val = (BinaryOperatorExpression *)expr;
+    if (val)
+    {
+        auto *lhs = (NumberLiteralExpression *)(val->getLHS());
+        auto *rhs = (NumberLiteralExpression *)(val->getRHS());
+
+        std::cout << lhs->getValue() << " < " << val->getToken() << " > " << rhs->getValue() << "\n";
+    }
+    else
+    {
+        std::cout << "YOU STU\n";
+    }
+
+    if (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
+    {
+        return ErrorTable::addError(getCurrentToken(), "Expected )");
+    }
+
+    getNextToken(); // eat )
+    return expr;
+}
+
 zero::Expression *zero::Parser::parsePrimaryExpression()
 {
     if (getCurrentToken()->isLiteral())
@@ -148,7 +204,12 @@ zero::Expression *zero::Parser::parsePrimaryExpression()
         return parseIdentifierExpression();
     }
 
-    return nullptr;
+    if (getCurrentToken()->isKind(TokenKind::TokenDelimOpenParen))
+    {
+        return parseParenExpression();
+    }
+
+    return ErrorTable::addError(getCurrentToken(), "Expected expression");
 }
 
 zero::Expression *zero::Parser::parseExpression()
@@ -167,6 +228,7 @@ zero::Expression *zero::Parser::parseBinaryOperator(unsigned precOrder, zero::Ex
 {
     while (true)
     {
+        // precedence =
         auto *binOp = getCurrentToken();
         if (!binOp->isOperator() || binOp->isNewline())
         {
@@ -180,18 +242,18 @@ zero::Expression *zero::Parser::parseBinaryOperator(unsigned precOrder, zero::Ex
         }
 
         getNextToken(); // eat 'operator'
+        // eat =
         auto *rhs = parsePrimaryExpression();
         if (!rhs)
         {
-            return ErrorTable::addError(new Error(getCurrentToken(), "Expected RHS Expression"));
+            return ErrorTable::addError(new Error(getCurrentToken(), "Expected RHS Expression 1"));
         }
 
         getNextToken(); // eat 'rhs'
-
         rhs = parseBinaryOperator(prec.order, rhs);
         if (!rhs)
         {
-            return nullptr;
+            return ErrorTable::addError(new Error(getCurrentToken(), "Expected RHS Expression 2"));
         }
 
         lhs = new BinaryOperatorExpression(binOp, lhs, rhs);
@@ -201,14 +263,7 @@ zero::Expression *zero::Parser::parseBinaryOperator(unsigned precOrder, zero::Ex
 zero::Expression *zero::Parser::parseReturnStatement()
 {
     auto *retToken = getCurrentToken();
-
     getNextToken(); // eat 'return'
-    if (getCurrentToken()->isKind(TokenKind::TokenSpaceNewline))
-    {
-        getNextToken(); // eat '\n'
-        return new ReturnExpression(retToken, nullptr);
-    }
-
     auto *expr = parseExpression();
     if (!expr)
     {
@@ -237,8 +292,7 @@ zero::Expression *zero::Parser::parseCompoundStatement()
         auto *expr = parseExpression();
         if (!expr)
         {
-            delete stmt;
-            return nullptr;
+            return ErrorTable::addError(getCurrentToken(), "Expected statement");
         }
 
         stmt->addBody(expr);
@@ -256,7 +310,7 @@ zero::Expression *zero::Parser::parseCompoundStatement()
 // let 'identifier' 'datatype'  = 'expr'
 // let 'identifier' 'datatype'
 // let 'identifier'             = 'expr'
-zero::Expression *zero::Parser::parseDefinitionExpression()
+zero::Expression *zero::Parser::parseDeclarationExpression()
 {
     auto qualifier = getQualifier();
     auto *qualToken = getCurrentToken();
@@ -264,11 +318,10 @@ zero::Expression *zero::Parser::parseDefinitionExpression()
     getNextToken(); // eat qualifier(let, final, const)
     if (!getCurrentToken()->isKind(TokenKind::TokenIdentifier))
     {
-        auto *err = new Error(getCurrentToken(), "Expected an identifier but got {" + getCurrentToken()->getValue() + "}");
+        auto *errToken = getCurrentToken();
 
         getNextTokenUntil(TokenKind::TokenSpaceNewline);
-
-        return ErrorTable::addError(err);
+        return ErrorTable::addError(errToken, "Expected an identifier");
     }
 
     auto identifier = getCurrentToken()->getValue();
@@ -285,12 +338,12 @@ zero::Expression *zero::Parser::parseDefinitionExpression()
     {
         if (!tokenTy)
         {
-            return ErrorTable::addError(new Error(getCurrentToken(), "Data Type Expected for default value declaration"));
+            return ErrorTable::addError(getCurrentToken(), "Data Type Expected for default value declaration");
         }
 
         if (qualifier != Qualifier::QualVolatile)
         {
-            return ErrorTable::addError(new Error(getCurrentToken(), "No Default Value for Non Volatile variable"));
+            return ErrorTable::addError(getCurrentToken(), "No Default Value for Non Volatile variable");
         }
         auto *type = tokenTy->toType(getContext());
 
@@ -307,11 +360,10 @@ zero::Expression *zero::Parser::parseDefinitionExpression()
     // Equal
     if (!getCurrentToken()->isKind(TokenKind::TokenOperatorEqual))
     {
-        auto *err = new Error(getCurrentToken(), "Equal sign expected but got {" + getCurrentToken()->getValue() + "}");
+        auto *errToken = getCurrentToken();
 
         getNextTokenUntil(TokenKind::TokenSpaceNewline);
-
-        return ErrorTable::addError(err);
+        return ErrorTable::addError(errToken, "Expected equal sign");
     }
 
     // Get Value

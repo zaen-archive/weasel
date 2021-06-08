@@ -10,15 +10,17 @@
 // Parser => Recursive descent parser
 int main(int argc, char *argv[])
 {
+    char *filePath;
     if (argc <= 1)
     {
-        std::cout << "Need Argument\n";
-        return 0;
+        filePath = (char *)"G:/Compiler/underrated_project/test/test.zy";
+    }
+    else
+    {
+        filePath = argv[1];
     }
 
-    auto *filePath = argv[1];
     auto *fileManager = new zero::FileManager(filePath);
-
     if (!fileManager->isValid())
     {
         std::cout << filePath << " Not exist\n";

@@ -21,7 +21,7 @@ zero::Function *zero::Parser::parseFunction()
 
     if (!getCurrentToken()->isKind(TokenKind::TokenDelimOpenCurlyBracket))
     {
-        return logErrorF(std::string("Expected '{'"));
+        return ErrorTable::addError(getCurrentToken(), "Expected {");
     }
 
     // Set Symbol for parameters and enter a scope
@@ -40,7 +40,7 @@ zero::Function *zero::Parser::parseFunction()
     auto *body = parseFunctionBody();
     if (!body)
     {
-        return logErrorF(std::string("Expected valid body statement!."));
+        return ErrorTable::addError(getCurrentToken(), "Expected valid body statement!.");
     }
 
     // Exit parameter scope
@@ -57,22 +57,20 @@ zero::Function *zero::Parser::parseDeclareFunction()
 {
     if (!getCurrentToken()->isKind(TokenKind::TokenKeyFun))
     {
-        return logErrorF(std::string("Expected fun keyword"));
+        return ErrorTable::addError(getCurrentToken(), "Expected fun keyword");
     }
 
     // get next and eat 'fun'
     if (!getNextToken()->isKind(TokenKind::TokenIdentifier))
     {
-        std::cerr << "Error : " << getCurrentToken()->getTokenKindToInt() << "\n";
-        return logErrorF(std::string("Expected an identifier but found : " + getCurrentToken()->getValue()));
+        return ErrorTable::addError(getCurrentToken(), "Expected an identifier");
     }
 
     auto identifier = getCurrentToken()->getValue();
-
     getNextToken(); // eat 'identifier'
     if (!getCurrentToken()->isKind(TokenKind::TokenDelimOpenParen))
     {
-        return logErrorF(std::string("Expected an open paren"));
+        return ErrorTable::addError(getCurrentToken(), "Expected (");
     }
 
     getNextToken(); // eat '('
@@ -81,7 +79,7 @@ zero::Function *zero::Parser::parseDeclareFunction()
     {
         if (!args.back())
         {
-            return logErrorF(std::string("Expected an function argument"));
+            return ErrorTable::addError(getCurrentToken(), "Expected function argument");
         }
     }
 
@@ -102,11 +100,13 @@ zero::Function *zero::Parser::parseDeclareFunction()
     // Check Symbol Table
     if (SymbolTable::getInstance().get(identifier))
     {
-        return logErrorF(std::string("Function already declared"));
+        return ErrorTable::addError(getCurrentToken(), "Function already declared");
     }
 
     // Create Symbol for the function
-    SymbolTable::getInstance().insert(identifier, new Attribute(identifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
+    {
+        SymbolTable::getInstance().insert(identifier, new Attribute(identifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
+    }
 
     return func;
 }

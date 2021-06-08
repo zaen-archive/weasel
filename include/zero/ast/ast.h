@@ -60,7 +60,6 @@ namespace zero
     class Expression;
 
     // Expression Without Block
-    class AssignmentExpression;
     class LiteralExpression;
     class ReturnExpression;
     class CallExpression;
@@ -125,21 +124,6 @@ namespace zero
 // Expression Without Block PART
 namespace zero
 {
-    // Assignment Expression
-    class AssignmentExpression : public Expression
-    {
-    private:
-        Expression *_lhs;
-        Expression *_rhs;
-
-    public:
-        AssignmentExpression(Expression *lhs, Expression *rhs) : _lhs(lhs), _rhs(rhs) {}
-
-        Expression *getLHS() const { return _lhs; }
-        Expression *getRHS() const { return _rhs; }
-        llvm::Value *codegen(AnalysContext *context);
-    };
-
     // Return Expression
     class ReturnExpression : public Expression
     {
@@ -157,8 +141,16 @@ namespace zero
     // Call Expression
     class CallExpression : public Expression
     {
+        std::string _identifier;
+        std::vector<Expression *> _args;
+
     public:
-        llvm::Value *codegen(AnalysContext *context) { return nullptr; }
+        CallExpression(std::string identifier, std::vector<Expression *> args) : _identifier(identifier), _args(args) {}
+
+        std::string getIdentifier() const { return _identifier; }
+        std::vector<Expression *> getArguments() const { return _args; }
+
+        llvm::Value *codegen(AnalysContext *context);
     };
 
     // Group Expression

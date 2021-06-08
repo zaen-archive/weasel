@@ -40,7 +40,7 @@ namespace zero
     public:
         Lexer(FileManager *fileManager);
 
-        Token *getNextToken(bool skipSpace = false);
+        Token *getNextToken(bool skipSpace = false, bool eat = false);
         Token *getCurrentToken() const { return _currentToken; }
         bool expect(TokenKind kind);
     };
