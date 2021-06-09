@@ -29,7 +29,7 @@ We also can binding the library created by zero language into another languages 
 
 - [x] Function Declaration
 - [x] Function Definition
-- [ ] Function Call
+- [x] Function Call
 
 ### Variable declaration
 
