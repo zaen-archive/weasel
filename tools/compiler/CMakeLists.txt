@@ -15,6 +15,7 @@ add_llvm_example(compiler
   # test_llvm.cpp
   basic/filemanager.cpp
   analysis/context.cpp
+  analysis/context_helper.cpp
   lex/lexer.cpp
   lex/lexer_type.cpp
   lex/lexer_punctuation.cpp

@@ -30,6 +30,10 @@ std::shared_ptr<zero::StatementExpression> zero::Parser::parseFunctionBody()
             {
                 stmt->addBody(expr);
             }
+            else
+            {
+                ErrorTable::addError(getCurrentToken(), "Expected statement");
+            }
         }
 
         ignoreNewline();
@@ -169,25 +173,13 @@ std::shared_ptr<zero::Expression> zero::Parser::parseParenExpression()
     {
         return ErrorTable::addError(getCurrentToken(), "Expected expression inside after (..");
     }
-    // auto *val = (BinaryOperatorExpression *)expr;
-    // if (val)
-    // {
-    //     auto *lhs = (NumberLiteralExpression *)(val->getLHS());
-    //     auto *rhs = (NumberLiteralExpression *)(val->getRHS());
-
-    //     std::cout << lhs->getValue() << " < " << val->getToken() << " > " << rhs->getValue() << "\n";
-    // }
-    // else
-    // {
-    //     std::cout << "YOU STU\n";
-    // }
 
     if (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
     {
         return ErrorTable::addError(getCurrentToken(), "Expected )");
     }
 
-    getNextToken(); // eat )
+    // Token ) will eated next time
     return expr;
 }
 
@@ -227,7 +219,6 @@ std::shared_ptr<zero::Expression> zero::Parser::parseBinaryOperator(unsigned pre
 {
     while (true)
     {
-        // precedence =
         auto binOp = getCurrentToken();
         if (!binOp->isOperator() || binOp->isNewline())
         {
@@ -241,7 +232,6 @@ std::shared_ptr<zero::Expression> zero::Parser::parseBinaryOperator(unsigned pre
         }
 
         getNextToken(); // eat 'operator'
-        // eat =
         auto rhs = parsePrimaryExpression();
         if (!rhs)
         {

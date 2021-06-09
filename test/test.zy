@@ -4,6 +4,7 @@ fun test() int {
 }
 
 fun tut() {
-    let a int
-    a = (12 + 12)
+    let b = 2
+    let c = 3
+    let a = (12 + b) * c
 }
