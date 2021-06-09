@@ -2,14 +2,6 @@
 #include "zero/analysis/context.h"
 #include "zero/symbol/symbol.h"
 
-void zero::Parser::ignoreNewline()
-{
-    if (getCurrentToken()->isNewline())
-    {
-        getNextToken(true);
-    }
-}
-
 std::shared_ptr<zero::StatementExpression> zero::Parser::parseFunctionBody()
 {
     auto stmt = std::make_shared<StatementExpression>();
@@ -164,7 +156,6 @@ std::shared_ptr<zero::Expression> zero::Parser::parseIdentifierExpression()
     return std::make_shared<VariableExpression>(getCurrentToken(), identifier);
 }
 
-// TODO: Remove cout
 std::shared_ptr<zero::Expression> zero::Parser::parseParenExpression()
 {
     getNextToken(); // eat (
@@ -299,6 +290,8 @@ std::shared_ptr<zero::Expression> zero::Parser::parseCompoundStatement()
 // let 'identifier' 'datatype'  = 'expr'
 // let 'identifier' 'datatype'
 // let 'identifier'             = 'expr'
+// let 'identifier' *'datatype'
+// let 'identifier'             = &'expr'
 std::shared_ptr<zero::Expression> zero::Parser::parseDeclarationExpression()
 {
     auto qualifier = getQualifier();
@@ -315,17 +308,12 @@ std::shared_ptr<zero::Expression> zero::Parser::parseDeclarationExpression()
 
     auto identifier = getCurrentToken()->getValue();
 
-    std::shared_ptr<Token> tokenTy = nullptr;
     getNextToken(); // eat 'identifier' and get next token
-    if (getCurrentToken()->isDataType())
-    {
-        tokenTy = getCurrentToken();
-        getNextToken(); // eat 'data type'
-    }
 
+    auto *type = parseDataType();
     if (getCurrentToken()->isKind(TokenKind::TokenSpaceNewline))
     {
-        if (!tokenTy)
+        if (!type)
         {
             return ErrorTable::addError(getCurrentToken(), "Data Type Expected for default value declaration");
         }
@@ -334,8 +322,6 @@ std::shared_ptr<zero::Expression> zero::Parser::parseDeclarationExpression()
         {
             return ErrorTable::addError(getCurrentToken(), "No Default Value for Non Volatile variable");
         }
-        auto type = tokenTy->toType(getContext());
-
         // Insert Symbol Table
         {
             auto attr = std::make_shared<Attribute>(identifier, AttributeScope::ScopeLocal, AttributeKind::SymbolVariable, type);
@@ -369,12 +355,6 @@ std::shared_ptr<zero::Expression> zero::Parser::parseDeclarationExpression()
 
         getNextTokenUntil(TokenKind::TokenSpaceNewline);
         return ErrorTable::addError(errToken, "Expected RHS Value Expression but got not valid expression");
-    }
-
-    llvm::Type *type = nullptr;
-    if (tokenTy)
-    {
-        type = tokenTy->toType(getContext());
     }
 
     // Insert Symbol Table

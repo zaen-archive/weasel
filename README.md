@@ -69,7 +69,8 @@ We also can binding the library created by zero language into another languages 
 
 ### Array
 
-- [ ] Support pointer
+- [x] Support pointer type
+- [ ] Support Address of
 - [ ] Support data Sequence
 
 ### IO console (input/output)

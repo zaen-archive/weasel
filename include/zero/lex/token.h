@@ -187,7 +187,8 @@ namespace zero
         Precedence getPrecedence();
 
     public:
-        llvm::Type *toType(AnalysContext *c);
+        // Need to implement 128 float type
+        llvm::Type *toType(AnalysContext *c, bool pointerTy = false);
     };
 
 } // namespace zero

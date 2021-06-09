@@ -175,7 +175,14 @@ llvm::Value *zero::AnalysContext::codegen(DeclarationExpression *expr)
         assert(expr->getType());
 
         declTy = expr->getType();
-        value = llvm::ConstantInt::get(declTy, 0);
+        if (declTy->isPointerTy())
+        {
+            value = llvm::ConstantPointerNull::get(llvm::PointerType::get(declTy->getPointerElementType(), declTy->getPointerAddressSpace()));
+        }
+        else
+        {
+            value = llvm::ConstantInt::get(declTy, 0);
+        }
     }
 
     // Allocating Address for declaration

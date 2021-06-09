@@ -1,10 +1,5 @@
-fun test() int {
-    let a = 123
-    return a
-}
 
-fun tut() {
-    let b = 2
-    let c = 3
-    let a = (12 + b) * c
+extern fun puts(i *byte)
+
+fun tut(a int, b byte) {
 }

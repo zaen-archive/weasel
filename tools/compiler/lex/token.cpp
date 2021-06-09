@@ -2,56 +2,57 @@
 #include "zero/lex/token.h"
 #include "zero/ast/ast.h"
 
-llvm::Type *zero::Token::toType(AnalysContext *c)
+llvm::Type *zero::Token::toType(AnalysContext *c, bool pointerTy)
 {
     auto *builder = c->getBuilder();
-
-    // Integer
+    llvm::Type *type;
     if (isKind(TokenKind::TokenTyByte) || isKind(TokenKind::TokenTySbyte))
     {
-        return builder->getInt8Ty();
+        // Integer
+        type = builder->getInt8Ty();
     }
-    if (isKind(TokenKind::TokenTyShort) || isKind(TokenKind::TokenTyUshort))
+    else if (isKind(TokenKind::TokenTyShort) || isKind(TokenKind::TokenTyUshort))
     {
-        return builder->getInt16Ty();
+        type = builder->getInt16Ty();
     }
-    if (isKind(TokenKind::TokenTyInt) || isKind(TokenKind::TokenTyUint))
+    else if (isKind(TokenKind::TokenTyInt) || isKind(TokenKind::TokenTyUint))
     {
-        return builder->getInt32Ty();
+        type = builder->getInt32Ty();
     }
-    if (isKind(TokenKind::TokenTyLong) || isKind(TokenKind::TokenTyUlong))
+    else if (isKind(TokenKind::TokenTyLong) || isKind(TokenKind::TokenTyUlong))
     {
-        return builder->getInt64Ty();
+        type = builder->getInt64Ty();
     }
-    if (isKind(TokenKind::TokenTyInt128) || isKind(TokenKind::TokenTyUnt128))
+    else if (isKind(TokenKind::TokenTyInt128) || isKind(TokenKind::TokenTyUnt128))
     {
-        return builder->getInt128Ty();
+        type = builder->getInt128Ty();
+    }
+    else if (isKind(TokenKind::TokenTyFloat))
+    {
+        // Float
+        type = builder->getFloatTy();
+    }
+    else if (isKind(TokenKind::TokenTyDouble))
+    {
+        type = builder->getDoubleTy();
+    }
+    else if (isKind(TokenKind::TokenTyBool))
+    {
+        // Bool
+        type = builder->getInt1Ty();
+    }
+    else if (isKind(TokenKind::TokenTyVoid))
+    {
+        // Void
+        type = builder->getVoidTy();
     }
 
-    // Float
-    if (isKind(TokenKind::TokenTyFloat))
+    if (pointerTy)
     {
-        return builder->getFloatTy();
-    }
-    if (isKind(TokenKind::TokenTyDouble))
-    {
-        return builder->getDoubleTy();
+        return llvm::PointerType::get(type, 0);
     }
 
-    // TODO: Need more research
-    // if (isKind(TokenKind::TokenTyDecimal))
-    // {
-    //     return new Type(builder->getDecimalTy());
-    // }
-
-    // Bool
-    if (isKind(TokenKind::TokenTyBool))
-    {
-        return builder->getInt1Ty();
-    }
-
-    // Void
-    return builder->getVoidTy();
+    return type;
 }
 
 zero::Qualifier zero::Token::getQualifier()

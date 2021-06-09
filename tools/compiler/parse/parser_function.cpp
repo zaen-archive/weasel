@@ -127,32 +127,47 @@ std::vector<std::shared_ptr<zero::FunctionArgument>> zero::Parser::parseFunction
             // immeadiate return to inform there is wrong with arguments
             return args;
         }
+
+        if (!getCurrentToken()->isKind(TokenKind::TokenPuncComma))
+        {
+            break;
+        }
+
+        getNextToken(); // eat ','
     }
 
-    getNextToken(); // eat ')'
+    if (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
+    {
+        ErrorTable::addError(getCurrentToken(), "Expected ) in function argument");
+        if (!getCurrentToken()->isKind(TokenKind::TokenDelimOpenSquareBracket))
+        {
+
+            getNextTokenUntil(TokenKind::TokenDelimCloseParen);
+        }
+    }
+    else
+    {
+        getNextToken(); // eat ')'
+    }
 
     return args;
 }
 
 std::shared_ptr<zero::FunctionArgument> zero::Parser::parseFunctionArgument()
 {
-    auto token = getCurrentToken();
-    if (!token->isKind(TokenKind::TokenIdentifier))
+    if (!getCurrentToken()->isKind(TokenKind::TokenIdentifier))
     {
-        return nullptr;
+        return ErrorTable::addError(getCurrentToken(), "Expected identifier in function argument");
     }
 
-    auto identifier = token->getValue();
-    token = getNextToken();
-    if (!token->isDataType())
+    auto identifier = getCurrentToken()->getValue();
+    getNextToken();
+
+    auto *type = parseDataType();
+    if (!type)
     {
-        return nullptr;
+        return ErrorTable::addError(getCurrentToken(), "Expected type in function argument");
     }
 
-    if (getNextToken()->isKind(TokenKind::TokenPuncComma))
-    {
-        getNextToken(); // eat ','
-    }
-
-    return std::make_shared<FunctionArgument>(identifier, token->toType(getContext()));
+    return std::make_shared<FunctionArgument>(identifier, type);
 }

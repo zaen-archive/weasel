@@ -19,12 +19,12 @@ namespace zero
 
     public:
         void addFunction(std::shared_ptr<Function> func) { _funcs.push_back(func); }
+        bool expectToken(TokenKind kind) { return _lexer->expect(kind); }
 
+        Qualifier getQualifier() const { return getCurrentToken()->getQualifier(); }
         std::shared_ptr<Token> getCurrentToken() const { return _lexer->getCurrentToken(); }
         std::shared_ptr<Token> getNextToken(bool skipSpace = false);
         std::shared_ptr<Token> getNextTokenUntil(TokenKind kind);
-        Qualifier getQualifier() const { return getCurrentToken()->getQualifier(); }
-        bool expectToken(TokenKind kind) { return _lexer->expect(kind); }
 
         // Function
         std::shared_ptr<Function> parseDeclareFunction();
@@ -51,6 +51,7 @@ namespace zero
         std::shared_ptr<Expression> parseBinaryOperator(unsigned prec, std::shared_ptr<zero::Expression> lhs);
 
         // Helper
+        llvm::Type *parseDataType();
         void ignoreNewline();
 
     public:
