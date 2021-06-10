@@ -17,7 +17,6 @@ We also can binding the library created by zero language into another languages 
 
 # FOLDER STRUCTURE
 
-- examples (llvm examples and some testing)
 - include (folder header)
 - test (program for to be compiled)
 - tools (tools program)
