@@ -2,6 +2,7 @@ llvm-build
 llvm-project
 build
 clang
+examples
 
 .vscode
 .vs
