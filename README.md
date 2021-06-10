@@ -75,6 +75,8 @@ We also can binding the library created by zero language into another languages 
 
 ### IO console (input/output)
 
+- [ ] Support simple output
+- [ ] Support simple input
 - [ ] Support IO
 
 ### Heterogeneous Computing
@@ -89,6 +91,10 @@ We also can binding the library created by zero language into another languages 
 
 # BUGS
 
-- [ ] Weird Lexeme Location(row, col, position)
+- [x] Weird Lexeme Location(row, col, position)
 - [ ] I implemented binaryexpression for precedence associative right to left wrongly
 - [ ] Library inside lib folder instead of inside tools folder
+
+# BUGS SOLVED
+
+- weird lexeme Location solved by use filemapped source

@@ -6,8 +6,10 @@ std::shared_ptr<zero::Token> zero::Lexer::getStringLiteral()
     while (*getNextBuffer() != '"')
         ;
 
-    getNextToken(); // double quote (")
-    return createToken(TokenKind::TokenLitString, start, _currentBuffer);
+    auto *endString = _currentBuffer;
+
+    getNextBuffer(); // eat double quote (")
+    return createToken(TokenKind::TokenLitString, start, endString);
 }
 
 std::shared_ptr<zero::Token> zero::Lexer::getCharacterLiteral()

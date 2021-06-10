@@ -1,6 +1,8 @@
 #include <fstream>
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/Target/TargetMachine.h"
 #include "zero/parse/parser.h"
 #include "zero/analysis/context.h"
 #include "zero/ast/ast.h"
@@ -13,7 +15,7 @@ int main(int argc, char *argv[])
     char *filePath;
     if (argc <= 1)
     {
-        filePath = (char *)"G:/Compiler/underrated_project/test/test.zy";
+        filePath = (char *)"G:/Compiler/underrated_project/test/test.ze";
     }
     else
     {

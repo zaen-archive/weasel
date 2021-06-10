@@ -1,6 +1,9 @@
 #include <iostream>
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Constant.h"
+#include "llvm/Transforms/InstCombine/InstCombine.h"
+#include "llvm/Transforms/Scalar.h"
+#include "llvm/Transforms/Scalar/GVN.h"
 #include "zero/analysis/context.h"
 #include "zero/symbol/symbol.h"
 
@@ -9,6 +12,18 @@ zero::AnalysContext::AnalysContext(std::string moduleName)
     _context = new llvm::LLVMContext();
     _module = new llvm::Module(moduleName, *getContext());
     _builder = new llvm::IRBuilder<>(*getContext());
+    _fpm = new llvm::legacy::FunctionPassManager(_module);
+
+    // Do simple "peephole" optimizations and bit-twiddling optzns.
+    _fpm->add(llvm::createInstructionCombiningPass());
+    // Reassociate expressions.
+    _fpm->add(llvm::createReassociatePass());
+    // Eliminate Common SubExpressions.
+    _fpm->add(llvm::createGVNPass());
+    // Simplify the control flow graph (deleting unreachable blocks, etc).
+    _fpm->add(llvm::createCFGSimplificationPass());
+    // Initialize Function Pass
+    _fpm->doInitialization();
 }
 
 std::string zero::AnalysContext::getDefaultLabel()
@@ -36,7 +51,7 @@ llvm::Function *zero::AnalysContext::codegen(Function *funAST)
     }
 
     auto *funTyLLVM = llvm::FunctionType::get(retTy, args, false);
-    auto *funLLVM = llvm::Function::Create(funTyLLVM, llvm::Function::ExternalWeakLinkage, funName, *getModule());
+    auto *funLLVM = llvm::Function::Create(funTyLLVM, llvm::Function::LinkageTypes::ExternalLinkage, funName, *getModule());
     auto idx = 0;
     for (auto &item : funLLVM->args())
     {
@@ -141,7 +156,16 @@ llvm::Value *zero::AnalysContext::codegen(NumberLiteralExpression *expr)
     return getBuilder()->getInt32(expr->getValue());
 }
 
-// Support another default value
+llvm::Value *zero::AnalysContext::codegen(StringLiteralExpression *expr)
+{
+    auto *str = getBuilder()->CreateGlobalString(expr->getValue());
+    std::vector<llvm::Value *> idxList;
+    idxList.push_back(getBuilder()->getInt8(0));
+    idxList.push_back(getBuilder()->getInt8(0));
+
+    return llvm::ConstantExpr::getGetElementPtr(str->getType()->getElementType(), str, idxList, true);
+}
+
 llvm::Value *zero::AnalysContext::codegen(DeclarationExpression *expr)
 {
     // Get Value Representation

@@ -103,7 +103,10 @@ std::shared_ptr<zero::Expression> zero::Parser::parseLiteralExpression()
 std::shared_ptr<zero::Expression> zero::Parser::parseFunctionCallExpression(std::shared_ptr<zero::Attribute> attr)
 {
     auto identifier = getCurrentToken()->getValue();
-    getNextToken();
+    if (!getNextToken()->isKind(TokenKind::TokenDelimOpenParen))
+    {
+        return ErrorTable::addError(getCurrentToken(), "Expected ( for function call");
+    }
 
     std::vector<std::shared_ptr<Expression>> args;
     if (!getNextToken()->isKind(TokenKind::TokenDelimCloseParen))
@@ -133,7 +136,6 @@ std::shared_ptr<zero::Expression> zero::Parser::parseFunctionCallExpression(std:
         }
     }
 
-    getNextToken(); // eat )
     return std::make_shared<CallExpression>(identifier, args);
 }
 

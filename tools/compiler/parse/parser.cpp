@@ -23,6 +23,7 @@ void zero::Parser::codegen()
         SymbolTable::getInstance().reset(); // We need to reset symbol table
     }
 
+    auto *fpm = getContext()->getFunctionPass();
     auto ok = true;
     std::cout << "Functions : " << _funcs.size() << "\n";
     for (auto &item : _funcs)
@@ -36,7 +37,7 @@ void zero::Parser::codegen()
             break;
         }
 
-        auto fun = item->codegen(getContext());
+        auto *fun = item->codegen(getContext());
         if (!fun)
         {
             std::cout << "\nSomthing happend to function symbol\n\n";
@@ -51,6 +52,9 @@ void zero::Parser::codegen()
             ok = false;
             break;
         }
+
+        // TODO: Run Function Pass
+        // fpm->run(*fun);
     }
 
     if (!ok || llvm::verifyModule(*getContext()->getModule()))

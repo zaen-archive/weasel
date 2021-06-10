@@ -22,6 +22,11 @@ llvm::Value *zero::VariableExpression::codegen(AnalysContext *c)
     return c->codegen(this);
 }
 
+llvm::Value *zero::StringLiteralExpression::codegen(AnalysContext *c)
+{
+    return c->codegen(this);
+}
+
 llvm::Value *zero::BinaryOperatorExpression::codegen(AnalysContext *c)
 {
     return c->codegen(this);

@@ -13,7 +13,6 @@ std::shared_ptr<zero::Function> zero::Parser::parseFunction()
     {
         return nullptr;
     }
-    func->setIsDefine(true);
 
     // Ignore new line
     if (getCurrentToken()->isKind(TokenKind::TokenSpaceNewline))
@@ -40,14 +39,21 @@ std::shared_ptr<zero::Function> zero::Parser::parseFunction()
     }
 
     auto body = parseFunctionBody();
+
+    // Exit parameter scope
+    {
+        SymbolTable::getInstance().exitScope();
+    }
+
     if (!body)
     {
         return ErrorTable::addError(getCurrentToken(), "Expected valid body statement!.");
     }
 
-    // Exit parameter scope
+    if (!body->getBody().empty())
     {
-        SymbolTable::getInstance().exitScope();
+
+        func->setIsDefine(true);
     }
 
     func->setBody(body);

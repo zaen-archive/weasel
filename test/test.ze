@@ -1,0 +1,10 @@
+
+fun test(i *byte) int {}
+
+fun tut() int {
+    test("HELLO")
+    let a = 12
+    let b = (a + a) * 2
+
+    return b - a
+}

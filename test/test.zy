@@ -1,5 +1,0 @@
-
-extern fun puts(i *byte)
-
-fun tut(a int, b byte) {
-}

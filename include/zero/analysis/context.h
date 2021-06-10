@@ -6,6 +6,7 @@
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "zero/ast/ast.h"
 
 namespace zero
@@ -25,6 +26,7 @@ namespace zero
         llvm::Module *_module;
         llvm::LLVMContext *_context;
         llvm::IRBuilder<> *_builder;
+        llvm::legacy::FunctionPassManager *_fpm;
 
         unsigned long long _counter = 0;
 
@@ -34,6 +36,7 @@ namespace zero
         llvm::LLVMContext *getContext() const { return _context; }
         llvm::Module *getModule() const { return _module; }
         llvm::IRBuilder<> *getBuilder() const { return _builder; }
+        llvm::legacy::FunctionPassManager *getFunctionPass() const { return _fpm; }
 
         llvm::Value *castIntegerType(llvm::Value *lhs, llvm::Value *rhs);
         llvm::Value *castIntegerType(llvm::Value *value, llvm::Type *castTy);
@@ -47,6 +50,7 @@ namespace zero
         llvm::Value *codegen(CallExpression *expr);
         llvm::Value *codegen(ReturnExpression *expr);
         llvm::Value *codegen(DeclarationExpression *expr);
+        llvm::Value *codegen(StringLiteralExpression *expr);
         // TODO: Need to implement modulo operator
         // TODO: Paren Expression get bugs
         llvm::Value *codegen(BinaryOperatorExpression *expr);

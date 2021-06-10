@@ -202,7 +202,7 @@ namespace zero
 
         std::string getValue() const { return _value; }
 
-        llvm::Value *codegen(AnalysContext *context) { return nullptr; }
+        llvm::Value *codegen(AnalysContext *context);
     };
 
     // Nil Literal Expression
