@@ -29,8 +29,8 @@ namespace zero
         // Function
         std::shared_ptr<Function> parseDeclareFunction();
         std::shared_ptr<Function> parseFunction();
-        std::vector<std::shared_ptr<FunctionArgument>> parseFunctionArguments();
-        std::shared_ptr<FunctionArgument> parseFunctionArgument();
+        // std::vector<std::shared_ptr<FunctionArgument>> parseFunctionArguments();
+        // std::shared_ptr<FunctionArgument> parseFunctionArgument();
 
         // Statement
         std::shared_ptr<StatementExpression> parseFunctionBody();

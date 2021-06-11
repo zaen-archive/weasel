@@ -42,6 +42,11 @@ llvm::Value *zero::ReturnExpression::codegen(AnalysContext *c)
     return c->codegen(this);
 }
 
+llvm::Value *zero::NilLiteralExpression::codegen(AnalysContext *c)
+{
+    return c->codegen(this);
+}
+
 llvm::Function *zero::Function::codegen(AnalysContext *c)
 {
     return c->codegen(this);

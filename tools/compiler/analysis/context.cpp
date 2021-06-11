@@ -31,7 +31,7 @@ std::string zero::AnalysContext::getDefaultLabel()
     return std::to_string(_counter++);
 }
 
-llvm::Function *zero::AnalysContext::codegen(Function *funAST)
+llvm::Function *zero::AnalysContext::codegen(zero::Function *funAST)
 {
     auto funName = funAST->getIdentifier();
     if (getModule()->getFunction(funName))
@@ -39,18 +39,17 @@ llvm::Function *zero::AnalysContext::codegen(Function *funAST)
         return nullptr;
     }
 
+    auto isVararg = funAST->getFunctionType()->getIsVararg();
     auto funArgs = funAST->getArgs();
     auto retTy = funAST->getFunctionType()->getReturnType();
     auto args = std::vector<llvm::Type *>();
-    if (funArgs.size() > 0)
+    auto argsLength = funArgs.size() - (isVararg ? 1 : 0);
+    for (size_t i = 0; i < argsLength; i++)
     {
-        for (auto &item : funArgs)
-        {
-            args.push_back(item->getArgumentType());
-        }
+        args.push_back(funArgs[i]->getArgumentType());
     }
 
-    auto *funTyLLVM = llvm::FunctionType::get(retTy, args, false);
+    auto *funTyLLVM = llvm::FunctionType::get(retTy, args, isVararg);
     auto *funLLVM = llvm::Function::Create(funTyLLVM, llvm::Function::LinkageTypes::ExternalLinkage, funName, *getModule());
     auto idx = 0;
     for (auto &item : funLLVM->args())
@@ -66,6 +65,9 @@ llvm::Function *zero::AnalysContext::codegen(Function *funAST)
 
     if (funAST->getIsDefine())
     {
+        auto *entry = llvm::BasicBlock::Create(*getContext(), "", funLLVM);
+        getBuilder()->SetInsertPoint(entry);
+
         // Add Parameter to symbol table
         {
             // Enter to parameter scope
@@ -75,14 +77,15 @@ llvm::Function *zero::AnalysContext::codegen(Function *funAST)
             {
                 auto refName = item.getName();
                 auto paramName = std::string(refName.begin(), refName.end());
-                auto attr = std::make_shared<Attribute>(paramName, AttributeScope::ScopeParam, AttributeKind::SymbolParameter, &item);
+                auto *allocParam = getBuilder()->CreateAlloca(item.getType());
+
+                getBuilder()->CreateStore(&item, allocParam);
+
+                auto attr = std::make_shared<Attribute>(paramName, AttributeScope::ScopeParam, AttributeKind::SymbolParameter, allocParam);
 
                 SymbolTable::getInstance().insert(paramName, attr);
             }
         }
-
-        auto *entry = llvm::BasicBlock::Create(*getContext(), "", funLLVM);
-        getBuilder()->SetInsertPoint(entry);
 
         // Create Block
         if (funAST->getBody())
@@ -136,8 +139,6 @@ llvm::Value *zero::AnalysContext::codegen(CallExpression *expr)
     auto args = expr->getArguments();
     auto *fun = getModule()->getFunction(identifier);
 
-    assert(args.size() == fun->arg_size());
-
     std::vector<llvm::Value *> argsV;
     for (size_t i = 0; i < args.size(); i++)
     {
@@ -148,7 +149,7 @@ llvm::Value *zero::AnalysContext::codegen(CallExpression *expr)
         }
     }
 
-    return getBuilder()->CreateCall(fun, argsV, identifier);
+    return getBuilder()->CreateCall(fun, argsV, fun->getReturnType()->isVoidTy() ? "" : identifier);
 }
 
 llvm::Value *zero::AnalysContext::codegen(NumberLiteralExpression *expr)
@@ -166,22 +167,39 @@ llvm::Value *zero::AnalysContext::codegen(StringLiteralExpression *expr)
     return llvm::ConstantExpr::getGetElementPtr(str->getType()->getElementType(), str, idxList, true);
 }
 
+llvm::Value *zero::AnalysContext::codegen(NilLiteralExpression *expr)
+{
+    return llvm::ConstantPointerNull::getNullValue(getBuilder()->getInt8PtrTy());
+}
+
 llvm::Value *zero::AnalysContext::codegen(DeclarationExpression *expr)
 {
     // Get Value Representation
     llvm::Value *value;
     llvm::Type *declTy;
-    if (expr->getValue())
+
+    auto exprValue = expr->getValue();
+    if (exprValue)
     {
-        value = expr->getValue()->codegen(this);
+        value = exprValue->codegen(this);
         declTy = expr->getType();
+
+        if (value->getType()->getTypeID() == llvm::Type::TypeID::VoidTyID)
+        {
+            return ErrorTable::addError(exprValue->getToken(), "Cannot assign void to a variable");
+        }
+
+        if (value->getValueID() == llvm::Value::ConstantPointerNullVal && declTy)
+        {
+            value = llvm::ConstantPointerNull::getNullValue(declTy);
+        }
 
         if (declTy)
         {
             auto compareTy = compareType(declTy, value->getType());
             if (compareTy == CompareType::Different)
             {
-                return logErrorV(std::string("Cannot assign, expression type is different"));
+                return ErrorTable::addError(exprValue->getToken(), "Cannot assign, expression type is different");
             }
 
             if (compareTy == CompareType::Casting)
@@ -314,6 +332,11 @@ llvm::Value *zero::AnalysContext::codegen(VariableExpression *expr)
     if (!alloc)
     {
         return ErrorTable::addError(expr->getToken(), "Variable " + varName + " Not declared");
+    }
+
+    if (expr->isAddressOf())
+    {
+        return alloc->getValue();
     }
 
     return getBuilder()->CreateLoad(alloc->getValue(), varName);

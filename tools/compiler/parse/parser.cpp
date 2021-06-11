@@ -81,7 +81,7 @@ bool zero::Parser::parse()
     if (getCurrentToken()->isKind(TokenKind::TokenKeyExtern))
     {
         getNextToken(); // eat 'extern'
-        auto func = parseDeclareFunction();
+        auto func = parseFunction();
         if (func)
         {
             addFunction(func);

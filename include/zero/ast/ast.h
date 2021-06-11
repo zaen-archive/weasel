@@ -120,7 +120,7 @@ namespace zero
         std::vector<std::shared_ptr<Expression>> _args;
 
     public:
-        CallExpression(std::string identifier, std::vector<std::shared_ptr<Expression>> args) : _identifier(identifier), _args(args) {}
+        CallExpression(std::shared_ptr<Token> token, std::string identifier, std::vector<std::shared_ptr<Expression>> args) : Expression(token), _identifier(identifier), _args(args) {}
 
         std::string getIdentifier() const { return _identifier; }
         std::vector<std::shared_ptr<Expression>> getArguments() const { return _args; }
@@ -133,12 +133,13 @@ namespace zero
     {
     private:
         std::string _identifier;
-        bool _declare;
+        bool _addressOf;
 
     public:
-        VariableExpression(std::shared_ptr<Token> token, std::string identifier, bool declare = false) : Expression(token), _identifier(identifier), _declare(declare) {}
+        VariableExpression(std::shared_ptr<Token> token, std::string identifier, bool addressOf = false) : Expression(token), _identifier(identifier), _addressOf(addressOf) {}
 
         std::string getIdentifier() const { return _identifier; }
+        bool isAddressOf() const { return _addressOf; }
 
         llvm::Value *codegen(AnalysContext *context);
     };
@@ -209,9 +210,9 @@ namespace zero
     class NilLiteralExpression : public LiteralExpression
     {
     public:
-        NilLiteralExpression() : LiteralExpression(nullptr, LiteralType::LiteralNil, 64) {}
+        NilLiteralExpression(std::shared_ptr<Token> token) : LiteralExpression(token, LiteralType::LiteralNil, 64) {}
 
-        llvm::Value *codegen(AnalysContext *context) { return nullptr; }
+        llvm::Value *codegen(AnalysContext *context);
     };
 
     // Binary Operator Expression
@@ -282,12 +283,14 @@ namespace zero
     class FunctionArgument
     {
     private:
+        std::shared_ptr<Token> _token;
         std::string _argName;
         llvm::Type *_type;
 
     public:
-        FunctionArgument(std::string argName, llvm::Type *type) : _argName(argName), _type(type) {}
+        FunctionArgument(std::shared_ptr<Token> token, std::string argName, llvm::Type *type) : _argName(argName), _type(type), _token(token) {}
 
+        std::shared_ptr<Token> getToken() const { return _token; }
         llvm::Type *getArgumentType() const { return _type; }
         std::string getArgumentName() const { return _argName; }
     };
@@ -298,12 +301,15 @@ namespace zero
     private:
         std::vector<std::shared_ptr<FunctionArgument>> _args;
         llvm::Type *_retType;
+        bool _isVararg;
 
     public:
-        FunctionType(llvm::Type *returnType, std::vector<std::shared_ptr<FunctionArgument>> args) : _retType(returnType), _args(args) {}
+        FunctionType(llvm::Type *returnType, std::vector<std::shared_ptr<FunctionArgument>> args, bool vararg) : _retType(returnType), _args(args), _isVararg(vararg) {}
 
         std::vector<std::shared_ptr<FunctionArgument>> getArgs() const { return _args; }
         llvm::Type *getReturnType() const { return _retType; }
+
+        bool getIsVararg() const { return _isVararg; }
     };
 
     // Func

@@ -51,6 +51,7 @@ namespace zero
         llvm::Value *codegen(ReturnExpression *expr);
         llvm::Value *codegen(DeclarationExpression *expr);
         llvm::Value *codegen(StringLiteralExpression *expr);
+        llvm::Value *codegen(NilLiteralExpression *expr);
         // TODO: Need to implement modulo operator
         // TODO: Paren Expression get bugs
         llvm::Value *codegen(BinaryOperatorExpression *expr);

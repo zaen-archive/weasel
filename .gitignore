@@ -3,6 +3,8 @@ llvm-project
 build
 clang
 examples
+runtime-rt/*.exe
+runtime-rt/*.o
 
 .vscode
 .vs

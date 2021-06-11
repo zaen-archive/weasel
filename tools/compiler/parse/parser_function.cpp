@@ -74,7 +74,14 @@ std::shared_ptr<zero::Function> zero::Parser::parseDeclareFunction()
         return ErrorTable::addError(getCurrentToken(), "Expected an identifier");
     }
 
-    auto identifier = getCurrentToken()->getValue();
+    auto funIdentifier = getCurrentToken()->getValue();
+
+    // Check Symbol Table
+    if (SymbolTable::getInstance().get(funIdentifier))
+    {
+        return ErrorTable::addError(getCurrentToken(), "Function already declared");
+    }
+
     getNextToken(); // eat 'identifier'
     if (!getCurrentToken()->isKind(TokenKind::TokenDelimOpenParen))
     {
@@ -82,14 +89,50 @@ std::shared_ptr<zero::Function> zero::Parser::parseDeclareFunction()
     }
 
     getNextToken(); // eat '('
-    auto args = parseFunctionArguments();
-    if (args.size() > 0)
+    std::vector<std::shared_ptr<zero::FunctionArgument>> args;
+    auto isVararg = false;
+
+    while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
     {
-        if (!args.back())
+        if (isVararg)
         {
-            return ErrorTable::addError(getCurrentToken(), "Expected function argument");
+            return ErrorTable::addError(getCurrentToken(), "Variable number argument should be final argument");
         }
+
+        auto idenToken = getCurrentToken();
+        if (!getCurrentToken()->isKind(TokenKind::TokenIdentifier))
+        {
+            return ErrorTable::addError(getCurrentToken(), "Expected identifier in function argument");
+        }
+
+        auto identifier = getCurrentToken()->getValue();
+        if (getNextToken()->isKind(TokenKind::TokenPuncDotThree))
+        {
+            isVararg = true;
+            getNextToken(); // eat ...
+        }
+
+        auto *type = parseDataType();
+        if (!type)
+        {
+            return ErrorTable::addError(getCurrentToken(), "Expected type in function argument");
+        }
+
+        args.push_back(std::make_shared<FunctionArgument>(idenToken, identifier, type));
+        if (!getCurrentToken()->isKind(TokenKind::TokenPuncComma))
+        {
+            break;
+        }
+
+        getNextToken(); // eat ','
     }
+
+    if (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
+    {
+        return ErrorTable::addError(getCurrentToken(), "Expected ) in function argument");
+    }
+
+    getNextToken(); // eat )
 
     llvm::Type *returnType;
     if (getCurrentToken()->isDataType())
@@ -103,77 +146,13 @@ std::shared_ptr<zero::Function> zero::Parser::parseDeclareFunction()
         returnType = llvm::Type::getVoidTy(*getContext()->getContext());
     }
 
-    auto funcTy = std::make_shared<FunctionType>(returnType, args);
-    auto func = std::make_shared<Function>(identifier, funcTy);
-
-    // Check Symbol Table
-    if (SymbolTable::getInstance().get(identifier))
-    {
-        return ErrorTable::addError(getCurrentToken(), "Function already declared");
-    }
+    auto funcTy = std::make_shared<FunctionType>(returnType, args, isVararg);
+    auto func = std::make_shared<Function>(funIdentifier, funcTy);
 
     // Create Symbol for the function
     {
-        SymbolTable::getInstance().insert(identifier, std::make_shared<Attribute>(identifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
+        SymbolTable::getInstance().insert(funIdentifier, std::make_shared<Attribute>(funIdentifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
     }
 
     return func;
-}
-
-std::vector<std::shared_ptr<zero::FunctionArgument>> zero::Parser::parseFunctionArguments()
-{
-    std::vector<std::shared_ptr<zero::FunctionArgument>> args;
-
-    while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
-    {
-        args.push_back(parseFunctionArgument());
-
-        if (args[args.size() - 1] == nullptr)
-        {
-            // immeadiate return to inform there is wrong with arguments
-            return args;
-        }
-
-        if (!getCurrentToken()->isKind(TokenKind::TokenPuncComma))
-        {
-            break;
-        }
-
-        getNextToken(); // eat ','
-    }
-
-    if (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
-    {
-        ErrorTable::addError(getCurrentToken(), "Expected ) in function argument");
-        if (!getCurrentToken()->isKind(TokenKind::TokenDelimOpenSquareBracket))
-        {
-
-            getNextTokenUntil(TokenKind::TokenDelimCloseParen);
-        }
-    }
-    else
-    {
-        getNextToken(); // eat ')'
-    }
-
-    return args;
-}
-
-std::shared_ptr<zero::FunctionArgument> zero::Parser::parseFunctionArgument()
-{
-    if (!getCurrentToken()->isKind(TokenKind::TokenIdentifier))
-    {
-        return ErrorTable::addError(getCurrentToken(), "Expected identifier in function argument");
-    }
-
-    auto identifier = getCurrentToken()->getValue();
-    getNextToken();
-
-    auto *type = parseDataType();
-    if (!type)
-    {
-        return ErrorTable::addError(getCurrentToken(), "Expected type in function argument");
-    }
-
-    return std::make_shared<FunctionArgument>(identifier, type);
 }

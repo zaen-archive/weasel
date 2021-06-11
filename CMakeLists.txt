@@ -1,3 +1,4 @@
+# https://llvm.org/docs/CMake.html#options-and-variables
 # # INITIALIZE
 cmake_minimum_required(VERSION 3.15)
 project(underrated VERSION 1.0.0)
@@ -29,10 +30,11 @@ add_subdirectory(${ZERO_TOOLS_DIRS})
 # add_subdirectory(${ZERO_LIBS_DIRS})
 
 # ADD LLVM LIBS
-llvm_map_components_to_libnames(llvm_libs core)
+llvm_map_components_to_libnames(llvm_libs support core target irreader)
 
 # Show all include directory
 get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+
 foreach(dir ${dirs})
     message(STATUS "dir = '${dir}'")
 endforeach()

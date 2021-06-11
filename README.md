@@ -41,7 +41,7 @@ We also can binding the library created by zero language into another languages 
 - [x] Variable names and constants
 - [x] Procedure and function names
 - [x] Literal constants
-- [ ] Strings Literal
+- [x] Strings Literal
 - [ ] Compiler generated temporaries
 - [ ] Labels in source languages
 
@@ -68,13 +68,14 @@ We also can binding the library created by zero language into another languages 
 
 ### Array
 
-- [x] Support pointer type
-- [ ] Support Address of
+- [x] Simple pointer type
+- [x] Simple Address of
+- [x] Support nil value
 - [ ] Support data Sequence
 
 ### IO console (input/output)
 
-- [ ] Support simple output
+- [x] Support simple output through c library
 - [ ] Support simple input
 - [ ] Support IO
 

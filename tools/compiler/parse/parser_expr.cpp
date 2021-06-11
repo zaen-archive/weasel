@@ -97,12 +97,12 @@ std::shared_ptr<zero::Expression> zero::Parser::parseLiteralExpression()
         return std::make_shared<StringLiteralExpression>(token, token->getValue());
     }
 
-    return std::make_shared<NilLiteralExpression>();
+    return std::make_shared<NilLiteralExpression>(getCurrentToken());
 }
 
 std::shared_ptr<zero::Expression> zero::Parser::parseFunctionCallExpression(std::shared_ptr<zero::Attribute> attr)
 {
-    auto identifier = getCurrentToken()->getValue();
+    auto callToken = getCurrentToken();
     if (!getNextToken()->isKind(TokenKind::TokenDelimOpenParen))
     {
         return ErrorTable::addError(getCurrentToken(), "Expected ( for function call");
@@ -136,7 +136,7 @@ std::shared_ptr<zero::Expression> zero::Parser::parseFunctionCallExpression(std:
         }
     }
 
-    return std::make_shared<CallExpression>(identifier, args);
+    return std::make_shared<CallExpression>(callToken, callToken->getValue(), args);
 }
 
 std::shared_ptr<zero::Expression> zero::Parser::parseIdentifierExpression()
@@ -191,6 +191,16 @@ std::shared_ptr<zero::Expression> zero::Parser::parsePrimaryExpression()
     if (getCurrentToken()->isKind(TokenKind::TokenDelimOpenParen))
     {
         return parseParenExpression();
+    }
+
+    if (getCurrentToken()->isKind(TokenKind::TokenOperatorAnd))
+    {
+        if (getNextToken()->isKind(TokenKind::TokenIdentifier))
+        {
+            return std::make_shared<VariableExpression>(getCurrentToken(), getCurrentToken()->getValue(), true);
+        }
+
+        return ErrorTable::addError(getCurrentToken(), "Expected Variable Identifier for address of");
     }
 
     return ErrorTable::addError(getCurrentToken(), "Expected expression");
