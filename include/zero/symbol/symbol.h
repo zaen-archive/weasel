@@ -64,7 +64,7 @@ namespace zero
     public:
         SymbolTable(const SymbolTable &) = delete;
         SymbolTable &operator=(const SymbolTable &) = delete;
-        static SymbolTable &SymbolTable::getInstance()
+        static SymbolTable &getInstance()
         {
             static SymbolTable instance;
             return instance;

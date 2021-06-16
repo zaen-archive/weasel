@@ -6,7 +6,7 @@ namespace zero
     {
     protected:
         char *_startBuffer;
-        unsigned long long _size;
+        size_t _size;
 
     private:
         // I copy paste the implementation from
@@ -17,7 +17,7 @@ namespace zero
         FileManager(const char *filePath);
 
         bool isValid() const { return _startBuffer != nullptr; }
-        unsigned long long getSize() const { return _size; }
+        size_t getSize() const { return _size; }
         char *getStartBuffer() const { return _startBuffer; }
     };
 

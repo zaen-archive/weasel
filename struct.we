@@ -1,0 +1,134 @@
+import "io"
+
+
+/// Data Types ///
+
+// Boolean
+// bool             : 1 byte
+
+// Character
+// byte             : 1 byte -> UTF-8
+// rune             : 4 bytes -> UTF-32
+// string           : sequences of byte
+
+// Integer
+// sbyte, byte      : 1 byte
+// ushort, short    : 2 bytes
+// uint, int        : 4 bytes
+// ulong, long      : 8 bytes
+// uint128, int128  : 16 bytes
+
+// Floating Point
+// float            : 4 bytes
+// double           : 8 bytes
+// decimal          : 16 bytes
+
+// Tuple
+// Array
+// Slice
+
+// Module => Functions
+// Function => Statements
+
+//// Grammer Specification
+// Program => Libraries
+// Library => Functions
+// Functions => 'fun' identifier '(' args ')' funTy '{' stmt '}'
+// funTy => dataType
+// funTy => empty
+
+// args => empty | arg
+// args => arg ',' args
+// arg => identifier dataType
+
+// stmt => '{' stmt '}'                      // compound statement
+// stmt => 'if' exprs '{' stmt '}'           // conditional statement
+// stmt => 'for' exprs '{' stmt '}'          // loop statement
+// stmt => 'return' exprs                    // return statement
+// stmt => exprs                             // expression statement
+// stmt => ';'                               // no-op statement
+
+// varDefs => 'let' varDef1                  // variable definition
+// varDef1 => identifier '=' expr            // variable definition
+// varDef1 => identifier dataType            // variable definition
+// varDef1 => identifier dataType '=' expr   // variable definition
+
+// exprs => varDefs
+// exprs => expr
+// exprs => expr ',' cExpr1
+
+// cExpr1 => expr
+// cExpr1 => cExpr1 ',' expr
+
+// expr => nilLiteral
+// expr => numberLiteral
+// expr => stringLiteral
+// expr => boolLiteral
+// expr => charLiteral
+// expr => identifier
+// expr => '(' exprs ')'
+// expr => expr '[' exprs ']'
+// expr => expr '(' ')'
+// expr => expr '(' cExpr1 ')'
+// expr => expr '=' expr
+// expr => expr '+' expr
+// expr => expr '-' expr
+// expr => expr '+=' expr
+// expr => expr '-=' expr
+// expr => expr '||' expr
+// expr => expr '&&' expr
+// expr => expr '==' expr
+// expr => expr '!=' expr
+// expr => '&' expr
+// expr => '*' expr
+// expr => '-' expr
+// expr => '!' expr
+// expr => '++' expr
+// expr => '--' expr
+// expr => expr '++'
+// expr => expr '--'
+// expr => expr '?' expr ':' expr
+
+/*
+
+File -> Module -> Context
+Compiler / Program -> Modules -> Analysis
+
+Parser
+. Context
+. Lexer
+
+Context
+. GlobalVariables
+. Functions
+. llvm Module
+. llvm Context
+. llvm Builder
+
+*/
+
+fun main() int
+{
+    let fundec fun() int    // declaration function lambda
+    let test int            // declaration
+    let testing = 123       // definition
+    let anon = fun() {}     // definition function lambda
+    final testfinal = 123   // definition final variable
+}
+
+/*
+// Problem
+
+let i = 12 // definition and single expression
+let i = 321 + b * 2 // definition and multiple expression with assign expression
+let m = -124 // unary expression with '-' 'expression'
+
+*/
+
+/*
+
+Expression always come with left hand side(LHS) and right hand side(RHS)
+let i = expr
+expr => 'lhs', op, 'rhs'
+
+*/

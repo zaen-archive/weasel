@@ -18,7 +18,8 @@ int main(int argc, char *argv[])
     char *filePath;
     if (argc <= 1)
     {
-        filePath = (char *)"G:/Compiler/underrated_project/runtime-rt/main.ze";
+        std::cerr << "Not Input files\n";
+        return 1;
     }
     else
     {

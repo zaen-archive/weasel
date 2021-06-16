@@ -1,0 +1,8 @@
+extern fun printf(msg *byte, param ...*int) int {
+    let a = 12
+    return a
+}
+
+fun main() {
+    printf("HELLO %d %d", 12, 21)
+}

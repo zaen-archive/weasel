@@ -1,17 +1,17 @@
-# Zero Language
+# Weasel Language
 
 # BACKGROUND
 
-Underrated Project or zero language is a project i created to prove of concept that we can support heterogenous internally inside a language. We can use GPGPU Computing directly supported by the language. Which mean you just directly code to the language and just works.
+Weasel language is a project i created to prove of concept that we can support heterogenous internally inside a language. We can use GPGPU Computing directly supported by the language. Which mean you just directly code to the language and just works.
 
 And we can create computationally task easyly solved. Like Machine Learning and even AI, because you can switch which program or code need to run on GPU or CPU or any compute hardware without hassle.
 
-We also can binding the library created by zero language into another languages like python to create better environment for end user to create fast program.
+We also can binding the library created by weasel language into another languages like python to create better environment for end user to create fast program.
 
 # SETUP (see LLVM Documentation)
 
 - Add LLVM Project
-- Build LLVM Project
+- Before build change linker to llvm lld then Build LLVM Project
 - Set LLVM DIR
 - Build Project
 

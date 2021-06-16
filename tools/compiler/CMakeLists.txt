@@ -32,41 +32,41 @@ add_executable(compiler
 
 set(ZERO_EXT_LIBS
 # AARCH 64
-LLVMAArch64AsmParser
-LLVMAArch64CodeGen
-LLVMAArch64Desc
-LLVMAArch64Disassembler
-LLVMAArch64Info
-LLVMAArch64Utils
+# LLVMAArch64AsmParser
+# LLVMAArch64CodeGen
+# LLVMAArch64Desc
+# LLVMAArch64Disassembler
+# LLVMAArch64Info
+# LLVMAArch64Utils
 
 LLVMAggressiveInstCombine
 # INFOS
-LLVMAMDGPUInfo
-LLVMARMInfo
-LLVMAVRInfo
-LLVMBPFInfo
-LLVMHexagonInfo
-LLVMLanaiInfo
-LLVMMipsInfo
-LLVMMSP430Info
+# LLVMAMDGPUInfo
+# LLVMARMInfo
+# LLVMAVRInfo
+# LLVMBPFInfo
+# LLVMHexagonInfo
+# LLVMLanaiInfo
+# LLVMMipsInfo
+# LLVMMSP430Info
 LLVMNVPTXInfo
-LLVMPowerPCInfo
-LLVMRISCVInfo
-LLVMSparcInfo
-LLVMSystemZInfo
-LLVMWebAssemblyInfo
+# LLVMPowerPCInfo
+# LLVMRISCVInfo
+# LLVMSparcInfo
+# LLVMSystemZInfo
+# LLVMWebAssemblyInfo
 LLVMX86Info
-LLVMXCoreInfo
+# LLVMXCoreInfo
 
 # X86
 LLVMX86CodeGen
 LLVMX86AsmParser
 # AMD GPU
-LLVMAMDGPUCodeGen
+# LLVMAMDGPUCodeGen
 # ARM
-LLVMARMCodeGen
+# LLVMARMCodeGen
 # AVR
-LLVMAVRCodeGen
+# LLVMAVRCodeGen
 )
 
 target_link_libraries(compiler ${ZERO_EXT_LIBS})
