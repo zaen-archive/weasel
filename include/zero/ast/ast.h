@@ -39,8 +39,8 @@
 // | TypeCastExpression
 // | AssignmentExpression
 // | CompoundAssignmentExpression
-// Declaration of zero Class
-namespace zero
+// Declaration of weasel Class
+namespace weasel
 {
     // Analysis Context
     class AnalysContext;
@@ -54,14 +54,14 @@ namespace zero
         LiteralChar,
         LiteralString,
     };
-} // namespace zero
+} // namespace weasel
 
 //
 
 //
 
 // Expression Base Type
-namespace zero
+namespace weasel
 {
     // Expression
     class Expression
@@ -90,14 +90,14 @@ namespace zero
         LiteralExpression(std::shared_ptr<Token> token, LiteralType type, unsigned width, unsigned size = 1) : Expression(token), _type(type), _width(width), _size(size) {}
     };
 
-} // namespace zero
+} // namespace weasel
 
 //
 
 //
 
 // Expression Without Block PART
-namespace zero
+namespace weasel
 {
     // Return Expression
     class ReturnExpression : public Expression
@@ -246,14 +246,14 @@ namespace zero
         llvm::Value *codegen(AnalysContext *context) { return nullptr; }
     };
 
-} // namespace zero
+} // namespace weasel
 
 //
 
 //
 
 // Expression With Block Function PART
-namespace zero
+namespace weasel
 {
     // Statement Expression
     class StatementExpression : public Expression
@@ -270,14 +270,14 @@ namespace zero
         llvm::Value *codegen(AnalysContext *context);
     };
 
-} // namespace zero
+} // namespace weasel
 
 //
 
 //
 
 // Function PART
-namespace zero
+namespace weasel
 {
     // Func Arg
     class FunctionArgument
@@ -338,16 +338,16 @@ namespace zero
         llvm::Function *codegen(AnalysContext *c);
     };
 
-} // namespace zero
+} // namespace weasel
 
 //
 
 //
 
 // Log Error for expression and Function
-namespace zero
+namespace weasel
 {
     llvm::Value *logErrorV(std::string msg);
     llvm::Function *logErrorF(std::string msg);
 
-} // namespace zero
+} // namespace weasel

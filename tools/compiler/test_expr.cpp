@@ -10,9 +10,9 @@ int main()
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
 
-    auto *lexer = new zero::Lexer();
-    auto *context = new zero::AnalysContext("UnderratedProject");
-    auto *parser = new zero::Parser(context, lexer);
+    auto *lexer = new weasel::Lexer();
+    auto *context = new weasel::AnalysContext("UnderratedProject");
+    auto *parser = new weasel::Parser(context, lexer);
 
     while (true)
     {

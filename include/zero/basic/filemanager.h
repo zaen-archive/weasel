@@ -1,6 +1,6 @@
 #pragma once
 
-namespace zero
+namespace weasel
 {
     class FileManager
     {
@@ -21,4 +21,4 @@ namespace zero
         char *getStartBuffer() const { return _startBuffer; }
     };
 
-} // namespace zero
+} // namespace weasel

@@ -3,7 +3,7 @@
 #include "zero/lex/token.h"
 #include "llvm/IR/Value.h"
 
-namespace zero
+namespace weasel
 {
     enum class AttributeKind
     {
@@ -71,10 +71,10 @@ namespace zero
         }
     };
 
-} // namespace zero
+} // namespace weasel
 
 // Error
-namespace zero
+namespace weasel
 {
     // Error
     class Error
@@ -105,4 +105,4 @@ namespace zero
         static std::nullptr_t addError(std::shared_ptr<Token> token, std::string msg);
     };
 
-} // namespace zero
+} // namespace weasel

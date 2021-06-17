@@ -1,6 +1,6 @@
 #include "zero/lex/lexer.h"
 
-std::shared_ptr<zero::Token> zero::Lexer::getStringLiteral()
+std::shared_ptr<weasel::Token> weasel::Lexer::getStringLiteral()
 {
     auto *start = getNextBuffer(); // eat double quote (")
     while (*getNextBuffer() != '"')
@@ -12,7 +12,7 @@ std::shared_ptr<zero::Token> zero::Lexer::getStringLiteral()
     return createToken(TokenKind::TokenLitString, start, endString);
 }
 
-std::shared_ptr<zero::Token> zero::Lexer::getCharacterLiteral()
+std::shared_ptr<weasel::Token> weasel::Lexer::getCharacterLiteral()
 {
     auto *start = getNextBuffer(); // eat single quote (')
     if (*start == '\'')

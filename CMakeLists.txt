@@ -5,9 +5,6 @@ project(underrated VERSION 1.0.0)
 
 set(CMAKE_LINKER ld.lld)
 set(LLVM_DIR /mnt/Applications/LINUX/llvm/lib/cmake/llvm)
-set(ZERO_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include)
-set(ZERO_LIBS_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/lib)
-set(ZERO_TOOLS_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/tools)
 
 find_package(LLVM REQUIRED CONFIG)
 
@@ -25,10 +22,11 @@ message(STATUS ${LLVM_DEFINITIONS})
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
-# ZERO LIBRARY
-include_directories(${ZERO_INCLUDE_DIRS})
-add_subdirectory(${ZERO_TOOLS_DIRS})
-# add_subdirectory(${ZERO_LIBS_DIRS})
+# Weasel Directories
+include_directories(include)
+add_subdirectory(tools)
+add_subdirectory(test)
+# add_subdirectory(lib)
 
 # ADD LLVM LIBS
 llvm_map_components_to_libnames(llvm_libs support core target irreader)

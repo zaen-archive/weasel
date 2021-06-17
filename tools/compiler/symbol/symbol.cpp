@@ -2,19 +2,19 @@
 #include "zero/symbol/symbol.h"
 
 /// SYMBOL ///
-std::vector<std::shared_ptr<zero::Error>> zero::ErrorTable::_errors;
+std::vector<std::shared_ptr<weasel::Error>> weasel::ErrorTable::_errors;
 
-zero::SymbolTable::SymbolTable()
+weasel::SymbolTable::SymbolTable()
 {
     enterScope();
 }
 
-void zero::SymbolTable::enterScope()
+void weasel::SymbolTable::enterScope()
 {
     _lookup.push_back(0);
 }
 
-bool zero::SymbolTable::exitScope()
+bool weasel::SymbolTable::exitScope()
 {
     if (_lookup.size() == 1)
     {
@@ -31,13 +31,13 @@ bool zero::SymbolTable::exitScope()
     return true;
 }
 
-void zero::SymbolTable::insert(std::string key, std::shared_ptr<Attribute> attr)
+void weasel::SymbolTable::insert(std::string key, std::shared_ptr<Attribute> attr)
 {
     _table.push_back(attr);
     _lookup[_lookup.size() - 1]++;
 }
 
-std::shared_ptr<zero::Attribute> zero::SymbolTable::get(std::string key)
+std::shared_ptr<weasel::Attribute> weasel::SymbolTable::get(std::string key)
 {
     auto n = _table.size() - 1;
     for (int i = n; i >= 0; i--)
@@ -51,7 +51,7 @@ std::shared_ptr<zero::Attribute> zero::SymbolTable::get(std::string key)
     return nullptr;
 }
 
-std::shared_ptr<zero::Attribute> zero::SymbolTable::getLastFunction()
+std::shared_ptr<weasel::Attribute> weasel::SymbolTable::getLastFunction()
 {
     auto i = _table.size() - 1;
     for (; i >= 0; i--)
@@ -67,7 +67,7 @@ std::shared_ptr<zero::Attribute> zero::SymbolTable::getLastFunction()
     return nullptr;
 }
 
-void zero::SymbolTable::reset()
+void weasel::SymbolTable::reset()
 {
     while (!_table.empty())
     {
@@ -82,13 +82,13 @@ void zero::SymbolTable::reset()
     enterScope(); // Enter Global Scope
 }
 
-std::nullptr_t zero::ErrorTable::addError(std::shared_ptr<Token> token, std::string msg)
+std::nullptr_t weasel::ErrorTable::addError(std::shared_ptr<Token> token, std::string msg)
 {
     _errors.push_back(std::make_shared<Error>(token, msg));
     return nullptr;
 }
 
-void zero::ErrorTable::showErrors()
+void weasel::ErrorTable::showErrors()
 {
     if (_errors.empty())
     {

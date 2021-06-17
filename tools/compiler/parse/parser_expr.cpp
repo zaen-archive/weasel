@@ -2,7 +2,7 @@
 #include "zero/analysis/context.h"
 #include "zero/symbol/symbol.h"
 
-std::shared_ptr<zero::StatementExpression> zero::Parser::parseFunctionBody()
+std::shared_ptr<weasel::StatementExpression> weasel::Parser::parseFunctionBody()
 {
     auto stmt = std::make_shared<StatementExpression>();
 
@@ -40,7 +40,7 @@ std::shared_ptr<zero::StatementExpression> zero::Parser::parseFunctionBody()
     return stmt;
 }
 
-std::shared_ptr<zero::Expression> zero::Parser::parseStatement()
+std::shared_ptr<weasel::Expression> weasel::Parser::parseStatement()
 {
     // Compound Statement Expression
     if (getCurrentToken()->isKind(TokenKind::TokenDelimOpenCurlyBracket))
@@ -72,7 +72,7 @@ std::shared_ptr<zero::Expression> zero::Parser::parseStatement()
     return expr;
 }
 
-std::shared_ptr<zero::Expression> zero::Parser::parseLiteralExpression()
+std::shared_ptr<weasel::Expression> weasel::Parser::parseLiteralExpression()
 {
     auto token = getCurrentToken();
     if (token->isKind(TokenKind::TokenLitBool))
@@ -100,7 +100,7 @@ std::shared_ptr<zero::Expression> zero::Parser::parseLiteralExpression()
     return std::make_shared<NilLiteralExpression>(getCurrentToken());
 }
 
-std::shared_ptr<zero::Expression> zero::Parser::parseFunctionCallExpression(std::shared_ptr<zero::Attribute> attr)
+std::shared_ptr<weasel::Expression> weasel::Parser::parseFunctionCallExpression(std::shared_ptr<weasel::Attribute> attr)
 {
     auto callToken = getCurrentToken();
     if (!getNextToken()->isKind(TokenKind::TokenDelimOpenParen))
@@ -139,7 +139,7 @@ std::shared_ptr<zero::Expression> zero::Parser::parseFunctionCallExpression(std:
     return std::make_shared<CallExpression>(callToken, callToken->getValue(), args);
 }
 
-std::shared_ptr<zero::Expression> zero::Parser::parseIdentifierExpression()
+std::shared_ptr<weasel::Expression> weasel::Parser::parseIdentifierExpression()
 {
     auto identifier = getCurrentToken()->getValue();
 
@@ -158,7 +158,7 @@ std::shared_ptr<zero::Expression> zero::Parser::parseIdentifierExpression()
     return std::make_shared<VariableExpression>(getCurrentToken(), identifier);
 }
 
-std::shared_ptr<zero::Expression> zero::Parser::parseParenExpression()
+std::shared_ptr<weasel::Expression> weasel::Parser::parseParenExpression()
 {
     getNextToken(); // eat (
     auto expr = parseExpression();
@@ -176,7 +176,7 @@ std::shared_ptr<zero::Expression> zero::Parser::parseParenExpression()
     return expr;
 }
 
-std::shared_ptr<zero::Expression> zero::Parser::parsePrimaryExpression()
+std::shared_ptr<weasel::Expression> weasel::Parser::parsePrimaryExpression()
 {
     if (getCurrentToken()->isLiteral())
     {
@@ -206,7 +206,7 @@ std::shared_ptr<zero::Expression> zero::Parser::parsePrimaryExpression()
     return ErrorTable::addError(getCurrentToken(), "Expected expression");
 }
 
-std::shared_ptr<zero::Expression> zero::Parser::parseExpression()
+std::shared_ptr<weasel::Expression> weasel::Parser::parseExpression()
 {
     auto lhs = parsePrimaryExpression();
     if (!lhs)
@@ -215,10 +215,10 @@ std::shared_ptr<zero::Expression> zero::Parser::parseExpression()
     }
 
     getNextToken(); // Eat 'LHS' Expression
-    return parseBinaryOperator(zero::defPrecOrder, lhs);
+    return parseBinaryOperator(weasel::defPrecOrder, lhs);
 }
 
-std::shared_ptr<zero::Expression> zero::Parser::parseBinaryOperator(unsigned precOrder, std::shared_ptr<Expression> lhs)
+std::shared_ptr<weasel::Expression> weasel::Parser::parseBinaryOperator(unsigned precOrder, std::shared_ptr<Expression> lhs)
 {
     while (true)
     {
@@ -252,7 +252,7 @@ std::shared_ptr<zero::Expression> zero::Parser::parseBinaryOperator(unsigned pre
     }
 }
 
-std::shared_ptr<zero::Expression> zero::Parser::parseReturnStatement()
+std::shared_ptr<weasel::Expression> weasel::Parser::parseReturnStatement()
 {
     auto retToken = getCurrentToken();
     getNextToken(); // eat 'return'
@@ -269,7 +269,7 @@ std::shared_ptr<zero::Expression> zero::Parser::parseReturnStatement()
     return std::make_shared<ReturnExpression>(retToken, expr);
 }
 
-std::shared_ptr<zero::Expression> zero::Parser::parseCompoundStatement()
+std::shared_ptr<weasel::Expression> weasel::Parser::parseCompoundStatement()
 {
     auto stmt = std::make_shared<StatementExpression>();
 
@@ -304,7 +304,7 @@ std::shared_ptr<zero::Expression> zero::Parser::parseCompoundStatement()
 // let 'identifier'             = 'expr'
 // let 'identifier' *'datatype'
 // let 'identifier'             = &'expr'
-std::shared_ptr<zero::Expression> zero::Parser::parseDeclarationExpression()
+std::shared_ptr<weasel::Expression> weasel::Parser::parseDeclarationExpression()
 {
     auto qualifier = getQualifier();
     auto qualToken = getCurrentToken();

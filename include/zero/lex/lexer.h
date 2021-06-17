@@ -5,7 +5,7 @@
 #include "zero/lex/token.h"
 #include "zero/basic/filemanager.h"
 
-namespace zero
+namespace weasel
 {
     class Lexer
     {
@@ -43,4 +43,4 @@ namespace zero
         bool expect(TokenKind kind);
     };
 
-} // namespace zero
+} // namespace weasel

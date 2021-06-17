@@ -1,7 +1,7 @@
 #include "zero/analysis/context.h"
 
 // Compare Type Helpter
-zero::CompareType zero::AnalysContext::compareType(llvm::Type *lhsType, llvm::Type *rhsType)
+weasel::CompareType weasel::AnalysContext::compareType(llvm::Type *lhsType, llvm::Type *rhsType)
 {
     if (lhsType->getTypeID() != rhsType->getTypeID())
     {
@@ -20,7 +20,7 @@ zero::CompareType zero::AnalysContext::compareType(llvm::Type *lhsType, llvm::Ty
 }
 
 // Cast Integer Type Helper
-llvm::Value *zero::AnalysContext::castIntegerType(llvm::Value *value, llvm::Type *castTy)
+llvm::Value *weasel::AnalysContext::castIntegerType(llvm::Value *value, llvm::Type *castTy)
 {
     if (value->getType()->getIntegerBitWidth() < castTy->getIntegerBitWidth())
     {
@@ -33,7 +33,7 @@ llvm::Value *zero::AnalysContext::castIntegerType(llvm::Value *value, llvm::Type
 }
 
 // Cast Integer Type Helper
-llvm::Value *zero::AnalysContext::castIntegerType(llvm::Value *lhs, llvm::Value *rhs)
+llvm::Value *weasel::AnalysContext::castIntegerType(llvm::Value *lhs, llvm::Value *rhs)
 {
     if (lhs->getType()->getIntegerBitWidth() > rhs->getType()->getIntegerBitWidth())
     {

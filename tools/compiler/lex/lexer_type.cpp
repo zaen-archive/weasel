@@ -1,6 +1,6 @@
 #include "zero/lex/lexer.h"
 
-std::shared_ptr<zero::Token> zero::Lexer::getType(char *startBuffer, char *endBuffer)
+std::shared_ptr<weasel::Token> weasel::Lexer::getType(char *startBuffer, char *endBuffer)
 {
     TokenKind kind;
     if (compareBuffer(startBuffer, endBuffer, "rune"))

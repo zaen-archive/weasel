@@ -10,7 +10,7 @@ auto enumToInt(Enumeration const value) -> typename std::underlying_type<Enumera
 }
 
 // Base
-namespace zero
+namespace weasel
 {
     // Token Kind
     enum class TokenKind
@@ -146,10 +146,10 @@ namespace zero
     // Default Precedence Order
     static unsigned defPrecOrder = 20;
 
-} // namespace zero
+} // namespace weasel
 
 // Token Class
-namespace zero
+namespace weasel
 {
     class AnalysContext;
 
@@ -191,4 +191,4 @@ namespace zero
         llvm::Type *toType(AnalysContext *c, bool pointerTy = false);
     };
 
-} // namespace zero
+} // namespace weasel

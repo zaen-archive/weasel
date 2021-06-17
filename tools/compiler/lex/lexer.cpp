@@ -2,13 +2,13 @@
 #include <cassert>
 #include "zero/lex/lexer.h"
 
-zero::Lexer::Lexer(FileManager *fileManager)
+weasel::Lexer::Lexer(FileManager *fileManager)
 {
     _currentBuffer = _startBuffer = fileManager->getStartBuffer();
     _endBuffer = _startBuffer + fileManager->getSize();
 }
 
-bool zero::Lexer::compareBuffer(char *startBuffer, char *endBuffer, const char *compareBuffer)
+bool weasel::Lexer::compareBuffer(char *startBuffer, char *endBuffer, const char *compareBuffer)
 {
     auto length = endBuffer - startBuffer;
 
@@ -28,7 +28,7 @@ bool zero::Lexer::compareBuffer(char *startBuffer, char *endBuffer, const char *
     return true;
 }
 
-bool zero::Lexer::isIdentifier(char c, bool num)
+bool weasel::Lexer::isIdentifier(char c, bool num)
 {
     if (c == '_')
         return true;
@@ -36,7 +36,7 @@ bool zero::Lexer::isIdentifier(char c, bool num)
     return num ? isalnum(c) : isalpha(c);
 }
 
-char *zero::Lexer::getNextBuffer(size_t slide)
+char *weasel::Lexer::getNextBuffer(size_t slide)
 {
     _currentBuffer += slide; // get next buffer
 
@@ -53,13 +53,13 @@ char *zero::Lexer::getNextBuffer(size_t slide)
     return _currentBuffer;
 }
 
-void zero::Lexer::setCurrentBuffer(char *buffer)
+void weasel::Lexer::setCurrentBuffer(char *buffer)
 {
     assert(buffer < _currentBuffer);
     _currentBuffer -= _currentBuffer - buffer;
 }
 
-bool zero::Lexer::expect(zero::TokenKind kind)
+bool weasel::Lexer::expect(weasel::TokenKind kind)
 {
     auto *lastBuffer = _currentBuffer;
     auto ok = true;
@@ -78,12 +78,12 @@ bool zero::Lexer::expect(zero::TokenKind kind)
     return ok;
 }
 
-std::shared_ptr<zero::Token> zero::Lexer::createToken(zero::TokenKind kind, char *startBuffer, char *endBuffer)
+std::shared_ptr<weasel::Token> weasel::Lexer::createToken(weasel::TokenKind kind, char *startBuffer, char *endBuffer)
 {
     return std::make_shared<Token>(kind, _location, startBuffer, endBuffer);
 }
 
-std::shared_ptr<zero::Token> zero::Lexer::getNextToken(bool skipSpace, bool eat)
+std::shared_ptr<weasel::Token> weasel::Lexer::getNextToken(bool skipSpace, bool eat)
 {
     do
     {
@@ -93,7 +93,7 @@ std::shared_ptr<zero::Token> zero::Lexer::getNextToken(bool skipSpace, bool eat)
     return _currentToken;
 }
 
-std::shared_ptr<zero::Token> zero::Lexer::getToken()
+std::shared_ptr<weasel::Token> weasel::Lexer::getToken()
 {
     if (_currentBuffer == _endBuffer)
     {

@@ -14,12 +14,12 @@
 #include "zero/basic/filemanager.h"
 
 // instead of using ifstream
-zero::FileManager::FileManager(const char *filePath)
+weasel::FileManager::FileManager(const char *filePath)
 {
     _startBuffer = mapFile(filePath, &_size);
 }
 
-char *zero::FileManager::mapFile(const char *path, size_t *length)
+char *weasel::FileManager::mapFile(const char *path, size_t *length)
 {
     char *data = NULL;
     size_t size = 0;

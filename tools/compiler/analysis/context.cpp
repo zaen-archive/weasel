@@ -7,7 +7,7 @@
 #include "zero/analysis/context.h"
 #include "zero/symbol/symbol.h"
 
-zero::AnalysContext::AnalysContext(std::string moduleName)
+weasel::AnalysContext::AnalysContext(std::string moduleName)
 {
     _context = new llvm::LLVMContext();
     _module = new llvm::Module(moduleName, *getContext());
@@ -26,12 +26,12 @@ zero::AnalysContext::AnalysContext(std::string moduleName)
     _fpm->doInitialization();
 }
 
-std::string zero::AnalysContext::getDefaultLabel()
+std::string weasel::AnalysContext::getDefaultLabel()
 {
     return std::to_string(_counter++);
 }
 
-llvm::Function *zero::AnalysContext::codegen(zero::Function *funAST)
+llvm::Function *weasel::AnalysContext::codegen(weasel::Function *funAST)
 {
     auto funName = funAST->getIdentifier();
     if (getModule()->getFunction(funName))
@@ -111,7 +111,7 @@ llvm::Function *zero::AnalysContext::codegen(zero::Function *funAST)
     return funLLVM;
 }
 
-llvm::Value *zero::AnalysContext::codegen(StatementExpression *expr)
+llvm::Value *weasel::AnalysContext::codegen(StatementExpression *expr)
 {
     std::cout << "Statements : " << expr->getBody().size() << "\n";
 
@@ -133,7 +133,7 @@ llvm::Value *zero::AnalysContext::codegen(StatementExpression *expr)
     return nullptr;
 }
 
-llvm::Value *zero::AnalysContext::codegen(CallExpression *expr)
+llvm::Value *weasel::AnalysContext::codegen(CallExpression *expr)
 {
     auto identifier = expr->getIdentifier();
     auto args = expr->getArguments();
@@ -152,12 +152,12 @@ llvm::Value *zero::AnalysContext::codegen(CallExpression *expr)
     return getBuilder()->CreateCall(fun, argsV, fun->getReturnType()->isVoidTy() ? "" : identifier);
 }
 
-llvm::Value *zero::AnalysContext::codegen(NumberLiteralExpression *expr)
+llvm::Value *weasel::AnalysContext::codegen(NumberLiteralExpression *expr)
 {
     return getBuilder()->getInt32(expr->getValue());
 }
 
-llvm::Value *zero::AnalysContext::codegen(StringLiteralExpression *expr)
+llvm::Value *weasel::AnalysContext::codegen(StringLiteralExpression *expr)
 {
     auto *str = getBuilder()->CreateGlobalString(expr->getValue());
     std::vector<llvm::Value *> idxList;
@@ -167,12 +167,12 @@ llvm::Value *zero::AnalysContext::codegen(StringLiteralExpression *expr)
     return llvm::ConstantExpr::getGetElementPtr(str->getType()->getElementType(), str, idxList, true);
 }
 
-llvm::Value *zero::AnalysContext::codegen(NilLiteralExpression *expr)
+llvm::Value *weasel::AnalysContext::codegen(NilLiteralExpression *expr)
 {
     return llvm::ConstantPointerNull::getNullValue(getBuilder()->getInt8PtrTy());
 }
 
-llvm::Value *zero::AnalysContext::codegen(DeclarationExpression *expr)
+llvm::Value *weasel::AnalysContext::codegen(DeclarationExpression *expr)
 {
     // Get Value Representation
     llvm::Value *value;
@@ -241,7 +241,7 @@ llvm::Value *zero::AnalysContext::codegen(DeclarationExpression *expr)
     return getBuilder()->CreateStore(value, alloc);
 }
 
-llvm::Value *zero::AnalysContext::codegen(BinaryOperatorExpression *expr)
+llvm::Value *weasel::AnalysContext::codegen(BinaryOperatorExpression *expr)
 {
     auto token = expr->getOperator();
     auto *rhs = expr->getRHS()->codegen(this);
@@ -292,7 +292,7 @@ llvm::Value *zero::AnalysContext::codegen(BinaryOperatorExpression *expr)
     }
 }
 
-llvm::Value *zero::AnalysContext::codegen(ReturnExpression *expr)
+llvm::Value *weasel::AnalysContext::codegen(ReturnExpression *expr)
 {
     if (!expr->getValue())
     {
@@ -324,7 +324,7 @@ llvm::Value *zero::AnalysContext::codegen(ReturnExpression *expr)
     return getBuilder()->CreateRet(val);
 }
 
-llvm::Value *zero::AnalysContext::codegen(VariableExpression *expr)
+llvm::Value *weasel::AnalysContext::codegen(VariableExpression *expr)
 {
     // Get Allocator from Symbol Table
     auto varName = expr->getIdentifier();

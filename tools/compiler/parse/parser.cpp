@@ -5,7 +5,7 @@
 #include "zero/symbol/symbol.h"
 
 // Codegen
-void zero::Parser::codegen()
+void weasel::Parser::codegen()
 {
     {
         if (SymbolTable::getInstance().getLookup().size() != 1)
@@ -69,7 +69,7 @@ void zero::Parser::codegen()
 }
 
 // parse
-bool zero::Parser::parse()
+bool weasel::Parser::parse()
 {
     // EOF FILE
     if (getCurrentToken()->isKind(TokenKind::TokenEOF))
@@ -108,7 +108,7 @@ bool zero::Parser::parse()
 }
 
 // get Next Token Until
-std::shared_ptr<zero::Token> zero::Parser::getNextTokenUntil(zero::TokenKind kind)
+std::shared_ptr<weasel::Token> weasel::Parser::getNextTokenUntil(weasel::TokenKind kind)
 {
     if (getCurrentToken()->isKind(kind))
     {
@@ -132,19 +132,19 @@ std::shared_ptr<zero::Token> zero::Parser::getNextTokenUntil(zero::TokenKind kin
 }
 
 // Get Next Token
-std::shared_ptr<zero::Token> zero::Parser::getNextToken(bool skipSpace)
+std::shared_ptr<weasel::Token> weasel::Parser::getNextToken(bool skipSpace)
 {
     return _lexer->getNextToken(skipSpace);
 }
 
 // getModule
-llvm::Module *zero::Parser::getModule() const
+llvm::Module *weasel::Parser::getModule() const
 {
     return _context->getModule();
 }
 
 // getBuilder
-llvm::IRBuilder<> *zero::Parser::getBuilder() const
+llvm::IRBuilder<> *weasel::Parser::getBuilder() const
 {
     return _context->getBuilder();
 }

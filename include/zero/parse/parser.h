@@ -4,7 +4,7 @@
 #include "zero/ast/ast.h"
 #include "zero/lex/lexer.h"
 
-namespace zero
+namespace weasel
 {
     class AnalysContext;
     class Attribute;
@@ -48,7 +48,7 @@ namespace zero
         // Expression Literal
         std::shared_ptr<Expression> parseLiteralExpression();
         std::shared_ptr<Expression> parseIdentifierExpression();
-        std::shared_ptr<Expression> parseBinaryOperator(unsigned prec, std::shared_ptr<zero::Expression> lhs);
+        std::shared_ptr<Expression> parseBinaryOperator(unsigned prec, std::shared_ptr<weasel::Expression> lhs);
 
         // Helper
         llvm::Type *parseDataType();
@@ -76,4 +76,4 @@ namespace zero
         // Codegen every function inside library
         void codegen();
     };
-} // namespace zero
+} // namespace weasel

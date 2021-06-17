@@ -26,16 +26,16 @@ int main(int argc, char *argv[])
         filePath = argv[1];
     }
 
-    auto *fileManager = new zero::FileManager(filePath);
+    auto *fileManager = new weasel::FileManager(filePath);
     if (!fileManager->isValid())
     {
         std::cout << filePath << " Not exist\n";
         return 0;
     }
 
-    auto *lexer = new zero::Lexer(fileManager);
-    auto *context = new zero::AnalysContext("UnderratedModule");
-    auto *parser = new zero::Parser(context, lexer);
+    auto *lexer = new weasel::Lexer(fileManager);
+    auto *context = new weasel::AnalysContext("UnderratedModule");
+    auto *parser = new weasel::Parser(context, lexer);
 
     /// Compiler ///
     do

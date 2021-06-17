@@ -3,7 +3,7 @@
 
 int main()
 {
-    auto *lexer = new zero::Lexer();
+    auto *lexer = new weasel::Lexer();
 
     while (true)
     {

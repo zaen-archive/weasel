@@ -1,7 +1,7 @@
 #include "zero/parse/parser.h"
 #include "zero/symbol/symbol.h"
 
-void zero::Parser::ignoreNewline()
+void weasel::Parser::ignoreNewline()
 {
     if (getCurrentToken()->isNewline())
     {
@@ -9,7 +9,7 @@ void zero::Parser::ignoreNewline()
     }
 }
 
-llvm::Type *zero::Parser::parseDataType()
+llvm::Type *weasel::Parser::parseDataType()
 {
     auto isPointerType = false;
     if (getCurrentToken()->isKind(TokenKind::TokenOperatorStar))

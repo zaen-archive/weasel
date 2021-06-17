@@ -6,7 +6,7 @@
 
 // define
 // 'fun' identifier '(' args ')' funTy '{' stmt '}'
-std::shared_ptr<zero::Function> zero::Parser::parseFunction()
+std::shared_ptr<weasel::Function> weasel::Parser::parseFunction()
 {
     auto func = parseDeclareFunction();
     if (!func)
@@ -61,7 +61,7 @@ std::shared_ptr<zero::Function> zero::Parser::parseFunction()
 }
 
 // extern 'fun' identifier '(' args ')' funTy
-std::shared_ptr<zero::Function> zero::Parser::parseDeclareFunction()
+std::shared_ptr<weasel::Function> weasel::Parser::parseDeclareFunction()
 {
     if (!getCurrentToken()->isKind(TokenKind::TokenKeyFun))
     {
@@ -89,7 +89,7 @@ std::shared_ptr<zero::Function> zero::Parser::parseDeclareFunction()
     }
 
     getNextToken(); // eat '('
-    std::vector<std::shared_ptr<zero::FunctionArgument>> args;
+    std::vector<std::shared_ptr<weasel::FunctionArgument>> args;
     auto isVararg = false;
 
     while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))

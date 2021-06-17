@@ -2,7 +2,7 @@
 #include "zero/lex/token.h"
 #include "zero/ast/ast.h"
 
-llvm::Type *zero::Token::toType(AnalysContext *c, bool pointerTy)
+llvm::Type *weasel::Token::toType(AnalysContext *c, bool pointerTy)
 {
     auto *builder = c->getBuilder();
     llvm::Type *type;
@@ -55,7 +55,7 @@ llvm::Type *zero::Token::toType(AnalysContext *c, bool pointerTy)
     return type;
 }
 
-zero::Qualifier zero::Token::getQualifier()
+weasel::Qualifier weasel::Token::getQualifier()
 {
     switch (getTokenKind())
     {
@@ -69,7 +69,7 @@ zero::Qualifier zero::Token::getQualifier()
 }
 
 // TODO: Need to add associativity
-zero::Precedence zero::Token::getPrecedence()
+weasel::Precedence weasel::Token::getPrecedence()
 {
     Precedence val;
     val.associative = Associative::LeftToRight;

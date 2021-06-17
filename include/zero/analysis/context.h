@@ -9,7 +9,7 @@
 #include "llvm/IR/LegacyPassManager.h"
 #include "zero/ast/ast.h"
 
-namespace zero
+namespace weasel
 {
     // Compare Type
     enum class CompareType
@@ -58,4 +58,4 @@ namespace zero
         llvm::Function *codegen(Function *func);
     };
 
-} // namespace zero
+} // namespace weasel

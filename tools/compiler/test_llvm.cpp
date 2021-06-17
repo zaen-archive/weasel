@@ -22,7 +22,7 @@ int main()
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
 
-    auto *context = new zero::AnalysContext("LLVM TESTING");
+    auto *context = new weasel::AnalysContext("LLVM TESTING");
     auto *builder = context->getBuilder();
     auto *funTy = llvm::FunctionType::get(builder->getInt32Ty(), false);
     auto *fun = llvm::Function::Create(funTy, llvm::Function::ExternalLinkage, "testing", context->getModule());
