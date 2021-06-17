@@ -1,21 +1,23 @@
+#define CL_HPP_TARGET_OPENCL_VERSION 210
+
 #include <iostream>
 #include <math.h>
 #include <chrono>
+#include <fstream>
 #include <CL/cl2.hpp>
 
 #define __micro 1'000
 #define __size (size_t)512'000
 #define __sizeWithInt __size * sizeof(int)
-const char *sourceStr =
-    "__kernel void vector_add(__global const int *A, __global const int *B, __global int *C) {\n"
-    "// Get the index of the current element to be processed\n"
-    "size_t i = get_global_id(0);\n"
-    "// Do the operation\n"
-    "C[i] = A[i] + B[i];\n"
-    "C[i] = C[i] / B[i];\n"
-    "A[i] = C[i] * A[i];\n"
-    "C[i] = C[i] + A[i];\n"
-    "}";
+
+
+// SOURCE
+// 441327
+// 352558
+// SPV
+// 185529
+// 175948
+
 
 inline uint64_t nanoseconds()
 {
@@ -24,7 +26,6 @@ inline uint64_t nanoseconds()
 
 inline void checkErr(cl_int err, const char *name)
 {
-
     if (err != CL_SUCCESS)
     {
         std::cerr << "ERROR: " << name << " (" << err << ")" << std::endl;
@@ -32,41 +33,17 @@ inline void checkErr(cl_int err, const char *name)
     }
 }
 
-void cpu()
-{
-    int a[__size];
-    int b[__size];
-    int c[__size];
-
-    for (int i = 1; i <= __size; i++)
-    {
-        a[i] = i;
-        b[i] = i;
-    }
-
-    auto start = nanoseconds();
-
-    for (int i = 0; i < __size; i++)
-    {
-        c[i] = a[i] + b[i];
-        c[i] = c[i] / b[i];
-        a[i] = c[i] * a[i];
-        c[i] = c[i] + a[i];
-    }
-
-    auto end = nanoseconds();
-
-    std::cout << ((end - start) / __micro) << "\n";
-}
-
 // TODO: Need Device Type CPU
-void opencl()
+int main()
 {
+    auto file = std::ifstream("vector_add.spv");
+    auto sourceStr = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+
     int a[__size];
     int b[__size];
     int c[__size];
 
-    for (int i = 1; i <= __size; i++)
+    for (int i = 1; i <= (int)__size; i++)
     {
         a[i] = i;
         b[i] = i;
@@ -92,10 +69,8 @@ void opencl()
     // Get Devices
     std::vector<cl::Device> devices = context.getInfo<CL_CONTEXT_DEVICES>();
 
-    return;
-
     // Program and build source
-    auto source = cl::Program::Sources((size_t)1, std::string(sourceStr));
+    auto source = cl::Program::Sources((size_t)1, sourceStr);
     auto program = cl::Program(context, source);
     err = program.build(devices, "");
 
@@ -124,26 +99,4 @@ void opencl()
     auto end = nanoseconds();
 
     std::cout << ((end - start) / __micro) << "\n";
-}
-
-int main()
-{
-    // std::cout  << "Begin the program\n";
-    // cpu();
-    // opencl();
-
-    std::vector<cl::Platform> platforms;
-    cl::Platform::get(&platforms);
-    cl::Platform platform(platforms[0]);
-
-    auto context = cl::Context(CL_DEVICE_TYPE_GPU);
-    auto devices = context.getInfo<CL_CONTEXT_DEVICES>();
-
-    std::cout << "Platforms : " << platforms.size() << "\n";
-    std::cout << "DEVICES : " << devices.size() << "\n";
-
-    for (auto &item : platforms)
-    {
-        std::cout << item.getInfo<CL_PLATFORM_NAME>() << "\n";
-    }
 }

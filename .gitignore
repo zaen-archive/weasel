@@ -1,8 +1,7 @@
-llvm-build
-llvm-project
 build
 clang
 examples
+third-party
 runtime-rt/*.exe
 runtime-rt/*.o
 
