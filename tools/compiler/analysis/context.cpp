@@ -4,8 +4,8 @@
 #include "llvm/Transforms/InstCombine/InstCombine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
-#include "zero/analysis/context.h"
-#include "zero/symbol/symbol.h"
+#include "weasel/analysis/context.h"
+#include "weasel/symbol/symbol.h"
 
 weasel::AnalysContext::AnalysContext(std::string moduleName)
 {
@@ -145,7 +145,7 @@ llvm::Value *weasel::AnalysContext::codegen(CallExpression *expr)
         argsV.push_back(args[i]->codegen(this));
         if (!argsV.back())
         {
-            return ErrorTable::addError(expr->getToken(), "Expected argument list index " + i);
+            return ErrorTable::addError(expr->getToken(), "Expected argument list index " + std::to_string(i));
         }
     }
 
@@ -155,6 +155,41 @@ llvm::Value *weasel::AnalysContext::codegen(CallExpression *expr)
 llvm::Value *weasel::AnalysContext::codegen(NumberLiteralExpression *expr)
 {
     return getBuilder()->getInt32(expr->getValue());
+}
+
+llvm::Value *weasel::AnalysContext::codegen(ArrayLiteralExpression *expr)
+{
+    auto items = expr->getItems();
+    auto numItem = items.size();
+    auto *valueTy = llvm::ArrayType::get(getBuilder()->getInt32Ty(), numItem);
+    auto *valueNull = llvm::Constant::getNullValue(valueTy);
+    auto valueArr = std::vector<llvm::Constant *>(numItem);
+    auto i = 0;
+
+    while (auto *c = valueNull->getAggregateElement(i))
+    {
+        if (auto *constVal = llvm::dyn_cast<llvm::Constant>(items[i]->codegen(this)))
+        {
+            valueArr[i] = constVal;
+        }
+        else
+        {
+            valueArr[i] = c;
+        }
+
+        i++;
+    }
+
+    auto init = llvm::ConstantArray::get(valueTy, valueArr);
+    auto linkage = llvm::GlobalVariable::LinkageTypes::PrivateLinkage;
+    auto *gv = new llvm::GlobalVariable(*getModule(), valueTy, true, linkage, init, "array");
+    auto dataLayout = llvm::DataLayout(getModule());
+    auto alignNum = dataLayout.getPrefTypeAlignment(valueTy);
+
+    gv->setAlignment(llvm::Align(std::max((unsigned)16, alignNum)));
+    gv->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Local);
+
+    return getBuilder()->CreateLoad(gv, "loadArray");
 }
 
 llvm::Value *weasel::AnalysContext::codegen(StringLiteralExpression *expr)
@@ -175,55 +210,42 @@ llvm::Value *weasel::AnalysContext::codegen(NilLiteralExpression *expr)
 llvm::Value *weasel::AnalysContext::codegen(DeclarationExpression *expr)
 {
     // Get Value Representation
-    llvm::Value *value;
-    llvm::Type *declTy;
+    llvm::Value *value = nullptr;
+    llvm::Type *declTy = expr->getType();
 
     auto exprValue = expr->getValue();
-    if (exprValue)
+    if (exprValue != nullptr)
     {
-        value = exprValue->codegen(this);
-        declTy = expr->getType();
-
-        if (value->getType()->getTypeID() == llvm::Type::TypeID::VoidTyID)
+        if ((value = exprValue->codegen(this)) != nullptr)
         {
-            return ErrorTable::addError(exprValue->getToken(), "Cannot assign void to a variable");
-        }
 
-        if (value->getValueID() == llvm::Value::ConstantPointerNullVal && declTy)
-        {
-            value = llvm::ConstantPointerNull::getNullValue(declTy);
-        }
-
-        if (declTy)
-        {
-            auto compareTy = compareType(declTy, value->getType());
-            if (compareTy == CompareType::Different)
+            if (value->getType()->getTypeID() == llvm::Type::TypeID::VoidTyID)
             {
-                return ErrorTable::addError(exprValue->getToken(), "Cannot assign, expression type is different");
+                return ErrorTable::addError(exprValue->getToken(), "Cannot assign void to a variable");
             }
 
-            if (compareTy == CompareType::Casting)
+            if (value->getValueID() == llvm::Value::ConstantPointerNullVal && declTy)
             {
-                value = castIntegerType(value, declTy);
+                value = llvm::ConstantPointerNull::getNullValue(declTy);
             }
-        }
-        else
-        {
-            declTy = value->getType();
-        }
-    }
-    else
-    {
-        assert(expr->getType());
 
-        declTy = expr->getType();
-        if (declTy->isPointerTy())
-        {
-            value = llvm::ConstantPointerNull::get(llvm::PointerType::get(declTy->getPointerElementType(), declTy->getPointerAddressSpace()));
-        }
-        else
-        {
-            value = llvm::ConstantInt::get(declTy, 0);
+            if (declTy)
+            {
+                auto compareTy = compareType(declTy, value->getType());
+                if (compareTy == CompareType::Different)
+                {
+                    return ErrorTable::addError(exprValue->getToken(), "Cannot assign, expression type is different");
+                }
+
+                if (compareTy == CompareType::Casting)
+                {
+                    value = castIntegerType(value, declTy);
+                }
+            }
+            else
+            {
+                declTy = value->getType();
+            }
         }
     }
 
@@ -231,14 +253,20 @@ llvm::Value *weasel::AnalysContext::codegen(DeclarationExpression *expr)
     auto varName = expr->getIdentifier();
     auto *alloc = getBuilder()->CreateAlloca(declTy, 0, varName);
 
+    std::cerr << "Allocate\n";
+
     // Add Variable Declaration to symbol table
     {
         auto attr = std::make_shared<Attribute>(varName, AttributeScope::ScopeLocal, AttributeKind::SymbolVariable, alloc);
-
         SymbolTable::getInstance().insert(varName, attr);
     }
 
-    return getBuilder()->CreateStore(value, alloc);
+    if (value)
+    {
+        getBuilder()->CreateStore(value, alloc);
+    }
+
+    return alloc;
 }
 
 llvm::Value *weasel::AnalysContext::codegen(BinaryOperatorExpression *expr)
@@ -277,13 +305,10 @@ llvm::Value *weasel::AnalysContext::codegen(BinaryOperatorExpression *expr)
             return ErrorTable::addError(expr->getLHS()->getToken(), "LHS not valid");
         }
 
-        auto *allocLhs = llvm::dyn_cast<llvm::AllocaInst>(loadLhs->getPointerOperand());
-        if (!allocLhs)
-        {
-            return ErrorTable::addError(expr->getLHS()->getToken(), "LHS is not a valid address pointer");
-        }
+        auto *allocLhs = loadLhs->getPointerOperand();
 
         getBuilder()->CreateStore(rhs, allocLhs);
+
         return getBuilder()->CreateLoad(allocLhs);
     }
     default:
@@ -340,4 +365,34 @@ llvm::Value *weasel::AnalysContext::codegen(VariableExpression *expr)
     }
 
     return getBuilder()->CreateLoad(alloc->getValue(), varName);
+}
+
+llvm::Value *weasel::AnalysContext::codegen(ArrayExpression *expr)
+{
+    // Get Allocator from Symbol Table
+    auto varName = expr->getIdentifier();
+    auto attr = SymbolTable::getInstance().get(varName);
+    if (!attr)
+    {
+        return ErrorTable::addError(expr->getToken(), "Variable " + varName + " Not declared");
+    }
+
+    auto indexValue = expr->getIndex()->codegen(this);
+    if (!indexValue->getType()->isIntegerTy())
+    {
+        return ErrorTable::addError(expr->getToken(), "Expected integer value");
+    }
+    std::vector<llvm::Value *> idxList;
+    idxList.push_back(getBuilder()->getInt32(0));
+    idxList.push_back(indexValue);
+
+    auto *alloc = attr->getValue();
+    auto *elemIndex = getBuilder()->CreateGEP(alloc, idxList, "arrayElement");
+
+    if (expr->isAddressOf())
+    {
+        return elemIndex;
+    }
+
+    return getBuilder()->CreateLoad(elemIndex, varName);
 }

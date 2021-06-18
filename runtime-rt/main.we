@@ -1,8 +1,5 @@
-extern fun printf(msg *byte, param ...*int) int {
-    let a = 12
-    return a
-}
+extern fun printf(msg *byte, param ...*int) int {}
 
 fun main() {
-    printf("HELLO %d %d", 12, 21)
+    let n = 12
 }

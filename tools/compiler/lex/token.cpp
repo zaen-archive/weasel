@@ -1,6 +1,6 @@
-#include "zero/analysis/context.h"
-#include "zero/lex/token.h"
-#include "zero/ast/ast.h"
+#include "weasel/analysis/context.h"
+#include "weasel/lex/token.h"
+#include "weasel/ast/ast.h"
 
 llvm::Type *weasel::Token::toType(AnalysContext *c, bool pointerTy)
 {
@@ -135,7 +135,7 @@ weasel::Precedence weasel::Token::getPrecedence()
         val.order = 16;
         break;
     default:
-        val.order = defPrecOrder;
+        val.order = __defaultPrecOrder;
         break;
     }
 

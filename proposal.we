@@ -3,7 +3,7 @@ import "io"
 import "gpu"
 
 // HETEROGENEOUS PROGRAMMING Function
-@gpu
+@parallel
 fun Mul(id int, global data *float) {
     int index = 2 * id
     int nextIndex = index + 1
@@ -31,7 +31,7 @@ fun Main() {
 
     // Call Function by Reference
     car2.Crash()
-    
+
     // HETEROGENEOUS PROGRAMMING Function call //
     // The Language automaticly understand how to handle local or global data
     // We need to map data address into lookup gpu memory

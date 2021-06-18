@@ -1,8 +1,8 @@
 #pragma once
 
 #include "llvm/IR/IRBuilder.h"
-#include "zero/ast/ast.h"
-#include "zero/lex/lexer.h"
+#include "weasel/ast/ast.h"
+#include "weasel/lex/lexer.h"
 
 namespace weasel
 {
@@ -49,6 +49,7 @@ namespace weasel
         std::shared_ptr<Expression> parseLiteralExpression();
         std::shared_ptr<Expression> parseIdentifierExpression();
         std::shared_ptr<Expression> parseBinaryOperator(unsigned prec, std::shared_ptr<weasel::Expression> lhs);
+        std::shared_ptr<Expression> parseArrayExpression();
 
         // Helper
         llvm::Type *parseDataType();

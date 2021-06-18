@@ -1,6 +1,6 @@
-#include "zero/parse/parser.h"
-#include "zero/analysis/context.h"
-#include "zero/symbol/symbol.h"
+#include "weasel/parse/parser.h"
+#include "weasel/analysis/context.h"
+#include "weasel/symbol/symbol.h"
 
 std::shared_ptr<weasel::StatementExpression> weasel::Parser::parseFunctionBody()
 {
@@ -155,6 +155,17 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseIdentifierExpression()
         return parseFunctionCallExpression(attr);
     }
 
+    // Check if Array Variable
+    if (attr->getType()->isArrayTy() && expectToken(TokenKind::TokenDelimOpenSquareBracket))
+    {
+        getNextToken(); // eat identifier
+        getNextToken(); // eat [
+        auto indexExpr = parseLiteralExpression();
+        getNextToken(); // eat index
+
+        return std::make_shared<ArrayExpression>(indexExpr->getToken(), identifier, indexExpr);
+    }
+
     return std::make_shared<VariableExpression>(getCurrentToken(), identifier);
 }
 
@@ -173,6 +184,24 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseParenExpression()
     }
 
     // Token ) will eated next time
+    return expr;
+}
+
+std::shared_ptr<weasel::Expression> weasel::Parser::parseArrayExpression()
+{
+    auto expr = std::make_shared<ArrayLiteralExpression>();
+
+    getNextToken(); // eat [
+    while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseSquareBracket))
+    {
+        expr->addItem(parseLiteralExpression());
+
+        if (getNextToken()->isKind(TokenKind::TokenPuncComma))
+        {
+            getNextToken();
+        }
+    }
+
     return expr;
 }
 
@@ -203,6 +232,11 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parsePrimaryExpression()
         return ErrorTable::addError(getCurrentToken(), "Expected Variable Identifier for address of");
     }
 
+    if (getCurrentToken()->isKind(TokenKind::TokenDelimOpenSquareBracket))
+    {
+        return parseArrayExpression();
+    }
+
     return ErrorTable::addError(getCurrentToken(), "Expected expression");
 }
 
@@ -215,7 +249,7 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseExpression()
     }
 
     getNextToken(); // Eat 'LHS' Expression
-    return parseBinaryOperator(weasel::defPrecOrder, lhs);
+    return parseBinaryOperator(__defaultPrecOrder, lhs);
 }
 
 std::shared_ptr<weasel::Expression> weasel::Parser::parseBinaryOperator(unsigned precOrder, std::shared_ptr<Expression> lhs)
@@ -304,6 +338,8 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseCompoundStatement()
 // let 'identifier'             = 'expr'
 // let 'identifier' *'datatype'
 // let 'identifier'             = &'expr'
+// let 'identifier' [<size>]'datatype'
+// let 'identifier'             = []
 std::shared_ptr<weasel::Expression> weasel::Parser::parseDeclarationExpression()
 {
     auto qualifier = getQualifier();

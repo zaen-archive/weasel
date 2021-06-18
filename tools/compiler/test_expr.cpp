@@ -1,8 +1,8 @@
 #include <iostream>
 #include "llvm/Support/TargetSelect.h"
-#include "lex/lexer.h"
-#include "analysis/context.h"
-#include "parse/parser.h"
+#include "weasel/lex/lexer.h"
+#include "weasel/analysis/context.h"
+#include "weasel/parse/parser.h"
 
 int main()
 {

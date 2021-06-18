@@ -1,3 +1,5 @@
+#include <iostream>
+#include <memory>
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Type.h"
@@ -10,11 +12,9 @@
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ExecutionEngine/MCJIT.h"
-#include <iostream>
-#include <memory>
-#include "parse/parser.h"
-#include "ast/ast.h"
-#include "analysis/context.h"
+#include "weasel/parse/parser.h"
+#include "weasel/ast/ast.h"
+#include "weasel/analysis/context.h"
 
 int main()
 {

@@ -1,1 +1,1 @@
-add_subdirectory(zero)
+add_subdirectory(weasel)

@@ -1,8 +1,8 @@
 #include <iostream>
 #include "llvm/IR/Verifier.h"
-#include "zero/parse/parser.h"
-#include "zero/analysis/context.h"
-#include "zero/symbol/symbol.h"
+#include "weasel/parse/parser.h"
+#include "weasel/analysis/context.h"
+#include "weasel/symbol/symbol.h"
 
 // Codegen
 void weasel::Parser::codegen()
@@ -23,7 +23,10 @@ void weasel::Parser::codegen()
         SymbolTable::getInstance().reset(); // We need to reset symbol table
     }
 
+#ifndef __weasel_debug
     auto *fpm = getContext()->getFunctionPass();
+#endif
+
     auto ok = true;
     std::cout << "Functions : " << _funcs.size() << "\n";
     for (auto &item : _funcs)
@@ -53,8 +56,9 @@ void weasel::Parser::codegen()
             break;
         }
 
-        // TODO: Run Function Pass
-        // fpm->run(*fun);
+#ifndef __weasel_debug
+        fpm->run(*fun);
+#endif
     }
 
     if (!ok || llvm::verifyModule(*getContext()->getModule()))

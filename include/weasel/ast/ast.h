@@ -4,15 +4,16 @@
 #include <vector>
 #include <map>
 #include "llvm/IR/Value.h"
-#include "zero/lex/token.h"
+#include "weasel/lex/token.h"
 
 ///// Expression /////
 // VariableExpression
 // LiteralExpression
+// ArrayLiteralExpression
 // | PathExpression
 // OperatorExpression
 // | GroupedExpression
-// | ArrayExpression
+// ArrayExpression
 // | AwaitExpression
 // | IndexExpression
 // | TupleExpression
@@ -110,7 +111,7 @@ namespace weasel
 
         std::shared_ptr<Expression> getValue() const { return _value; }
 
-        llvm::Value *codegen(AnalysContext *context);
+        llvm::Value *codegen(AnalysContext *context) override;
     };
 
     // Call Expression
@@ -125,7 +126,7 @@ namespace weasel
         std::string getIdentifier() const { return _identifier; }
         std::vector<std::shared_ptr<Expression>> getArguments() const { return _args; }
 
-        llvm::Value *codegen(AnalysContext *context);
+        llvm::Value *codegen(AnalysContext *context) override;
     };
 
     // Variable Expression
@@ -141,7 +142,20 @@ namespace weasel
         std::string getIdentifier() const { return _identifier; }
         bool isAddressOf() const { return _addressOf; }
 
-        llvm::Value *codegen(AnalysContext *context);
+        llvm::Value *codegen(AnalysContext *context) override;
+    };
+
+    class ArrayExpression : public VariableExpression
+    {
+    private:
+        std::shared_ptr<Expression> _indexExpr;
+
+    public:
+        ArrayExpression(std::shared_ptr<Token> token, std::string identifier, std::shared_ptr<Expression> indexExpr, bool addressOf = false) : VariableExpression(token, identifier, addressOf), _indexExpr(indexExpr) {}
+
+        std::shared_ptr<Expression> getIndex() const { return _indexExpr; }
+
+        llvm::Value *codegen(AnalysContext *context) override;
     };
 
     // Declaration Expression
@@ -149,19 +163,19 @@ namespace weasel
     {
     private:
         std::string _identifier;
+        Qualifier _qualifier;
         llvm::Type *_type;
         std::shared_ptr<Expression> _value;
-        Qualifier _qualifier;
 
     public:
-        DeclarationExpression(std::shared_ptr<Token> token, std::string identifier, Qualifier qualifier, llvm::Type *type = nullptr, std::shared_ptr<Expression> value = nullptr) : Expression(token), _identifier(identifier), _type(type), _qualifier(qualifier), _value(value) {}
+        DeclarationExpression(std::shared_ptr<Token> token, std::string identifier, Qualifier qualifier, llvm::Type *type = nullptr, std::shared_ptr<Expression> value = nullptr) : Expression(token), _identifier(identifier), _qualifier(qualifier), _type(type), _value(value) {}
 
         std::string getIdentifier() const { return _identifier; }
         std::shared_ptr<Expression> getValue() const { return _value; }
         llvm::Type *getType() const { return _type; }
         Qualifier getQualifier() const { return _qualifier; }
 
-        llvm::Value *codegen(AnalysContext *context);
+        llvm::Value *codegen(AnalysContext *context) override;
     };
 
     // Number Literal Expression
@@ -171,11 +185,11 @@ namespace weasel
         long long _value; // 64 bit(8 bytes)
 
     public:
-        NumberLiteralExpression(std::shared_ptr<Token> token, long long value, unsigned width = 32) : _value(value), LiteralExpression(token, LiteralType::LiteralNumber, width) {}
+        NumberLiteralExpression(std::shared_ptr<Token> token, long long value, unsigned width = 32) : LiteralExpression(token, LiteralType::LiteralNumber, width), _value(value) {}
 
         long long getValue() const { return _value; }
 
-        llvm::Value *codegen(AnalysContext *context);
+        llvm::Value *codegen(AnalysContext *context) override;
     };
 
     // Boolean Literal Expression
@@ -185,11 +199,11 @@ namespace weasel
         bool _value;
 
     public:
-        BoolLiteralExpression(std::shared_ptr<Token> token, bool value) : _value(value), LiteralExpression(token, LiteralType::LiteralBool, 1) {}
+        BoolLiteralExpression(std::shared_ptr<Token> token, bool value) : LiteralExpression(token, LiteralType::LiteralBool, 1), _value(value) {}
 
         bool getValue() const { return _value; }
 
-        llvm::Value *codegen(AnalysContext *context) { return nullptr; }
+        llvm::Value *codegen(AnalysContext *context) override { return nullptr; }
     };
 
     // String Literal Expression
@@ -199,11 +213,11 @@ namespace weasel
         std::string _value;
 
     public:
-        StringLiteralExpression(std::shared_ptr<Token> token, std::string value) : _value(value), LiteralExpression(token, LiteralType::LiteralString, 8, value.size()) {}
+        StringLiteralExpression(std::shared_ptr<Token> token, std::string value) : LiteralExpression(token, LiteralType::LiteralString, 8, value.size()), _value(value) {}
 
         std::string getValue() const { return _value; }
 
-        llvm::Value *codegen(AnalysContext *context);
+        llvm::Value *codegen(AnalysContext *context) override;
     };
 
     // Nil Literal Expression
@@ -212,7 +226,7 @@ namespace weasel
     public:
         NilLiteralExpression(std::shared_ptr<Token> token) : LiteralExpression(token, LiteralType::LiteralNil, 64) {}
 
-        llvm::Value *codegen(AnalysContext *context);
+        llvm::Value *codegen(AnalysContext *context) override;
     };
 
     // Binary Operator Expression
@@ -230,7 +244,7 @@ namespace weasel
         std::shared_ptr<Expression> getLHS() const { return _lhs; }
         std::shared_ptr<Expression> getRHS() const { return _rhs; }
 
-        llvm::Value *codegen(AnalysContext *context);
+        llvm::Value *codegen(AnalysContext *context) override;
     };
 
     // Unary Operator Expression
@@ -243,7 +257,23 @@ namespace weasel
     public:
         UnaryOperatorExpression(std::shared_ptr<Token> lhs, std::shared_ptr<Expression> rhs) : _lhs(lhs), _rhs(rhs) {}
 
-        llvm::Value *codegen(AnalysContext *context) { return nullptr; }
+        llvm::Value *codegen(AnalysContext *context) override { return nullptr; }
+    };
+
+    // Array Expression
+    class ArrayLiteralExpression : public Expression
+    {
+    private:
+        std::vector<std::shared_ptr<Expression>> _items;
+
+    public:
+        ArrayLiteralExpression() {}
+        ArrayLiteralExpression(std::vector<std::shared_ptr<Expression>> items) : _items(items) {}
+
+        void addItem(std::shared_ptr<Expression> item) { _items.push_back(item); }
+        std::vector<std::shared_ptr<Expression>> getItems() const { return _items; }
+
+        llvm::Value *codegen(AnalysContext *context) override;
     };
 
 } // namespace weasel
@@ -267,7 +297,7 @@ namespace weasel
         void addBody(std::shared_ptr<Expression> expr) { _body.push_back(expr); }
         std::vector<std::shared_ptr<Expression>> getBody() const { return _body; }
 
-        llvm::Value *codegen(AnalysContext *context);
+        llvm::Value *codegen(AnalysContext *context) override;
     };
 
 } // namespace weasel
@@ -288,7 +318,7 @@ namespace weasel
         llvm::Type *_type;
 
     public:
-        FunctionArgument(std::shared_ptr<Token> token, std::string argName, llvm::Type *type) : _argName(argName), _type(type), _token(token) {}
+        FunctionArgument(std::shared_ptr<Token> token, std::string argName, llvm::Type *type) : _token(token), _argName(argName), _type(type) {}
 
         std::shared_ptr<Token> getToken() const { return _token; }
         llvm::Type *getArgumentType() const { return _type; }
@@ -304,7 +334,7 @@ namespace weasel
         bool _isVararg;
 
     public:
-        FunctionType(llvm::Type *returnType, std::vector<std::shared_ptr<FunctionArgument>> args, bool vararg) : _retType(returnType), _args(args), _isVararg(vararg) {}
+        FunctionType(llvm::Type *returnType, std::vector<std::shared_ptr<FunctionArgument>> args, bool vararg) : _args(args), _retType(returnType), _isVararg(vararg) {}
 
         std::vector<std::shared_ptr<FunctionArgument>> getArgs() const { return _args; }
         llvm::Type *getReturnType() const { return _retType; }

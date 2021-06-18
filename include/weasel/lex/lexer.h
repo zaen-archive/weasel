@@ -2,8 +2,8 @@
 
 #include <fstream>
 #include <memory>
-#include "zero/lex/token.h"
-#include "zero/basic/filemanager.h"
+#include "weasel/lex/token.h"
+#include "weasel/basic/filemanager.h"
 
 namespace weasel
 {

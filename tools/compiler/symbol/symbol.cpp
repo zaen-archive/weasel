@@ -1,5 +1,5 @@
 #include <iostream>
-#include "zero/symbol/symbol.h"
+#include "weasel/symbol/symbol.h"
 
 /// SYMBOL ///
 std::vector<std::shared_ptr<weasel::Error>> weasel::ErrorTable::_errors;
@@ -53,7 +53,7 @@ std::shared_ptr<weasel::Attribute> weasel::SymbolTable::get(std::string key)
 
 std::shared_ptr<weasel::Attribute> weasel::SymbolTable::getLastFunction()
 {
-    auto i = _table.size() - 1;
+    auto i = (int)_table.size() - 1;
     for (; i >= 0; i--)
     {
         auto attr = _table[i];

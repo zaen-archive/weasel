@@ -1,8 +1,8 @@
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Instructions.h"
-#include "zero/parse/parser.h"
-#include "zero/analysis/context.h"
-#include "zero/symbol/symbol.h"
+#include "weasel/parse/parser.h"
+#include "weasel/analysis/context.h"
+#include "weasel/symbol/symbol.h"
 
 // define
 // 'fun' identifier '(' args ')' funTy '{' stmt '}'

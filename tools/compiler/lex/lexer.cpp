@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cassert>
-#include "zero/lex/lexer.h"
+#include "weasel/lex/lexer.h"
 
 weasel::Lexer::Lexer(FileManager *fileManager)
 {
@@ -12,7 +12,7 @@ bool weasel::Lexer::compareBuffer(char *startBuffer, char *endBuffer, const char
 {
     auto length = endBuffer - startBuffer;
 
-    if (length != strlen(compareBuffer))
+    if (length != ((long)strlen(compareBuffer)))
     {
         return false;
     }

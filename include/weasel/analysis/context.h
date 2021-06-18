@@ -7,7 +7,7 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LegacyPassManager.h"
-#include "zero/ast/ast.h"
+#include "weasel/ast/ast.h"
 
 namespace weasel
 {
@@ -52,6 +52,8 @@ namespace weasel
         llvm::Value *codegen(DeclarationExpression *expr);
         llvm::Value *codegen(StringLiteralExpression *expr);
         llvm::Value *codegen(NilLiteralExpression *expr);
+        llvm::Value *codegen(ArrayLiteralExpression *expr);
+        llvm::Value *codegen(ArrayExpression *expr);
         // TODO: Need to implement modulo operator
         // TODO: Paren Expression get bugs
         llvm::Value *codegen(BinaryOperatorExpression *expr);

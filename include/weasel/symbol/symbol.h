@@ -1,7 +1,7 @@
 #include <vector>
 #include <string>
-#include "zero/lex/token.h"
 #include "llvm/IR/Value.h"
+#include "weasel/lex/token.h"
 
 namespace weasel
 {
@@ -25,9 +25,9 @@ namespace weasel
     class Attribute
     {
     private:
-        AttributeKind _kind;
-        AttributeScope _scope;
         std::string _identifier;
+        AttributeScope _scope;
+        AttributeKind _kind;
         llvm::Type *_type;   // Used when lexical process
         llvm::Value *_value; // used when LLVM Codegen process or semantical process
 

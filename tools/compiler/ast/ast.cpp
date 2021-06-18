@@ -1,5 +1,5 @@
-#include "zero/ast/ast.h"
-#include "zero/analysis/context.h"
+#include "weasel/ast/ast.h"
+#include "weasel/analysis/context.h"
 
 // Expression Codegen
 llvm::Value *weasel::NumberLiteralExpression::codegen(AnalysContext *c)
@@ -22,6 +22,11 @@ llvm::Value *weasel::VariableExpression::codegen(AnalysContext *c)
     return c->codegen(this);
 }
 
+llvm::Value *weasel::ArrayExpression::codegen(AnalysContext *c)
+{
+    return c->codegen(this);
+}
+
 llvm::Value *weasel::StringLiteralExpression::codegen(AnalysContext *c)
 {
     return c->codegen(this);
@@ -38,6 +43,11 @@ llvm::Value *weasel::CallExpression::codegen(AnalysContext *c)
 }
 
 llvm::Value *weasel::ReturnExpression::codegen(AnalysContext *c)
+{
+    return c->codegen(this);
+}
+
+llvm::Value *weasel::ArrayLiteralExpression::codegen(AnalysContext *c)
 {
     return c->codegen(this);
 }

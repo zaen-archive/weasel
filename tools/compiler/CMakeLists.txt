@@ -14,6 +14,7 @@ add_executable(compiler
   # test_expr.cpp
   # test_llvm.cpp
   basic/filemanager.cpp
+  basic/number.cpp
   analysis/context.cpp
   analysis/context_helper.cpp
   lex/lexer.cpp
@@ -39,7 +40,7 @@ set(ZERO_EXT_LIBS
 # LLVMAArch64Info
 # LLVMAArch64Utils
 
-LLVMAggressiveInstCombine
+# LLVMAggressiveInstCombine
 # INFOS
 # LLVMAMDGPUInfo
 # LLVMARMInfo

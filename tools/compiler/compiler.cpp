@@ -6,11 +6,13 @@
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Host.h"
-#include "zero/parse/parser.h"
-#include "zero/analysis/context.h"
-#include "zero/ast/ast.h"
-#include "zero/symbol/symbol.h"
-#include "zero/basic/filemanager.h"
+#include "weasel/parse/parser.h"
+#include "weasel/analysis/context.h"
+#include "weasel/ast/ast.h"
+#include "weasel/symbol/symbol.h"
+#include "weasel/basic/filemanager.h"
+
+#define __weasel_debug
 
 // Parser => Recursive descent parser
 int main(int argc, char *argv[])
@@ -45,61 +47,57 @@ int main(int argc, char *argv[])
 
     parser->codegen(); // change ast to llvm IR
 
-    // // Initialize LLVM TO BULK
-    // // llvm::InitializeAllTargetInfos();
-    // // llvm::InitializeAllTargets();
-    // // llvm::InitializeAllTargetMCs();
-    // // llvm::InitializeAllAsmParsers();
-    // // llvm::InitializeAllAsmPrinters();
-    // // Initialize just native Machine
-    // llvm::InitializeAllTargetInfos();
-    // // llvm::InitializeAllTargetMCs();
-    // llvm::InitializeNativeTarget();
-    // llvm::InitializeNativeTargetAsmParser();
-    // llvm::InitializeNativeTargetAsmPrinter();
+#ifdef __writeout
 
-    // // Compile to Object Code
-    // auto targetTriple = llvm::sys::getDefaultTargetTriple();
-    // context->getModule()->setTargetTriple(targetTriple);
+    // Initialize LLVM TO BULK
+    llvm::InitializeAllTargetInfos();
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmParser();
+    llvm::InitializeNativeTargetAsmPrinter();
 
-    // // Registry Error
-    // std::string error;
-    // auto *target = llvm::TargetRegistry::lookupTarget(targetTriple, error);
+    // Compile to Object Code
+    auto targetTriple = llvm::sys::getDefaultTargetTriple();
+    context->getModule()->setTargetTriple(targetTriple);
 
-    // if (!target)
-    // {
-    //     llvm::errs() << error;
-    //     return 1;
-    // }
+    // Registry Error
+    std::string error;
+    auto *target = llvm::TargetRegistry::lookupTarget(targetTriple, error);
 
-    // auto cpu = "generic";
-    // auto features = "";
+    if (!target)
+    {
+        llvm::errs() << error;
+        return 1;
+    }
 
-    // llvm::TargetOptions targetOpts;
-    // auto rm = llvm::Optional<llvm::Reloc::Model>();
-    // auto targetMachine = target->createTargetMachine(targetTriple, cpu, features, targetOpts, rm);
+    auto cpu = "generic";
+    auto features = "";
 
-    // context->getModule()->setDataLayout(targetMachine->createDataLayout());
+    llvm::TargetOptions targetOpts;
+    auto rm = llvm::Optional<llvm::Reloc::Model>();
+    auto targetMachine = target->createTargetMachine(targetTriple, cpu, features, targetOpts, rm);
 
-    // auto filename = "test/output.o";
-    // std::error_code errorCode;
-    // llvm::raw_fd_ostream dest(filename, errorCode, llvm::sys::fs::OF_None);
-    // if (errorCode)
-    // {
-    //     llvm::errs() << "Could not open file : " << errorCode.message();
-    //     return 1;
-    // }
+    context->getModule()->setDataLayout(targetMachine->createDataLayout());
 
-    // llvm::legacy::PassManager pass;
-    // auto fileType = llvm::CGFT_ObjectFile;
-    // if (targetMachine->addPassesToEmitFile(pass, dest, nullptr, fileType))
-    // {
-    //     llvm::errs() << "The Target Machine can't emit a file of this type";
-    //     return 1;
-    // }
+    auto filename = "runtime-rt/main.o";
+    std::error_code errorCode;
+    llvm::raw_fd_ostream dest(filename, errorCode, llvm::sys::fs::OF_None);
+    if (errorCode)
+    {
+        llvm::errs() << "Could not open file : " << errorCode.message();
+        return 1;
+    }
 
-    // pass.run(*context->getModule());
-    // dest.flush();
+    llvm::legacy::PassManager pass;
+    auto fileType = llvm::CGFT_ObjectFile;
+    if (targetMachine->addPassesToEmitFile(pass, dest, nullptr, fileType))
+    {
+        llvm::errs() << "The Target Machine can't emit a file of this type";
+        return 1;
+    }
 
-    // llvm::outs() << "Wrote " << filename << "\n";
+    pass.run(*context->getModule());
+    dest.flush();
+
+    llvm::outs() << "Wrote " << filename << "\n";
+#endif
 }

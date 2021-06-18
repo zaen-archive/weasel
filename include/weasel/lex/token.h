@@ -9,6 +9,8 @@ auto enumToInt(Enumeration const value) -> typename std::underlying_type<Enumera
     return static_cast<typename std::underlying_type<Enumeration>::type>(value);
 }
 
+#define __defaultPrecOrder 20
+
 // Base
 namespace weasel
 {
@@ -143,9 +145,6 @@ namespace weasel
         unsigned order;
     };
 
-    // Default Precedence Order
-    static unsigned defPrecOrder = 20;
-
 } // namespace weasel
 
 // Token Class
@@ -163,7 +162,7 @@ namespace weasel
         SourceLocation _location;
 
     public:
-        Token(TokenKind kind, SourceLocation &location, char *startToken, char *endToken) : _kind(kind), _location(location), _startBuffer(startToken), _endBuffer(endToken) {}
+        Token(TokenKind kind, SourceLocation &location, char *startToken, char *endToken) : _startBuffer(startToken), _endBuffer(endToken), _kind(kind), _location(location) {}
 
         inline bool isKind(TokenKind type) const { return type == _kind; }
         inline bool isDataType() const { return _kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal; }

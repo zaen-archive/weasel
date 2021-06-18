@@ -11,7 +11,7 @@
 #endif /* !_WIN32 && !HAVE_MMAP */
 
 #include <iostream>
-#include "zero/basic/filemanager.h"
+#include "weasel/basic/filemanager.h"
 
 // instead of using ifstream
 weasel::FileManager::FileManager(const char *filePath)

@@ -1,5 +1,5 @@
 #include <iostream>
-#include "zero/lex/lexer.h"
+#include "weasel/lex/lexer.h"
 
 std::shared_ptr<weasel::Token> weasel::Lexer::getKeyword(char *startBuffer, char *endBuffer)
 {

@@ -31,14 +31,16 @@ We also can binding the library created by weasel language into another language
 - [x] Function Declaration
 - [x] Function Definition
 - [x] Function Call
-- [ ] Function Variable Number Argument
+- [ ] Function Variable Number Arguments
 
-### Variable declaration
+### Data Type
 
-- [x] Variable Declaration
+- [x] Integer
+- [ ] Boolean
 
 ### Variable Table Declaration
 
+- [x] Variable Declaration
 - [x] Variable Lookup
 - [x] Function Lookup
 - [x] Variable names and constants
@@ -86,11 +88,29 @@ We also can binding the library created by weasel language into another language
 
 - [ ] Implement Internal Heterogeneous Computing (for prove of concept)
 
+### If / Else Statement
+
+- [ ] Support if decision
+- [ ] Support else if decision
+- [ ] Support else decision
+
+### For Statement
+
+- [ ] Support For-loop statement
+- [ ] Support For(while) statement
+- [ ] Support For(switch) statement
+
 ### Struct
 
 - [ ] Support Struct
 
 ### Function Struct
+
+- [ ] Support internal function inside struct
+
+### Function Struct by reference
+
+- [ ] Support Function by reference
 
 # BUGS
 

@@ -1,4 +1,4 @@
-#include "zero/lex/lexer.h"
+#include "weasel/lex/lexer.h"
 
 std::shared_ptr<weasel::Token> weasel::Lexer::getType(char *startBuffer, char *endBuffer)
 {
