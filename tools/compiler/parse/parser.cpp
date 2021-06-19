@@ -23,10 +23,8 @@ void weasel::Parser::codegen()
         SymbolTable::getInstance().reset(); // We need to reset symbol table
     }
 
-#ifndef __weasel_debug
-    auto *fpm = getContext()->getFunctionPass();
-#endif
-
+    // TODO: Get FPM
+    // auto *fpm = getContext()->getFunctionPass();
     auto ok = true;
     std::cout << "Functions : " << _funcs.size() << "\n";
     for (auto &item : _funcs)
@@ -56,9 +54,8 @@ void weasel::Parser::codegen()
             break;
         }
 
-#ifndef __weasel_debug
-        fpm->run(*fun);
-#endif
+        // TODO: RUN FPM
+        // fpm->run(*fun);
     }
 
     if (!ok || llvm::verifyModule(*getContext()->getModule()))

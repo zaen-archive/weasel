@@ -196,8 +196,8 @@ llvm::Value *weasel::AnalysContext::codegen(StringLiteralExpression *expr)
 {
     auto *str = getBuilder()->CreateGlobalString(expr->getValue());
     std::vector<llvm::Value *> idxList;
-    idxList.push_back(getBuilder()->getInt8(0));
-    idxList.push_back(getBuilder()->getInt8(0));
+    idxList.push_back(getBuilder()->getInt64(0));
+    idxList.push_back(getBuilder()->getInt64(0));
 
     return llvm::ConstantExpr::getGetElementPtr(str->getType()->getElementType(), str, idxList, true);
 }
@@ -253,8 +253,6 @@ llvm::Value *weasel::AnalysContext::codegen(DeclarationExpression *expr)
     auto varName = expr->getIdentifier();
     auto *alloc = getBuilder()->CreateAlloca(declTy, 0, varName);
 
-    std::cerr << "Allocate\n";
-
     // Add Variable Declaration to symbol table
     {
         auto attr = std::make_shared<Attribute>(varName, AttributeScope::ScopeLocal, AttributeKind::SymbolVariable, alloc);
@@ -274,17 +272,17 @@ llvm::Value *weasel::AnalysContext::codegen(BinaryOperatorExpression *expr)
     auto token = expr->getOperator();
     auto *rhs = expr->getRHS()->codegen(this);
     auto *lhs = expr->getLHS()->codegen(this);
-    auto compareTy = compareType(lhs->getType(), rhs->getType());
+    // auto compareTy = compareType(lhs->getType(), rhs->getType());
 
-    if (compareTy == CompareType::Different)
-    {
-        return logErrorV(std::string("type LHS != type RHS"));
-    }
+    // if (compareTy == CompareType::Different)
+    // {
+    //     return logErrorV(std::string("type LHS != type RHS"));
+    // }
 
-    if (compareTy == CompareType::Casting)
-    {
-        castIntegerType(lhs, rhs);
-    }
+    // if (compareTy == CompareType::Casting)
+    // {
+    //     castIntegerType(lhs, rhs);
+    // }
 
     switch (token->getTokenKind())
     {
@@ -306,7 +304,6 @@ llvm::Value *weasel::AnalysContext::codegen(BinaryOperatorExpression *expr)
         }
 
         auto *allocLhs = loadLhs->getPointerOperand();
-
         getBuilder()->CreateStore(rhs, allocLhs);
 
         return getBuilder()->CreateLoad(allocLhs);
@@ -378,16 +375,24 @@ llvm::Value *weasel::AnalysContext::codegen(ArrayExpression *expr)
     }
 
     auto indexValue = expr->getIndex()->codegen(this);
-    if (!indexValue->getType()->isIntegerTy())
+    auto longTy = getBuilder()->getInt64Ty();
+    auto compare = compareType(indexValue->getType(), longTy);
+    if (compare == CompareType::Different)
     {
         return ErrorTable::addError(expr->getToken(), "Expected integer value");
     }
+
+    if (compare == CompareType::Casting)
+    {
+        indexValue = castIntegerType(indexValue, longTy);
+    }
+
     std::vector<llvm::Value *> idxList;
-    idxList.push_back(getBuilder()->getInt32(0));
+    idxList.push_back(getBuilder()->getInt64(0));
     idxList.push_back(indexValue);
 
     auto *alloc = attr->getValue();
-    auto *elemIndex = getBuilder()->CreateGEP(alloc, idxList, "arrayElement");
+    auto *elemIndex = getBuilder()->CreateInBoundsGEP(alloc, idxList, "arrayElement");
 
     if (expr->isAddressOf())
     {

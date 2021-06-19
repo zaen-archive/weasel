@@ -12,7 +12,7 @@
 #include "weasel/symbol/symbol.h"
 #include "weasel/basic/filemanager.h"
 
-#define __weasel_debug
+#define __writeout
 
 // Parser => Recursive descent parser
 int main(int argc, char *argv[])

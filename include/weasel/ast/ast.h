@@ -73,10 +73,10 @@ namespace weasel
     public:
         Expression(std::shared_ptr<Token> token) : _token(token) {}
         Expression() {}
-
         std::shared_ptr<Token> getToken() const { return _token; }
 
         virtual llvm::Value *codegen(AnalysContext *context) = 0;
+        // virtual ~Expression() = 0;
     };
 
     // Literal Expression

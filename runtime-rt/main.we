@@ -1,5 +1,10 @@
 extern fun printf(msg *byte, param ...*int) int {}
 
 fun main() {
-    let n = 12
+    let m = 44
+    let i [12]int
+    i[2] = m
+    let x = i[2]
+
+    printf("X = %d", x)
 }

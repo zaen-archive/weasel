@@ -67,6 +67,14 @@ We also can binding the library created by weasel language into another language
 
 - [ ] Support variable signed and unsigned
 
+### Operator
+
+- [x] Support Multiply
+- [x] Support Division
+- [x] Support Addition
+- [x] Support Substract
+- [ ] Support Modulo
+
 ### Unary Operator
 
 - [ ] Support Unary Operator
@@ -76,7 +84,8 @@ We also can binding the library created by weasel language into another language
 - [x] Simple pointer type
 - [x] Simple Address of
 - [x] Support nil value
-- [ ] Support data Sequence
+- [x] Support Array Data Sequence
+- [ ] Support Vector Data Sequence
 
 ### IO console (input/output)
 

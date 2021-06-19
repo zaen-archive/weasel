@@ -156,7 +156,7 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseIdentifierExpression()
     }
 
     // Check if Array Variable
-    if (attr->getType()->isArrayTy() && expectToken(TokenKind::TokenDelimOpenSquareBracket))
+    if (attr->getKind() == AttributeKind::SymbolArray && expectToken(TokenKind::TokenDelimOpenSquareBracket))
     {
         getNextToken(); // eat identifier
         getNextToken(); // eat [
@@ -370,9 +370,11 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseDeclarationExpression()
         {
             return ErrorTable::addError(getCurrentToken(), "No Default Value for Non Volatile variable");
         }
+
         // Insert Symbol Table
         {
-            auto attr = std::make_shared<Attribute>(identifier, AttributeScope::ScopeLocal, AttributeKind::SymbolVariable, type);
+            auto attrKind = type->isArrayTy() ? AttributeKind::SymbolArray : AttributeKind::SymbolVariable;
+            auto attr = std::make_shared<Attribute>(identifier, AttributeScope::ScopeLocal, attrKind, type);
             SymbolTable::getInstance().insert(identifier, attr);
         }
 

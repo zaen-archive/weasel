@@ -10,7 +10,8 @@ namespace weasel
         SymbolStruct,
         SymbolFunction,
         SymbolVariable,
-        SymbolParameter
+        SymbolParameter,
+        SymbolArray,
     };
 
     enum class AttributeScope
