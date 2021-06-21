@@ -10,7 +10,6 @@
 #define __size (size_t)512'000
 #define __sizeWithInt __size * sizeof(int)
 
-
 // SOURCE
 // 441327
 // 352558
@@ -18,6 +17,8 @@
 // 185529
 // 175948
 
+// 920827
+// 321930
 
 inline uint64_t nanoseconds()
 {
@@ -87,7 +88,7 @@ int main()
 
     // Command
     cl::CommandQueue queue(context, devices[0], 0, &err);
-    
+
     // Enqueue
     err = queue.enqueueNDRangeKernel(
         kernel,

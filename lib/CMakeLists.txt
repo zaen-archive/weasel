@@ -1,5 +1,1 @@
-add_subdirectory(analysis)
-add_subdirectory(ast)
-add_subdirectory(lex)
-add_subdirectory(parse)
-add_subdirectory(symbol)
+add_subdirectory(parallel)

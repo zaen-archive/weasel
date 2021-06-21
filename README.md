@@ -121,9 +121,14 @@ We also can binding the library created by weasel language into another language
 
 - [ ] Support Function by reference
 
+### Naming Mangling
+
+- [ ] By default use mangling name
+
 # BUGS
 
 - [x] Weird Lexeme Location(row, col, position)
+- [ ] Special character need handled
 - [ ] I implemented binaryexpression for precedence associative right to left wrongly
 - [ ] Library inside lib folder instead of inside tools folder
 

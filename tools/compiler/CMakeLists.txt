@@ -28,6 +28,7 @@ add_executable(compiler
   parse/parser_function.cpp
   parse/parser_expr.cpp
   parse/parser_helper.cpp
+  llc/llc.cpp
   symbol/symbol.cpp
 )
 

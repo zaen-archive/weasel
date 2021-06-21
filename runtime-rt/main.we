@@ -1,10 +1,7 @@
+
+extern fun testing() ulong {}
 extern fun printf(msg *byte, param ...*int) int {}
 
 fun main() {
-    let m = 44
-    let i [12]int
-    i[2] = m
-    let x = i[2]
-
-    printf("X = %d", x)
+    printf("X = %d", testing())
 }

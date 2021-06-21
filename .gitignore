@@ -1,9 +1,16 @@
 build/
+cmake-build-debug/
 clang/
 examples/
 third-party/
+
 runtime-rt/*.exe
 runtime-rt/*.o
+runtime-rt/*.out
 
+.idea
 .vscode
 .vs
+
+# FILES
+CMakeLists.txt
