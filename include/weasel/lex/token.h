@@ -24,15 +24,17 @@ namespace weasel
         TokenIdentifier,
 
         // Keyword
-        TokenKeyFun,    // fun
-        TokenKeyExtern, // extern
-        TokenKeyLet,    // let
-        TokenKeyFinal,  // final
-        TokenKeyConst,  // const
-        TokenKeyReturn, // return
-        TokenKeyIf,     // if // Condition
-        TokenKeyElse,   // else // Condition
-        TokenKeyFor,    // for // Looping
+        TokenKeyParallel, // parallel // heterogeneous support
+        TokenKeyKernel,   // kernel // heterogeneous kernel type
+        TokenKeyFun,      // fun
+        TokenKeyExtern,   // extern
+        TokenKeyLet,      // let
+        TokenKeyFinal,    // final
+        TokenKeyConst,    // const
+        TokenKeyReturn,   // return
+        TokenKeyIf,       // if // Condition
+        TokenKeyElse,     // else // Condition
+        TokenKeyFor,      // for // Looping
 
         // Data Literal -> Value of data type
         TokenLitNil,
@@ -150,7 +152,7 @@ namespace weasel
 // Token Class
 namespace weasel
 {
-    class AnalysContext;
+    class Context;
 
     class Token
     {
@@ -180,14 +182,14 @@ namespace weasel
         TokenKind getTokenKind() const { return _kind; }
         int getTokenKindToInt() { return enumToInt(_kind); }
 
-        Qualifier getQualifier();
+        Qualifier getQualifier() const;
 
         // TODO: Need to support Right to Left Associativity
         Precedence getPrecedence();
 
     public:
         // Need to implement 128 float type
-        llvm::Type *toType(AnalysContext *c, bool pointerTy = false);
+        llvm::Type *toType(llvm::LLVMContext &c, bool pointerTy = false) const;
     };
 
 } // namespace weasel

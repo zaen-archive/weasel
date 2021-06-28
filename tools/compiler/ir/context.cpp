@@ -15,21 +15,25 @@ weasel::Context::Context(llvm::LLVMContext *context, const std::string &moduleNa
 
 llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
 {
+    _currentFuncton = funAST;
+
     auto funName = funAST->getIdentifier();
     auto isVararg = funAST->getFunctionType()->getIsVararg();
     auto funArgs = funAST->getArgs();
     auto retTy = funAST->getFunctionType()->getReturnType();
+    auto parallelType = funAST->getParallelType();
     auto args = std::vector<llvm::Type *>();
     auto argsLength = funArgs.size() - (isVararg ? 1 : 0);
     for (size_t i = 0; i < argsLength; i++)
     {
         auto *arg = funArgs[i]->getArgumentType();
+        auto isParallel = parallelType != ParallelType::None;
 
-        if (arg->isPointerTy())
+        if (arg->isPointerTy() && isParallel)
         {
             args.push_back(llvm::PointerType::get(arg->getPointerElementType(), 1));
         }
-        else if (arg->isArrayTy())
+        else if (arg->isArrayTy() && isParallel)
         {
             args.push_back(llvm::PointerType::get(arg->getArrayElementType(), 1));
         }
@@ -42,27 +46,30 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
     auto *funTyLLVM = llvm::FunctionType::get(retTy, args, isVararg);
     auto *funLLVM = llvm::Function::Create(funTyLLVM, llvm::GlobalValue::LinkageTypes::ExternalLinkage, funName, *getModule());
 
-    // TODO: Function Attribute
-    // {
-    //     funLLVM->setDSOLocal(true);
-    //     // funLLVM->addAttribute(0, llvm::Attribute::AttrKind::Convergent);
-    //     // funLLVM->addAttribute(1, llvm::Attribute::AttrKind::NoUnwind);
-    //     funLLVM->setCallingConv(llvm::CallingConv::SPIR_KERNEL);
-    //     funLLVM->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Local);
-    // }
+    funLLVM->setDSOLocal(true);
 
-    auto idx = 0;
-    for (auto &item : funLLVM->args())
+    if (parallelType == ParallelType::ParallelKernel)
     {
-        auto arg = funArgs[idx++];
+        funLLVM->setCallingConv(llvm::CallingConv::SPIR_KERNEL);
+    }
+    else if (parallelType == ParallelType::ParallelFunction)
+    {
+        funLLVM->setCallingConv(llvm::CallingConv::SPIR_FUNC);
+    }
 
-        item.setName(arg->getArgumentName());
+    if (parallelType != ParallelType::None)
+    {
+        funLLVM->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Local);
+        funLLVM->addFnAttr(llvm::Attribute::AttrKind::NoUnwind);
+        funLLVM->addFnAttr(llvm::Attribute::AttrKind::Convergent);
+        funLLVM->addFnAttr(llvm::Attribute::AttrKind::NoRecurse);
+        funLLVM->addFnAttr(llvm::Attribute::AttrKind::NoFree);
     }
 
     // Add Function to symbol table
     {
         auto attr = std::make_shared<Attribute>(funName, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, funLLVM);
-        SymbolTable::getInstance().insert(funName, attr);
+        SymbolTable::insert(funName, attr);
     }
 
     if (funAST->getIsDefine())
@@ -70,49 +77,37 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
         auto *entry = llvm::BasicBlock::Create(*getContext(), "", funLLVM);
         getBuilder()->SetInsertPoint(entry);
 
-        // Add Parameter to symbol table
+        // Enter to parameter scope
+        SymbolTable::enterScope();
+
+        auto idx = 0;
+        for (auto &item : funLLVM->args())
         {
-            // Enter to parameter scope
-            SymbolTable::getInstance().enterScope();
+            auto argExpr = funArgs[idx++];
+            auto *paramTy = argExpr->getArgumentType();
+            auto argName = argExpr->getArgumentName();
 
-            auto i = 0;
-            for (auto &item : funLLVM->args())
+            item.setName(argName);
+
+            if ((paramTy->isPointerTy() || paramTy->isArrayTy()) && parallelType != ParallelType::None)
             {
-                // TODO: No Capture if kernel function
-                // No Capture mean no copy of address data
                 item.addAttr(llvm::Attribute::AttrKind::NoCapture);
+                // TODO: Add Modifier const or final
                 item.addAttr(llvm::Attribute::AttrKind::ReadOnly);
-
-                auto argExpr = funArgs[i];
-                auto *paramTy = argExpr->getArgumentType();
-                auto refName = item.getName();
-                auto paramName = std::string(refName.begin(), refName.end());
-                auto attrKind = AttributeKind::SymbolVariable;
-                if (paramTy->isArrayTy())
-                {
-                    attrKind = AttributeKind::SymbolArray;
-                }
-                else if (paramTy->isPointerTy())
-                {
-                    attrKind = AttributeKind::SymbolPointer;
-                }
-
-                // TODO: Add nocapture attribute
-                std::shared_ptr<Attribute> attr;
-                if (!item.hasAttribute(llvm::Attribute::AttrKind::NoCapture))
-                {
-                    auto *allocParam = getBuilder()->CreateAlloca(item.getType());
-                    getBuilder()->CreateStore(&item, allocParam);
-
-                    attr = std::make_shared<Attribute>(paramName, AttributeScope::ScopeParam, attrKind, allocParam);
-                }
-                else
-                {
-                    attr = std::make_shared<Attribute>(paramName, AttributeScope::ScopeParam, attrKind, &item);
-                }
-
-                SymbolTable::getInstance().insert(paramName, attr);
             }
+
+            auto attrKind = AttributeKind::SymbolVariable;
+            if (paramTy->isArrayTy())
+            {
+                attrKind = AttributeKind::SymbolArray;
+            }
+            else if (paramTy->isPointerTy())
+            {
+                attrKind = AttributeKind::SymbolPointer;
+            }
+
+            auto attr = std::make_shared<Attribute>(argName, AttributeScope::ScopeParam, attrKind, &item);
+            SymbolTable::insert(argName, attr);
         }
 
         // Create Block
@@ -128,7 +123,7 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
 
         // Exit from parameter scope
         {
-            auto exit = SymbolTable::getInstance().exitScope();
+            auto exit = SymbolTable::exitScope();
             if (!exit)
             {
                 return nullptr;
@@ -143,7 +138,7 @@ llvm::Value *weasel::Context::codegen(StatementExpression *expr)
 {
     // Enter to new statement
     {
-        SymbolTable::getInstance().enterScope();
+        SymbolTable::enterScope();
     }
 
     for (auto &item : expr->getBody())
@@ -153,7 +148,7 @@ llvm::Value *weasel::Context::codegen(StatementExpression *expr)
 
     // Exit from statement
     {
-        SymbolTable::getInstance().exitScope();
+        SymbolTable::exitScope();
     }
 
     return nullptr;
@@ -176,10 +171,14 @@ llvm::Value *weasel::Context::codegen(CallExpression *expr)
     }
 
     auto *call = getBuilder()->CreateCall(fun, argsV);
+    if (fun->hasFnAttribute(llvm::Attribute::AttrKind::Convergent))
+    {
+        call->setCallingConv(llvm::CallingConv::SPIR_FUNC);
+        call->setTailCall();
+    }
 
-    // TODO: Calling SPIR FUNCTION
-    call->setCallingConv(llvm::CallingConv::SPIR_FUNC);
-    call->setTailCall();
+    // TODO: When General Module calling Spir V or Parallel Module
+    // DO MAGIC HERE
 
     return call;
 }
@@ -302,7 +301,7 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
         }
 
         auto attr = std::make_shared<Attribute>(varName, AttributeScope::ScopeLocal, attrKind, alloc);
-        SymbolTable::getInstance().insert(varName, attr);
+        SymbolTable::insert(varName, attr);
     }
 
     if (value)
@@ -370,7 +369,7 @@ llvm::Value *weasel::Context::codegen(ReturnExpression *expr)
     auto *val = expr->getValue()->codegen(this);
 
     // Get Last Function from symbol table
-    auto funAttr = SymbolTable::getInstance().getLastFunction();
+    auto funAttr = SymbolTable::getLastFunction();
     if (!funAttr)
     {
         return ErrorTable::addError(expr->getToken(), "Return Statement cannot find last function from symbol table");
@@ -396,7 +395,7 @@ llvm::Value *weasel::Context::codegen(VariableExpression *expr) const
 {
     // Get Allocator from Symbol Table
     auto varName = expr->getIdentifier();
-    auto attr = SymbolTable::getInstance().get(varName);
+    auto attr = SymbolTable::get(varName);
     if (!attr)
     {
         return ErrorTable::addError(expr->getToken(), "Variable " + varName + " Not declared");
@@ -420,7 +419,7 @@ llvm::Value *weasel::Context::codegen(ArrayExpression *expr)
 {
     // Get Allocator from Symbol Table
     auto varName = expr->getIdentifier();
-    auto attr = SymbolTable::getInstance().get(varName);
+    auto attr = SymbolTable::get(varName);
     auto *alloc = attr->getValue();
     auto indexValue = expr->getIndex()->codegen(this);
     auto longTy = getBuilder()->getInt64Ty();
@@ -459,8 +458,7 @@ llvm::Value *weasel::Context::codegen(ArrayExpression *expr)
 
     auto *loadIns = getBuilder()->CreateLoad(elemIndex, varName);
 
-    // TODO: For Kernel Module
-    // Create TBAA Metadata
+    if (_currentFuncton->getParallelType() != ParallelType::None)
     {
         auto *node = getTBAA(loadIns->getType());
         auto *mdTBAA = getMDBuilder()->createTBAAStructTagNode(node, node, 0);

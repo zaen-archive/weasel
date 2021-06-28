@@ -1,50 +1,45 @@
-#include "weasel/analysis/context.h"
+#include "weasel/ir/context.h"
 #include "weasel/lex/token.h"
 #include "weasel/ast/ast.h"
 
-llvm::Type *weasel::Token::toType(AnalysContext *c, bool pointerTy)
+llvm::Type *weasel::Token::toType(llvm::LLVMContext &c, bool pointerTy) const
 {
-    auto *builder = c->getBuilder();
-    llvm::Type *type;
+    llvm::Type *type = nullptr;
     if (isKind(TokenKind::TokenTyByte) || isKind(TokenKind::TokenTySbyte))
     {
-        // Integer
-        type = builder->getInt8Ty();
+        type = llvm::Type::getInt8Ty(c);
     }
     else if (isKind(TokenKind::TokenTyShort) || isKind(TokenKind::TokenTyUshort))
     {
-        type = builder->getInt16Ty();
+        type = llvm::Type::getInt16Ty(c);
     }
     else if (isKind(TokenKind::TokenTyInt) || isKind(TokenKind::TokenTyUint))
     {
-        type = builder->getInt32Ty();
+        type = llvm::Type::getInt32Ty(c);
     }
     else if (isKind(TokenKind::TokenTyLong) || isKind(TokenKind::TokenTyUlong))
     {
-        type = builder->getInt64Ty();
+        type = llvm::Type::getInt64Ty(c);
     }
     else if (isKind(TokenKind::TokenTyInt128) || isKind(TokenKind::TokenTyUnt128))
     {
-        type = builder->getInt128Ty();
+        type = llvm::Type::getInt128Ty(c);
     }
     else if (isKind(TokenKind::TokenTyFloat))
     {
-        // Float
-        type = builder->getFloatTy();
+        type = llvm::Type::getFloatTy(c);
     }
     else if (isKind(TokenKind::TokenTyDouble))
     {
-        type = builder->getDoubleTy();
+        type = llvm::Type::getDoubleTy(c);
     }
     else if (isKind(TokenKind::TokenTyBool))
     {
-        // Bool
-        type = builder->getInt1Ty();
+        type = llvm::Type::getInt1Ty(c);
     }
     else if (isKind(TokenKind::TokenTyVoid))
     {
-        // Void
-        type = builder->getVoidTy();
+        type = llvm::Type::getVoidTy(c);
     }
 
     if (pointerTy)
@@ -55,7 +50,7 @@ llvm::Type *weasel::Token::toType(AnalysContext *c, bool pointerTy)
     return type;
 }
 
-weasel::Qualifier weasel::Token::getQualifier()
+weasel::Qualifier weasel::Token::getQualifier() const
 {
     switch (getTokenKind())
     {
@@ -71,7 +66,7 @@ weasel::Qualifier weasel::Token::getQualifier()
 // TODO: Need to add associativity
 weasel::Precedence weasel::Token::getPrecedence()
 {
-    Precedence val;
+    Precedence val{};
     val.associative = Associative::LeftToRight;
 
     switch (_kind)

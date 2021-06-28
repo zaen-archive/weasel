@@ -1,111 +1,57 @@
 #include <iostream>
+#include <unistd.h>
 #include "llvm/IR/Verifier.h"
 #include "weasel/parse/parser.h"
-#include "weasel/analysis/context.h"
+#include "weasel/ir/context.h"
 #include "weasel/symbol/symbol.h"
 
-// Codegen
-void weasel::Parser::codegen()
-{
-    {
-        if (SymbolTable::getInstance().getLookup().size() != 1)
-        {
-            std::cout << "\nSomething wrong with lookup table\n";
-            for (auto item : SymbolTable::getInstance().getLookup())
-            {
-                std::cout << item << " ";
-            }
-            std::cout << "\n\n";
-
-            return;
-        }
-
-        SymbolTable::getInstance().reset(); // We need to reset symbol table
-    }
-
-    // TODO: Get FPM
-    // auto *fpm = getContext()->getFunctionPass();
-    auto ok = true;
-    std::cout << "Functions : " << _funcs.size() << "\n";
-    for (auto &item : _funcs)
-    {
-        auto identifier = item->getIdentifier();
-        if (getModule()->getFunction(identifier))
-        {
-            std::cout << "Function " << identifier << " already declared\n";
-
-            ok = false;
-            break;
-        }
-
-        auto *fun = item->codegen(getContext());
-        if (!fun)
-        {
-            std::cout << "\nSomthing happend to function symbol\n\n";
-            return;
-        }
-
-        // Verify each function
-        if (llvm::verifyFunction(*fun, &llvm::errs()))
-        {
-            std::cout << "\nError when verifying Function " << identifier << "\n";
-
-            ok = false;
-            break;
-        }
-
-        // TODO: RUN FPM
-        // fpm->run(*fun);
-    }
-
-    if (!ok || llvm::verifyModule(*getContext()->getModule()))
-    {
-        std::cout << "Error when constructing functions\n";
-    }
-
-    llvm::errs() << *getContext()->getModule();
-
-    std::cerr << "\n=> Error Information\n";
-    ErrorTable::showErrors();
-}
-
 // parse
-bool weasel::Parser::parse()
+void weasel::Parser::parse()
 {
-    // EOF FILE
-    if (getCurrentToken()->isKind(TokenKind::TokenEOF))
+    while (!getNextToken(true)->isKind(TokenKind::TokenEOF))
     {
-        return false;
-    }
 
-    // Extern Function
-    if (getCurrentToken()->isKind(TokenKind::TokenKeyExtern))
-    {
-        getNextToken(); // eat 'extern'
-        auto func = parseFunction();
-        if (func)
+        // Parallel Function
+        if (getCurrentToken()->isKind(TokenKind::TokenKeyParallel))
         {
-            addFunction(func);
-        }
-        return true;
-    }
+            auto funParallel = parsePrallelFunction();
+            if (funParallel)
+            {
+                _parallelCount++;
 
-    // Function
-    if (getCurrentToken()->isKind(TokenKind::TokenKeyFun))
-    {
-        auto func = parseFunction();
-        if (func)
+                addFunction(funParallel);
+            }
+            continue;
+        }
+
+        // Extern Function
+        if (getCurrentToken()->isKind(TokenKind::TokenKeyExtern))
         {
-            addFunction(func);
+            getNextToken(); // eat 'extern'
+            auto func = parseFunction();
+            if (func)
+            {
+                addFunction(func);
+            }
+            continue;
         }
-        return true;
-    }
 
-    // TODO: Doing Global Variable
-    // For latter implementation
-    auto token = getCurrentToken();
-    std::cout << "Parser -> " << token->getLocation().row << "/" << token->getLocation().col << "<>" << token->getTokenKindToInt() << ":" << token->getValue() << "\n";
-    return true;
+        // Function
+        if (getCurrentToken()->isKind(TokenKind::TokenKeyFun))
+        {
+            auto fun = parseFunction();
+            if (fun)
+            {
+                addFunction(fun);
+            }
+            continue;
+        }
+
+        // TODO: Doing Global Variable
+        // For latter implementation
+        auto token = getCurrentToken();
+        std::cout << "Parser -> " << token->getLocation().row << "/" << token->getLocation().col << "<>" << token->getTokenKindToInt() << ":" << token->getValue() << "\n";
+    }
 }
 
 // get Next Token Until
@@ -136,16 +82,4 @@ std::shared_ptr<weasel::Token> weasel::Parser::getNextTokenUntil(weasel::TokenKi
 std::shared_ptr<weasel::Token> weasel::Parser::getNextToken(bool skipSpace)
 {
     return _lexer->getNextToken(skipSpace);
-}
-
-// getModule
-llvm::Module *weasel::Parser::getModule() const
-{
-    return _context->getModule();
-}
-
-// getBuilder
-llvm::IRBuilder<> *weasel::Parser::getBuilder() const
-{
-    return _context->getBuilder();
 }

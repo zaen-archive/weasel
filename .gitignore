@@ -7,6 +7,9 @@ third-party/
 runtime-rt/*.exe
 runtime-rt/*.o
 runtime-rt/*.out
+runtime-rt/*.bc
+runtime-rt/*.ll
+runtime-rt/*.spv
 
 .idea
 .vscode

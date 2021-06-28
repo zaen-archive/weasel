@@ -1,24 +1,27 @@
 #pragma once
 
+#include <utility>
+
 #include "llvm/IR/IRBuilder.h"
 #include "weasel/ast/ast.h"
 #include "weasel/lex/lexer.h"
 
 namespace weasel
 {
-    class AnalysContext;
+    class Context;
     class Attribute;
 
     class Parser
     {
     private:
-        Lexer *_lexer;
-        AnalysContext *_context;
-        std::vector<std::shared_ptr<Function>> _funcs;
-        std::vector<std::shared_ptr<Expression>> _global;
+        std::unique_ptr<Lexer> _lexer;
+        llvm::LLVMContext *_context;
+        std::vector<std::shared_ptr<Function>> _funs;
 
-    public:
-        void addFunction(std::shared_ptr<Function> func) { _funcs.push_back(func); }
+        unsigned _parallelCount = 0;
+
+    private:
+        void addFunction(const std::shared_ptr<Function> &fun) { _funs.push_back(fun); }
         bool expectToken(TokenKind kind) { return _lexer->expect(kind); }
 
         Qualifier getQualifier() const { return getCurrentToken()->getQualifier(); }
@@ -28,9 +31,8 @@ namespace weasel
 
         // Function
         std::shared_ptr<Function> parseDeclareFunction();
-        std::shared_ptr<Function> parseFunction();
-        // std::vector<std::shared_ptr<FunctionArgument>> parseFunctionArguments();
-        // std::shared_ptr<FunctionArgument> parseFunctionArgument();
+        std::shared_ptr<Function> parseFunction(ParallelType parallelType = ParallelType::None);
+        std::shared_ptr<Function> parsePrallelFunction();
 
         // Statement
         std::shared_ptr<StatementExpression> parseFunctionBody();
@@ -42,7 +44,7 @@ namespace weasel
         std::shared_ptr<Expression> parseExpression();
         std::shared_ptr<Expression> parsePrimaryExpression();
         std::shared_ptr<Expression> parseDeclarationExpression();
-        std::shared_ptr<Expression> parseFunctionCallExpression(std::shared_ptr<Attribute> attr);
+        std::shared_ptr<Expression> parseFunctionCallExpression(const std::shared_ptr<Attribute>& attr);
         std::shared_ptr<Expression> parseParenExpression();
 
         // Expression Literal
@@ -51,30 +53,29 @@ namespace weasel
         std::shared_ptr<Expression> parseBinaryOperator(unsigned prec, std::shared_ptr<weasel::Expression> lhs);
         std::shared_ptr<Expression> parseArrayExpression();
 
-        // Helper
-        llvm::Type *parseDataType();
-        void ignoreNewline();
-
     public:
-        Parser(AnalysContext *c, Lexer *lexer) : _lexer(lexer), _context(c) {}
+        Parser(llvm::LLVMContext* c, std::unique_ptr<Lexer> lexer) : _lexer(std::move(lexer)), _context(c) {}
 
         // getContext
-        AnalysContext *getContext() const { return _context; }
+        llvm::LLVMContext *getContext() const { return _context; }
 
-        // getModule
-        llvm::Module *getModule() const;
+        // Helper
+        llvm::Type *parseDataType();
 
-        // getBuilder
-        llvm::IRBuilder<> *getBuilder() const;
+        void ignoreNewline();
 
-        // setContext
-        void setContext(AnalysContext *c) { _context = c; }
+        unsigned getParallelCount() const { return _parallelCount; }
+
+        unsigned getFunctionCount() const { return _funs.size(); }
+
+        bool isParallelExist() const { return _parallelCount > 0; }
+
+        std::vector<std::shared_ptr<Function>> getParallelFunctions();
+
+        std::vector<std::shared_ptr<Function>> getFunctions();
 
     public:
-        // Parse Library in single file
-        bool parse();
-
-        // Codegen every function inside library
-        void codegen();
+        void parse();
     };
+
 } // namespace weasel

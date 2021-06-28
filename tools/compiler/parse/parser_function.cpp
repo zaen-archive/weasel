@@ -1,17 +1,32 @@
-#include "llvm/IR/Type.h"
-#include "llvm/IR/Instructions.h"
+#include <llvm/IR/Type.h>
 #include "weasel/parse/parser.h"
-#include "weasel/analysis/context.h"
+#include "weasel/ir/context.h"
 #include "weasel/symbol/symbol.h"
 
-// define
-// 'fun' identifier '(' args ')' funTy '{' stmt '}'
-std::shared_ptr<weasel::Function> weasel::Parser::parseFunction()
+std::shared_ptr<weasel::Function> weasel::Parser::parsePrallelFunction()
 {
-    auto func = parseDeclareFunction();
-    if (!func)
+    auto parallelType = ParallelType::ParallelFunction;
+    if (getNextToken(true)->isKind(TokenKind::TokenKeyKernel))
+    {
+        parallelType = ParallelType::ParallelKernel;
+
+        getNextToken(true); // eat kernel
+    }
+
+    return parseFunction(parallelType);
+}
+
+std::shared_ptr<weasel::Function> weasel::Parser::parseFunction(ParallelType parallelType)
+{
+    auto fun = parseDeclareFunction();
+    if (!fun)
     {
         return nullptr;
+    }
+
+    if (parallelType == ParallelType::ParallelKernel && !fun->getFunctionType()->getReturnType()->isVoidTy())
+    {
+        return ErrorTable::addError(getCurrentToken(), "Parallel Kernel just work on void function");
     }
 
     // Ignore new line
@@ -27,14 +42,25 @@ std::shared_ptr<weasel::Function> weasel::Parser::parseFunction()
 
     // Set Symbol for parameters and enter a scope
     {
-        SymbolTable::getInstance().enterScope();
-        for (auto arg : func->getArgs())
+        SymbolTable::enterScope();
+        for (const auto &arg : fun->getArgs())
         {
             auto argName = arg->getArgumentName();
             auto ty = arg->getArgumentType();
-            auto attr = std::make_shared<Attribute>(argName, AttributeScope::ScopeParam, AttributeKind::SymbolParameter, ty);
 
-            SymbolTable::getInstance().insert(argName, attr);
+            auto attrKind = AttributeKind::SymbolVariable;
+            if (ty->isPointerTy())
+            {
+                attrKind = AttributeKind::SymbolPointer;
+            }
+            else if (ty->isArrayTy())
+            {
+                attrKind = AttributeKind::SymbolArray;
+            }
+
+            auto attr = std::make_shared<Attribute>(argName, AttributeScope::ScopeParam, attrKind, ty);
+
+            SymbolTable::insert(argName, attr);
         }
     }
 
@@ -42,7 +68,8 @@ std::shared_ptr<weasel::Function> weasel::Parser::parseFunction()
 
     // Exit parameter scope
     {
-        SymbolTable::getInstance().exitScope();
+        SymbolTable::exitScope();
+        SymbolTable::exitScope();
     }
 
     if (!body)
@@ -52,12 +79,13 @@ std::shared_ptr<weasel::Function> weasel::Parser::parseFunction()
 
     if (!body->getBody().empty())
     {
-
-        func->setIsDefine(true);
+        fun->setIsDefine(true);
     }
 
-    func->setBody(body);
-    return func;
+    fun->setParallelType(parallelType);
+    fun->setBody(body);
+
+    return fun;
 }
 
 // extern 'fun' identifier '(' args ')' funTy
@@ -74,10 +102,9 @@ std::shared_ptr<weasel::Function> weasel::Parser::parseDeclareFunction()
         return ErrorTable::addError(getCurrentToken(), "Expected an identifier");
     }
 
-    auto funIdentifier = getCurrentToken()->getValue();
-
     // Check Symbol Table
-    if (SymbolTable::getInstance().get(funIdentifier))
+    auto funIdentifier = getCurrentToken()->getValue();
+    if (SymbolTable::get(funIdentifier) != nullptr)
     {
         return ErrorTable::addError(getCurrentToken(), "Function already declared");
     }
@@ -119,6 +146,7 @@ std::shared_ptr<weasel::Function> weasel::Parser::parseDeclareFunction()
         }
 
         args.push_back(std::make_shared<FunctionArgument>(idenToken, identifier, type));
+
         if (!getCurrentToken()->isKind(TokenKind::TokenPuncComma))
         {
             break;
@@ -134,25 +162,19 @@ std::shared_ptr<weasel::Function> weasel::Parser::parseDeclareFunction()
 
     getNextToken(); // eat )
 
-    llvm::Type *returnType;
-    if (getCurrentToken()->isDataType())
+    auto *returnType = parseDataType();
+    if (!returnType)
     {
-        returnType = getCurrentToken()->toType(getContext());
-
-        getNextToken(); // eat 'data type'
-    }
-    else
-    {
-        returnType = llvm::Type::getVoidTy(*getContext()->getContext());
+        returnType = llvm::Type::getVoidTy(*getContext());
     }
 
-    auto funcTy = std::make_shared<FunctionType>(returnType, args, isVararg);
-    auto func = std::make_shared<Function>(funIdentifier, funcTy);
+    auto funTy = std::make_shared<FunctionType>(returnType, args, isVararg);
+    auto fun = std::make_shared<Function>(funIdentifier, funTy);
 
     // Create Symbol for the function
     {
-        SymbolTable::getInstance().insert(funIdentifier, std::make_shared<Attribute>(funIdentifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
+        SymbolTable::insert(funIdentifier, std::make_shared<Attribute>(funIdentifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
     }
 
-    return func;
+    return fun;
 }

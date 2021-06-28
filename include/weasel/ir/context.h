@@ -6,6 +6,7 @@
 #include "llvm/IR/Value.h"
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/MDBuilder.h"
 #include "weasel/ast/ast.h"
@@ -21,13 +22,14 @@ namespace weasel
     };
 
     // Analysis Context
-    class AnalysContext
+    class Context
     {
     private:
         llvm::Module *_module;
         llvm::MDBuilder *_mdBuilder;
         llvm::LLVMContext *_context;
         llvm::IRBuilder<> *_builder;
+        Function *_currentFuncton;
 
         unsigned long long _counter = 0;
 
@@ -41,7 +43,7 @@ namespace weasel
         llvm::MDNode *getTBAAPointer() const;
 
     public:
-        explicit AnalysContext(const std::string &moduleName);
+        explicit Context(llvm::LLVMContext *context, const std::string &moduleName);
 
         llvm::LLVMContext *getContext() const { return _context; }
         llvm::Module *getModule() const { return _module; }
@@ -67,7 +69,6 @@ namespace weasel
         // TODO: Need to implement modulo operator
         llvm::Value *codegen(BinaryOperatorExpression *expr);
         llvm::Function *codegen(Function *func);
-
     };
 
 } // namespace weasel

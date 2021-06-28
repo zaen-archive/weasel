@@ -1,7 +1,15 @@
+parallel
+fun _Z13get_global_idj(i int) long {}
 
-extern fun testing() ulong {}
-extern fun printf(msg *byte, param ...*int) int {}
+parallel kernel
+fun vector_add(a *int, b *int, c *int, i int) {
+    c[i] = a[i] + b[i]
+}
 
-fun main() {
-    printf("X = %d", testing())
+fun test() {}
+
+fun vec(a *int, b*int) {
+    a[2] = b[2]
+
+    test()
 }

@@ -3,7 +3,15 @@
 
 std::shared_ptr<weasel::Token> weasel::Lexer::getKeyword(char *startBuffer, char *endBuffer)
 {
-    if (compareBuffer(startBuffer, endBuffer, "fun"))
+    if (compareBuffer(startBuffer, endBuffer, "parallel"))
+    {
+        return createToken(TokenKind::TokenKeyParallel, startBuffer, endBuffer);
+    }
+    else if (compareBuffer(startBuffer, endBuffer, "kernel"))
+    {
+        return createToken(TokenKind::TokenKeyKernel, startBuffer, endBuffer);
+    }
+    else if (compareBuffer(startBuffer, endBuffer, "fun"))
     {
         return createToken(TokenKind::TokenKeyFun, startBuffer, endBuffer);
     }

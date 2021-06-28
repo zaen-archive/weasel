@@ -3,9 +3,11 @@ import "io"
 import "gpu"
 
 // HETEROGENEOUS PROGRAMMING Function
-@parallel
-fun Mul(id int, global data *float) {
-    int index = 2 * id
+fun parallel get_global_id(const i int) ulong {} // Get Global ID
+
+parallel kernel
+fun Mul(data *float) {
+    int index = 2 * parallel.index
     int nextIndex = index + 1
 
     data[index] = 2 * data[index]
@@ -36,7 +38,10 @@ fun Main() {
     // The Language automaticly understand how to handle local or global data
     // We need to map data address into lookup gpu memory
     // We use already defined data in memory or use new one if not yet copy
-    gpu.Run(Mul, data)
+    Mul(data)
+
+    // TODO: @deprecated
+    // gpu.Run(Mul, data)
 
     // TODO: So many thing should be done with the memory allocation
     // Another proposal being created

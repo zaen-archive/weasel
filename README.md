@@ -87,6 +87,10 @@ We also can binding the library created by weasel language into another language
 - [x] Support Array Data Sequence
 - [ ] Support Vector Data Sequence
 
+### Dynamic Allocation
+
+- [ ] Support Malloc and Free
+
 ### IO console (input/output)
 
 - [x] Support simple output through c library

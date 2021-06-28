@@ -1,14 +1,12 @@
 #include <iostream>
 #include "weasel/symbol/symbol.h"
 
-/// SYMBOL ///
+/// Symbol Init ///
 std::vector<std::shared_ptr<weasel::Error>> weasel::ErrorTable::_errors;
+std::vector<unsigned> weasel::SymbolTable::_lookup;
+std::vector<std::shared_ptr<weasel::Attribute>> weasel::SymbolTable::_table;
 
-weasel::SymbolTable::SymbolTable()
-{
-    enterScope();
-}
-
+/// Symbol Function ///
 void weasel::SymbolTable::enterScope()
 {
     _lookup.push_back(0);
@@ -31,16 +29,21 @@ bool weasel::SymbolTable::exitScope()
     return true;
 }
 
-void weasel::SymbolTable::insert(std::string key, std::shared_ptr<Attribute> attr)
+void weasel::SymbolTable::insert(const std::string &key, const std::shared_ptr<Attribute> &attr)
 {
+    if (_lookup.empty())
+    {
+        _lookup.push_back(0);
+    }
+
     _table.push_back(attr);
     _lookup[_lookup.size() - 1]++;
 }
 
-std::shared_ptr<weasel::Attribute> weasel::SymbolTable::get(std::string key)
+std::shared_ptr<weasel::Attribute> weasel::SymbolTable::get(const std::string &key)
 {
-    auto n = _table.size() - 1;
-    for (int i = n; i >= 0; i--)
+    auto i = (int)_table.size() - 1;
+    for (; i >= 0; i--)
     {
         if (_table[i]->getIdentifier() == key)
         {
@@ -82,7 +85,7 @@ void weasel::SymbolTable::reset()
     enterScope(); // Enter Global Scope
 }
 
-std::nullptr_t weasel::ErrorTable::addError(std::shared_ptr<Token> token, std::string msg)
+std::nullptr_t weasel::ErrorTable::addError(const std::shared_ptr<Token> &token, std::string msg)
 {
     _errors.push_back(std::make_shared<Error>(token, msg));
     return nullptr;
@@ -96,7 +99,7 @@ void weasel::ErrorTable::showErrors()
     }
     else
     {
-        for (auto item : _errors)
+        for (const auto &item : _errors)
         {
             auto token = item->getToken();
             auto loc = token->getLocation();

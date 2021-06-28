@@ -1,74 +1,163 @@
-# set(LLVM_LINK_COMPONENTS
-#   Core
-#   ExecutionEngine
-#   Interpreter
-#   MC
-#   MCJIT
-#   Support
-#   nativecodegen
-# )
-
 add_executable(compiler
-  compiler.cpp
-  # test_lex.cpp
-  # test_expr.cpp
-  # test_llvm.cpp
-  basic/filemanager.cpp
-  basic/number.cpp
-  analysis/context.cpp
-  analysis/context_helper.cpp
-  lex/lexer.cpp
-  lex/lexer_type.cpp
-  lex/lexer_punctuation.cpp
-  lex/lexer_keyword.cpp
-  lex/lexer_literal.cpp
-  lex/token.cpp
-  ast/ast.cpp
-  parse/parser.cpp
-  parse/parser_function.cpp
-  parse/parser_expr.cpp
-  parse/parser_helper.cpp
-  llc/llc.cpp
-  symbol/symbol.cpp
-)
+    compiler.cpp
+    # test_lex.cpp
+    # test_expr.cpp
+    # test_llvm.cpp
+    basic/filemanager.cpp
+    basic/number.cpp
+    ir/context.cpp
+    ir/context_helper.cpp
+    lex/lexer.cpp
+    lex/lexer_type.cpp
+    lex/lexer_punctuation.cpp
+    lex/lexer_keyword.cpp
+    lex/lexer_literal.cpp
+    lex/token.cpp
+    ast/ast.cpp
+    parse/parser.cpp
+    parse/parser_function.cpp
+    parse/parser_expr.cpp
+    parse/parser_helper.cpp
+    symbol/symbol.cpp
+    codegen/codegen.cpp
+        codegen/codegen.cpp
+        metadata/metadata.cpp
+        passes/passes.cpp)
 
-set(ZERO_EXT_LIBS
-# AARCH 64
-# LLVMAArch64AsmParser
-# LLVMAArch64CodeGen
-# LLVMAArch64Desc
-# LLVMAArch64Disassembler
-# LLVMAArch64Info
-# LLVMAArch64Utils
+set(WEASEL_EXT_LIBS
+# AMD GPU
+LLVMAMDGPUInfo
+LLVMAMDGPUAsmParser
+LLVMAMDGPUCodeGen
+LLVMAMDGPUDesc
+LLVMAMDGPUDisassembler
+LLVMAMDGPUUtils
 
-# LLVMAggressiveInstCombine
-# INFOS
-# LLVMAMDGPUInfo
-# LLVMARMInfo
-# LLVMAVRInfo
-# LLVMBPFInfo
-# LLVMHexagonInfo
-# LLVMLanaiInfo
-# LLVMMipsInfo
-# LLVMMSP430Info
+# ARCH64
+LLVMAArch64Info
+
+# ARM INFO
+LLVMARMInfo
+LLVMARMAsmParser
+LLVMARMCodeGen
+LLVMARMDesc
+LLVMARMDisassembler
+LLVMARMUtils
+
+# AVR
+LLVMAVRInfo
+LLVMAVRAsmParser
+LLVMAVRCodeGen
+LLVMAVRDesc
+LLVMAVRDisassembler
+# LLVMAVRUtils
+
+# BPF
+LLVMBPFInfo
+LLVMBPFAsmParser
+LLVMBPFCodeGen
+LLVMBPFDesc
+LLVMBPFDisassembler
+# LLVMBPFUtils
+
+# Hexagon
+LLVMHexagonInfo
+LLVMHexagonAsmParser
+LLVMHexagonCodeGen
+LLVMHexagonDesc
+LLVMHexagonDisassembler
+# LLVMHexagonUtils
+
+# Lanai
+LLVMLanaiInfo
+LLVMLanaiAsmParser
+LLVMLanaiCodeGen
+LLVMLanaiDesc
+LLVMLanaiDisassembler
+# LLVMLanaiUtils
+
+# MIPS
+LLVMMipsInfo
+LLVMMipsAsmParser
+LLVMMipsCodeGen
+LLVMMipsDesc
+LLVMMipsDisassembler
+# LLVMMipsUtils
+
+# MSP430
+LLVMMSP430Info
+LLVMMSP430AsmParser
+LLVMMSP430CodeGen
+LLVMMSP430Desc
+LLVMMSP430Disassembler
+# LLVMMSP430Utils
+
+# NVPTX
 LLVMNVPTXInfo
-# LLVMPowerPCInfo
-# LLVMRISCVInfo
-# LLVMSparcInfo
-# LLVMSystemZInfo
-# LLVMWebAssemblyInfo
-LLVMX86Info
-# LLVMXCoreInfo
+# LLVMNVPTXAsmParser
+LLVMNVPTXCodeGen
+LLVMNVPTXDesc
+# LLVMNVPTXDisassembler
+# LLVMNVPTXUtils
+
+# Power PC
+LLVMPowerPCInfo
+LLVMPowerPCAsmParser
+LLVMPowerPCCodeGen
+LLVMPowerPCDesc
+LLVMPowerPCDisassembler
+# LLVMPowerPCUtils
+
+# RISC V
+LLVMRISCVInfo
+LLVMRISCVAsmParser
+LLVMRISCVCodeGen
+LLVMRISCVDesc
+LLVMRISCVDisassembler
+LLVMRISCVUtils
+
+# Sparc
+LLVMSparcInfo
+LLVMSparcAsmParser
+LLVMSparcCodeGen
+LLVMSparcDesc
+LLVMSparcDisassembler
+# LLVMSparcUtils
+
+# System Z
+LLVMSystemZInfo
+LLVMSystemZAsmParser
+LLVMSystemZCodeGen
+LLVMSystemZDesc
+LLVMSystemZDisassembler
+# LLVMSystemZUtils
+
+# Web Assembly
+LLVMWebAssemblyInfo
+LLVMWebAssemblyAsmParser
+LLVMWebAssemblyCodeGen
+LLVMWebAssemblyDesc
+LLVMWebAssemblyDisassembler
+# LLVMWebAssemblyUtils
 
 # X86
-LLVMX86CodeGen
+LLVMX86Info
 LLVMX86AsmParser
-# AMD GPU
-# LLVMAMDGPUCodeGen
-# ARM
-# LLVMARMCodeGen
-# AVR
-# LLVMAVRCodeGen
+LLVMX86CodeGen
+LLVMX86Desc
+LLVMX86Disassembler
+# LLVMX86Utils
+
+# Core
+LLVMXCoreInfo
+# LLVMXCoreAsmParser
+# LLVMXCoreCodeGen
+# LLVMXCoreDesc
+# LLVMXCoreDisassembler
+# LLVMXCoreUtils
+
+# LLVM to SPIRV
+LLVMSPIRVLib
 )
 
-target_link_libraries(compiler ${ZERO_EXT_LIBS})
+target_link_libraries(compiler ${WEASEL_EXT_LIBS})

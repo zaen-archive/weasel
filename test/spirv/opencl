@@ -1,4 +1,0 @@
-__kernel void test(__global int* in1, __global int* in2, __global int* out) {
-    int id = get_global_id(0);
-    out[id] = in1[id] * in2[id];
-}
