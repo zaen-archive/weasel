@@ -1,44 +1,21 @@
 #include <iostream>
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Constant.h"
-#include "llvm/Transforms/InstCombine/InstCombine.h"
-#include "llvm/Transforms/Scalar.h"
-#include "llvm/Transforms/Scalar/GVN.h"
-#include "weasel/analysis/context.h"
+#include "llvm/IR/Module.h"
+#include "weasel/ir/context.h"
 #include "weasel/symbol/symbol.h"
 
-weasel::AnalysContext::AnalysContext(std::string moduleName)
+weasel::Context::Context(llvm::LLVMContext *context, const std::string &moduleName)
 {
-    _context = new llvm::LLVMContext();
-    _module = new llvm::Module(moduleName, *getContext());
-    _builder = new llvm::IRBuilder<>(*getContext());
-    _fpm = new llvm::legacy::FunctionPassManager(_module);
-
-    // Do simple "peephole" optimizations and bit-twiddling optzns.
-    _fpm->add(llvm::createInstructionCombiningPass());
-    // Reassociate expressions.
-    _fpm->add(llvm::createReassociatePass());
-    // Eliminate Common SubExpressions.
-    _fpm->add(llvm::createGVNPass());
-    // Simplify the control flow graph (deleting unreachable blocks, etc).
-    _fpm->add(llvm::createCFGSimplificationPass());
-    // Initialize Function Pass
-    _fpm->doInitialization();
+    _context = context;
+    _module = new llvm::Module(moduleName, *_context);
+    _mdBuilder = new llvm::MDBuilder(*_context);
+    _builder = new llvm::IRBuilder<>(*_context);
 }
 
-std::string weasel::AnalysContext::getDefaultLabel()
-{
-    return std::to_string(_counter++);
-}
-
-llvm::Function *weasel::AnalysContext::codegen(weasel::Function *funAST)
+llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
 {
     auto funName = funAST->getIdentifier();
-    if (getModule()->getFunction(funName))
-    {
-        return nullptr;
-    }
-
     auto isVararg = funAST->getFunctionType()->getIsVararg();
     auto funArgs = funAST->getArgs();
     auto retTy = funAST->getFunctionType()->getReturnType();
@@ -46,15 +23,40 @@ llvm::Function *weasel::AnalysContext::codegen(weasel::Function *funAST)
     auto argsLength = funArgs.size() - (isVararg ? 1 : 0);
     for (size_t i = 0; i < argsLength; i++)
     {
-        args.push_back(funArgs[i]->getArgumentType());
+        auto *arg = funArgs[i]->getArgumentType();
+
+        if (arg->isPointerTy())
+        {
+            args.push_back(llvm::PointerType::get(arg->getPointerElementType(), 1));
+        }
+        else if (arg->isArrayTy())
+        {
+            args.push_back(llvm::PointerType::get(arg->getArrayElementType(), 1));
+        }
+        else
+        {
+            args.push_back(arg);
+        }
     }
 
     auto *funTyLLVM = llvm::FunctionType::get(retTy, args, isVararg);
-    auto *funLLVM = llvm::Function::Create(funTyLLVM, llvm::Function::LinkageTypes::ExternalLinkage, funName, *getModule());
+    auto *funLLVM = llvm::Function::Create(funTyLLVM, llvm::GlobalValue::LinkageTypes::ExternalLinkage, funName, *getModule());
+
+    // TODO: Function Attribute
+    // {
+    //     funLLVM->setDSOLocal(true);
+    //     // funLLVM->addAttribute(0, llvm::Attribute::AttrKind::Convergent);
+    //     // funLLVM->addAttribute(1, llvm::Attribute::AttrKind::NoUnwind);
+    //     funLLVM->setCallingConv(llvm::CallingConv::SPIR_KERNEL);
+    //     funLLVM->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Local);
+    // }
+
     auto idx = 0;
     for (auto &item : funLLVM->args())
     {
-        item.setName(funArgs[idx++]->getArgumentName());
+        auto arg = funArgs[idx++];
+
+        item.setName(arg->getArgumentName());
     }
 
     // Add Function to symbol table
@@ -73,15 +75,41 @@ llvm::Function *weasel::AnalysContext::codegen(weasel::Function *funAST)
             // Enter to parameter scope
             SymbolTable::getInstance().enterScope();
 
+            auto i = 0;
             for (auto &item : funLLVM->args())
             {
+                // TODO: No Capture if kernel function
+                // No Capture mean no copy of address data
+                item.addAttr(llvm::Attribute::AttrKind::NoCapture);
+                item.addAttr(llvm::Attribute::AttrKind::ReadOnly);
+
+                auto argExpr = funArgs[i];
+                auto *paramTy = argExpr->getArgumentType();
                 auto refName = item.getName();
                 auto paramName = std::string(refName.begin(), refName.end());
-                auto *allocParam = getBuilder()->CreateAlloca(item.getType());
+                auto attrKind = AttributeKind::SymbolVariable;
+                if (paramTy->isArrayTy())
+                {
+                    attrKind = AttributeKind::SymbolArray;
+                }
+                else if (paramTy->isPointerTy())
+                {
+                    attrKind = AttributeKind::SymbolPointer;
+                }
 
-                getBuilder()->CreateStore(&item, allocParam);
+                // TODO: Add nocapture attribute
+                std::shared_ptr<Attribute> attr;
+                if (!item.hasAttribute(llvm::Attribute::AttrKind::NoCapture))
+                {
+                    auto *allocParam = getBuilder()->CreateAlloca(item.getType());
+                    getBuilder()->CreateStore(&item, allocParam);
 
-                auto attr = std::make_shared<Attribute>(paramName, AttributeScope::ScopeParam, AttributeKind::SymbolParameter, allocParam);
+                    attr = std::make_shared<Attribute>(paramName, AttributeScope::ScopeParam, attrKind, allocParam);
+                }
+                else
+                {
+                    attr = std::make_shared<Attribute>(paramName, AttributeScope::ScopeParam, attrKind, &item);
+                }
 
                 SymbolTable::getInstance().insert(paramName, attr);
             }
@@ -111,10 +139,8 @@ llvm::Function *weasel::AnalysContext::codegen(weasel::Function *funAST)
     return funLLVM;
 }
 
-llvm::Value *weasel::AnalysContext::codegen(StatementExpression *expr)
+llvm::Value *weasel::Context::codegen(StatementExpression *expr)
 {
-    std::cout << "Statements : " << expr->getBody().size() << "\n";
-
     // Enter to new statement
     {
         SymbolTable::getInstance().enterScope();
@@ -133,7 +159,7 @@ llvm::Value *weasel::AnalysContext::codegen(StatementExpression *expr)
     return nullptr;
 }
 
-llvm::Value *weasel::AnalysContext::codegen(CallExpression *expr)
+llvm::Value *weasel::Context::codegen(CallExpression *expr)
 {
     auto identifier = expr->getIdentifier();
     auto args = expr->getArguments();
@@ -149,15 +175,21 @@ llvm::Value *weasel::AnalysContext::codegen(CallExpression *expr)
         }
     }
 
-    return getBuilder()->CreateCall(fun, argsV, fun->getReturnType()->isVoidTy() ? "" : identifier);
+    auto *call = getBuilder()->CreateCall(fun, argsV);
+
+    // TODO: Calling SPIR FUNCTION
+    call->setCallingConv(llvm::CallingConv::SPIR_FUNC);
+    call->setTailCall();
+
+    return call;
 }
 
-llvm::Value *weasel::AnalysContext::codegen(NumberLiteralExpression *expr)
+llvm::Value *weasel::Context::codegen(NumberLiteralExpression *expr) const
 {
     return getBuilder()->getInt32(expr->getValue());
 }
 
-llvm::Value *weasel::AnalysContext::codegen(ArrayLiteralExpression *expr)
+llvm::Value *weasel::Context::codegen(ArrayLiteralExpression *expr)
 {
     auto items = expr->getItems();
     auto numItem = items.size();
@@ -192,7 +224,7 @@ llvm::Value *weasel::AnalysContext::codegen(ArrayLiteralExpression *expr)
     return getBuilder()->CreateLoad(gv, "loadArray");
 }
 
-llvm::Value *weasel::AnalysContext::codegen(StringLiteralExpression *expr)
+llvm::Value *weasel::Context::codegen(StringLiteralExpression *expr) const
 {
     auto *str = getBuilder()->CreateGlobalString(expr->getValue());
     std::vector<llvm::Value *> idxList;
@@ -202,12 +234,12 @@ llvm::Value *weasel::AnalysContext::codegen(StringLiteralExpression *expr)
     return llvm::ConstantExpr::getGetElementPtr(str->getType()->getElementType(), str, idxList, true);
 }
 
-llvm::Value *weasel::AnalysContext::codegen(NilLiteralExpression *expr)
+llvm::Value *weasel::Context::codegen(NilLiteralExpression *expr) const
 {
     return llvm::ConstantPointerNull::getNullValue(getBuilder()->getInt8PtrTy());
 }
 
-llvm::Value *weasel::AnalysContext::codegen(DeclarationExpression *expr)
+llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
 {
     // Get Value Representation
     llvm::Value *value = nullptr;
@@ -251,11 +283,25 @@ llvm::Value *weasel::AnalysContext::codegen(DeclarationExpression *expr)
 
     // Allocating Address for declaration
     auto varName = expr->getIdentifier();
-    auto *alloc = getBuilder()->CreateAlloca(declTy, 0, varName);
+    auto *alloc = getBuilder()->CreateAlloca(declTy, nullptr, varName);
 
     // Add Variable Declaration to symbol table
     {
-        auto attr = std::make_shared<Attribute>(varName, AttributeScope::ScopeLocal, AttributeKind::SymbolVariable, alloc);
+        AttributeKind attrKind;
+        if (declTy->isArrayTy())
+        {
+            attrKind = AttributeKind::SymbolArray;
+        }
+        else if (declTy->isPointerTy())
+        {
+            attrKind = AttributeKind::SymbolPointer;
+        }
+        else
+        {
+            attrKind = AttributeKind::SymbolVariable;
+        }
+
+        auto attr = std::make_shared<Attribute>(varName, AttributeScope::ScopeLocal, attrKind, alloc);
         SymbolTable::getInstance().insert(varName, attr);
     }
 
@@ -267,7 +313,7 @@ llvm::Value *weasel::AnalysContext::codegen(DeclarationExpression *expr)
     return alloc;
 }
 
-llvm::Value *weasel::AnalysContext::codegen(BinaryOperatorExpression *expr)
+llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
 {
     auto token = expr->getOperator();
     auto *rhs = expr->getRHS()->codegen(this);
@@ -314,7 +360,7 @@ llvm::Value *weasel::AnalysContext::codegen(BinaryOperatorExpression *expr)
     }
 }
 
-llvm::Value *weasel::AnalysContext::codegen(ReturnExpression *expr)
+llvm::Value *weasel::Context::codegen(ReturnExpression *expr)
 {
     if (!expr->getValue())
     {
@@ -346,25 +392,7 @@ llvm::Value *weasel::AnalysContext::codegen(ReturnExpression *expr)
     return getBuilder()->CreateRet(val);
 }
 
-llvm::Value *weasel::AnalysContext::codegen(VariableExpression *expr)
-{
-    // Get Allocator from Symbol Table
-    auto varName = expr->getIdentifier();
-    auto alloc = SymbolTable::getInstance().get(varName);
-    if (!alloc)
-    {
-        return ErrorTable::addError(expr->getToken(), "Variable " + varName + " Not declared");
-    }
-
-    if (expr->isAddressOf())
-    {
-        return alloc->getValue();
-    }
-
-    return getBuilder()->CreateLoad(alloc->getValue(), varName);
-}
-
-llvm::Value *weasel::AnalysContext::codegen(ArrayExpression *expr)
+llvm::Value *weasel::Context::codegen(VariableExpression *expr) const
 {
     // Get Allocator from Symbol Table
     auto varName = expr->getIdentifier();
@@ -374,8 +402,29 @@ llvm::Value *weasel::AnalysContext::codegen(ArrayExpression *expr)
         return ErrorTable::addError(expr->getToken(), "Variable " + varName + " Not declared");
     }
 
+    auto *alloc = attr->getValue();
+    if (expr->isAddressOf())
+    {
+        return alloc;
+    }
+
+    if (llvm::dyn_cast<llvm::Argument>(alloc))
+    {
+        return alloc;
+    }
+
+    return getBuilder()->CreateLoad(alloc, varName);
+}
+
+llvm::Value *weasel::Context::codegen(ArrayExpression *expr)
+{
+    // Get Allocator from Symbol Table
+    auto varName = expr->getIdentifier();
+    auto attr = SymbolTable::getInstance().get(varName);
+    auto *alloc = attr->getValue();
     auto indexValue = expr->getIndex()->codegen(this);
     auto longTy = getBuilder()->getInt64Ty();
+
     auto compare = compareType(indexValue->getType(), longTy);
     if (compare == CompareType::Different)
     {
@@ -388,16 +437,35 @@ llvm::Value *weasel::AnalysContext::codegen(ArrayExpression *expr)
     }
 
     std::vector<llvm::Value *> idxList;
-    idxList.push_back(getBuilder()->getInt64(0));
+    if (attr->isKind(AttributeKind::SymbolArray))
+    {
+        idxList.push_back(getBuilder()->getInt64(0));
+    }
     idxList.push_back(indexValue);
 
-    auto *alloc = attr->getValue();
-    auto *elemIndex = getBuilder()->CreateInBoundsGEP(alloc, idxList, "arrayElement");
+    if (attr->isKind(AttributeKind::SymbolPointer))
+    {
+        if (llvm::dyn_cast<llvm::Instruction>(alloc))
+        {
+            alloc = getBuilder()->CreateLoad(alloc, "pointerLoad");
+        }
+    }
 
+    auto *elemIndex = getBuilder()->CreateInBoundsGEP(alloc, idxList, "arrayElement");
     if (expr->isAddressOf())
     {
         return elemIndex;
     }
 
-    return getBuilder()->CreateLoad(elemIndex, varName);
+    auto *loadIns = getBuilder()->CreateLoad(elemIndex, varName);
+
+    // TODO: For Kernel Module
+    // Create TBAA Metadata
+    {
+        auto *node = getTBAA(loadIns->getType());
+        auto *mdTBAA = getMDBuilder()->createTBAAStructTagNode(node, node, 0);
+        loadIns->setMetadata(llvm::LLVMContext::MD_tbaa, mdTBAA);
+    }
+
+    return loadIns;
 }
