@@ -1,8 +1,5 @@
 #pragma once
 
-#include <utility>
-
-#include "llvm/IR/IRBuilder.h"
 #include "weasel/ast/ast.h"
 #include "weasel/lex/lexer.h"
 
@@ -70,9 +67,9 @@ namespace weasel
 
         bool isParallelExist() const { return _parallelCount > 0; }
 
-        std::vector<std::shared_ptr<Function>> getParallelFunctions();
+        std::vector<std::shared_ptr<Function>> getFunctions() const { return _funs; };
 
-        std::vector<std::shared_ptr<Function>> getFunctions();
+        std::vector<std::shared_ptr<Function>> getParallelFunctions();
 
     public:
         void parse();

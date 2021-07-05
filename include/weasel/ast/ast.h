@@ -372,7 +372,7 @@ namespace weasel
         void setBody(std::shared_ptr<StatementExpression> body) { _body = body; }
 
         void setIsDefine(bool val) { _isDefine = val; }
-        bool getIsDefine() const { return _isDefine; }
+        bool isDefine() const { return _isDefine; }
 
         void setParallelType(ParallelType parallelType) { _parallelType = parallelType; }
         ParallelType getParallelType() const { return _parallelType; }

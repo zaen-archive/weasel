@@ -5,6 +5,7 @@
 #include "llvm/IR/LLVMContext.h"
 #include "weasel/ast/ast.h"
 #include "weasel/ir/context.h"
+#include "weasel/config/config.h"
 
 namespace weasel
 {
@@ -17,15 +18,18 @@ namespace weasel
         bool _isParallel;
 
     public:
-        Codegen(std::unique_ptr<Context> context, std::vector<std::shared_ptr<Function>> funs, bool isParallel = false) : _context(std::move(context)), _funs(std::move(funs)), _isParallel(isParallel) {}
+        Codegen(std::unique_ptr<Context> context, std::vector<std::shared_ptr<Function>> funs);
 
-        void compile();
+        bool compile(const std::string& spirvIR = "");
+
+        std::string createSpirv();
+        void createObject() const;
 
     public:
         llvm::Module *getModule() const { return _context->getModule(); }
         llvm::LLVMContext *getContext() const { return _context->getContext(); }
-        std::string getError() const { return _err; }
 
+        std::string getError() const { return _err; }
     };
 
 } // namespace weasel

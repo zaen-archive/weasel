@@ -36,6 +36,7 @@ We also can binding the library created by weasel language into another language
 ### Data Type
 
 - [x] Integer
+- [ ] Float
 - [ ] Boolean
 
 ### Variable Table Declaration
@@ -45,7 +46,7 @@ We also can binding the library created by weasel language into another language
 - [x] Function Lookup
 - [x] Variable names and constants
 - [x] Procedure and function names
-- [x] Literal constants
+- [x] Literal Constant
 - [x] Strings Literal
 - [ ] Compiler generated temporaries
 - [ ] Labels in source languages

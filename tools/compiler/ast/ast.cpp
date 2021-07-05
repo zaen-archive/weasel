@@ -54,7 +54,7 @@ llvm::Value *weasel::ArrayLiteralExpression::codegen(Context *c)
 
 llvm::Value *weasel::NilLiteralExpression::codegen(Context *c)
 {
-    return c->codegen(this);
+    return c->codegen();
 }
 
 llvm::Function *weasel::Function::codegen(Context *c)

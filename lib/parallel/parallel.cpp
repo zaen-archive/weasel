@@ -1,96 +1,188 @@
-#include <chrono>
-#include <string>
-#include <CL/cl2.hpp>
+//
+// Created by zaen on 30/06/21.
+//
+#include <cstdlib>
+#include <cstdio>
+#include <vector>
+#include <map>
+#include <CL/cl.h>
 
-#define __micro 1'000
-#define __size (size_t)512'000
-#define __sizeWithInt __size * sizeof(int)
+// Get platform and device information
+cl_platform_id platformId = nullptr;
+cl_device_id deviceId = nullptr;
+cl_program program = nullptr;
+cl_context context = nullptr;
+cl_command_queue commandQueue = nullptr;
 
-extern "C"
-{
-    inline uint64_t nanoseconds()
+cl_kernel kernel = nullptr;
+std::string lastkernelName;
+std::vector<cl_mem> gpuMems;
+
+cl_uint numDevices;
+cl_uint numPlatforms;
+
+std::map<void *, cl_mem> mapped;
+
+extern "C" {
+    int *generateArray(int count)
     {
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    }
-
-    unsigned long long testing()
-    {
-        std::string sourceStr = "#pragma OPENCL EXTENSION cl_khr_byte_addressable_store : enable \n"
-                                "__kernel void vector_add(__global const int *A, __global const int *B, __global int *C) { \n"
-                                "size_t i = get_global_id(0); \n"
-                                "C[i] = A[i] * B[i]; \n"
-                                "}";
-
-        int a[__size];
-        int b[__size];
-        int c[__size];
-
-        for (int i = 1; i <= (int)__size; i++)
-        {
-            a[i] = i;
-            b[i] = i;
+        int *arr = static_cast<int *>(malloc(sizeof(int) * count));
+        for (int i = 0; i < count; ++i) {
+            arr[i] = i + 1;
         }
 
-        auto start = nanoseconds();
+        return arr;
+    }
 
-        cl_int err;
-        std::vector<cl::Platform> platforms;
-        cl::Platform::get(&platforms);
-        cl::Platform platform = platforms[0];
+    // TODO: Init CL with platforms and devices
+    void initCL(const char* source, const size_t sourceSize)
+    {
+        // Init Platforms
+        cl_int ret = clGetPlatformIDs(1, &platformId, &numPlatforms);
+        if (ret != CL_SUCCESS)
+        {
+            printf("Error: Failed to create a device group!\n");
+            exit(EXIT_FAILURE);
+        }
 
-        // Create Properties
-        cl_context_properties props[3] = {
-            CL_CONTEXT_PLATFORM,
-            (cl_context_properties)(platform)(),
-            0,
-        };
+        // Init Devices
+        ret = clGetDeviceIDs(platformId, CL_DEVICE_TYPE_DEFAULT, 1,
+                             &deviceId, &numDevices);
+        if (ret != CL_SUCCESS)
+        {
+            printf("Error: Failed to create a device group!\n");
+            exit(EXIT_FAILURE);
+        }
 
-        // Create Context
-        cl::Context context(CL_DEVICE_TYPE_GPU, props, NULL, NULL, &err);
+        // Init Context
+        context = clCreateContext(nullptr, 1, &deviceId, nullptr, nullptr, &ret);
+        if (ret != CL_SUCCESS) {
+            printf("Error: Cannot create context\n");
+            exit(EXIT_FAILURE);
+        }
 
-        // Get Devices
-        std::vector<cl::Device> devices = context.getInfo<CL_CONTEXT_DEVICES>();
+        // Init Command Queue
+        commandQueue = clCreateCommandQueueWithProperties(context, deviceId, nullptr, &ret);
+        if (ret != CL_SUCCESS) {
+            printf("Error: Cannot create Command Queue\n");
+            exit(EXIT_FAILURE);
+        }
 
-        // Program and build source
-        auto source = cl::Program::Sources((size_t)1, sourceStr);
-        auto program = cl::Program(context, source);
-        err = program.build(devices, "");
+        // Init Program
+        program = clCreateProgramWithIL(context, source, sourceSize, &ret);
+        if (ret != CL_SUCCESS) {
+            printf("Error when creating program\n");
+            exit(EXIT_FAILURE);
+        }
 
-        // Create Buffer
-        auto memA = cl::Buffer(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, __sizeWithInt, a, &err);
-        auto memB = cl::Buffer(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, __sizeWithInt, b, &err);
-        auto memC = cl::Buffer(context, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, __sizeWithInt, c, &err);
+        // Build Program
+        ret = clBuildProgram(program, 1, &deviceId, nullptr, nullptr, nullptr);
+        if (ret != CL_SUCCESS) {
+            printf("Error when build program\n");
+            exit(EXIT_FAILURE);
+        }
+    }
 
-        // Create Kernel
-        auto kernel = cl::Kernel(program, "vector_add", &err);
-        err = kernel.setArg(0, memA);
-        err = kernel.setArg(1, memB);
-        err = kernel.setArg(2, memC);
+    void initKernel(const char *kernelName)
+    {
+        if (!lastkernelName.empty() && kernelName == lastkernelName) {
+            return;
+        }
 
-        // Command
-        cl::CommandQueue queue(context, devices[0], 0, &err);
+        if (kernel != nullptr) {
+            clReleaseKernel(kernel);
+            kernel = nullptr;
+        }
 
-        // Enqueue
-        err = queue.enqueueNDRangeKernel(
-            kernel,
-            cl::NullRange,
-            cl::NDRange(__sizeWithInt),
-            cl::NDRange(1, 1));
-        err = queue.enqueueReadBuffer(memC, CL_TRUE, 0, __sizeWithInt, c);
+        int ret;
+        kernel = clCreateKernel(program, kernelName, &ret);
+        if (ret != CL_SUCCESS) {
+            printf("Error when creating a kernel");
+            exit(EXIT_FAILURE);
+        }
 
-        auto end = nanoseconds();
+        lastkernelName = kernelName;
+    }
 
-        return ((end - start) / __micro);
+    void initArgument(int *arr, const int size, int type)
+    {
+        auto memObj = mapped[&arr];
+        if (!memObj) {
+            int err;
+            auto flag = CL_MEM_READ_WRITE;
+
+            memObj = clCreateBuffer(context, flag, size, nullptr, &err);
+            if (err != CL_SUCCESS) {
+                printf("Error : Failed to allocate argument %d", gpuMems.size());
+                exit(EXIT_FAILURE);
+            }
+
+            err = clEnqueueWriteBuffer(commandQueue, memObj, true, 0, size * sizeof(int), arr, 0, nullptr, nullptr);
+            if (err != CL_SUCCESS) {
+                printf("Failed to write argument %d", gpuMems.size());
+                exit(EXIT_FAILURE);
+            }
+
+            mapped[&arr] = memObj;
+        }
+
+        auto err = clSetKernelArg(kernel, gpuMems.size(), sizeof(cl_mem), &memObj);
+        if (err != CL_SUCCESS) {
+            printf("Failed to set kernel argument %d", gpuMems.size());
+            exit(EXIT_FAILURE);
+        }
+
+        gpuMems.push_back(memObj);
+    }
+
+    void load(int *arr, int size)
+    {
+        auto memObj = mapped[&arr];
+        if (!memObj) {
+            return;
+        }
+
+        int err = clEnqueueReadBuffer(commandQueue, memObj, true, 0, size * sizeof (int), arr, 0, nullptr, nullptr);
+        if (err != CL_SUCCESS) {
+            printf("Fail Load GPU Memory Object");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    void release(int *arr)
+    {
+        clReleaseMemObject(mapped[&arr]);
+
+        mapped.erase(&arr);
+    }
+
+    void run(int gSize, int lSize)
+    {
+        const size_t localSize = lSize;
+        const size_t workSize = gSize;
+        auto err = clEnqueueNDRangeKernel(commandQueue, kernel, 1, nullptr, &workSize, &localSize, NULL, nullptr, nullptr);
+        if (err != CL_SUCCESS) {
+            printf("Fail to run the kernel", gpuMems.size());
+            exit(EXIT_FAILURE);
+        }
+
+        while (!gpuMems.empty()) {
+            gpuMems.pop_back();
+        }
+    }
+
+    void destroy()
+    {
+        for (const auto &item : mapped) {
+            clReleaseMemObject(item.second);
+        }
+        mapped.clear();
+
+        clFlush(commandQueue);
+        clFinish(commandQueue);
+
+        clReleaseProgram(program);
+        clReleaseCommandQueue(commandQueue);
+        clReleaseContext(context);
     }
 }
-
-// namespace weasel
-// {
-//    class Parallel
-//    {
-//    private:
-//    public:
-//        void initialize();
-//    };
-
-// } // namespace weasel

@@ -1,6 +1,7 @@
 //
 // Created by zaen on 27/06/21.
 //
+#include <fstream>
 #include <llvm/IR/Function.h>
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/Target/TargetMachine.h>
@@ -10,16 +11,68 @@
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/IR/Verifier.h>
+#include <llvm/IR/LegacyPassManager.h>
 #include <LLVMSPIRVLib.h>
 #include "weasel/symbol/symbol.h"
 #include "weasel/codegen/codegen.h"
 #include "weasel/passes/passes.h"
 #include "weasel/metadata/metadata.h"
 
-void weasel::Codegen::compile()
+weasel::Codegen::Codegen(std::unique_ptr<Context> context, std::vector<std::shared_ptr<Function>> funs) {
+    _context = std::move(context);
+    _funs = std::move(funs);
+    _isParallel = _context->isParallel();
+}
+
+bool weasel::Codegen::compile(const std::string& spirvIR)
 {
     if (_funs.empty())
-        return;
+        return _isParallel;
+
+    auto isHostCL = !_isParallel && !spirvIR.empty();
+    if (isHostCL) {
+        auto *builder = _context->getBuilder();
+        auto *value = builder->getInt32(spirvIR.size());
+        auto linkage = llvm::GlobalVariable::LinkageTypes::PrivateLinkage;
+        auto *spirvSource = builder->CreateGlobalString(spirvIR, WEASEL_KERNEL_SOURCE_NAME + std::string(".str"), 0, getModule());
+        auto idxList = std::vector<llvm::Value *>{
+            builder->getInt64(0),
+            builder->getInt64(0)
+        };
+        auto *gep = llvm::ConstantExpr::getGetElementPtr(spirvSource->getType()->getElementType(), spirvSource, idxList, true);
+
+        new llvm::GlobalVariable(*getModule(), builder->getInt8PtrTy(), true, linkage, gep, WEASEL_KERNEL_SOURCE_NAME);
+        new llvm::GlobalVariable(*getModule(), builder->getInt32Ty(), true, linkage, value, WEASEL_KERNEL_SOURCE_SIZE_NAME);
+    }
+
+    _context->setHostCL(isHostCL);
+
+    auto pass = std::make_unique<Passes>(getModule());
+    for (const auto &item : _funs)
+    {
+        auto identifier = item->getIdentifier();
+        auto sym = SymbolTable::get(identifier);
+        if (sym && sym->isKind(AttributeKind::SymbolFunction))
+        {
+            _err = "Function conflict : " + identifier +"\n";
+            return false;
+        }
+
+        auto *fun = item->codegen(_context.get());
+        if (!fun)
+        {
+            _err = "Cannot codegen function " + identifier + "\n";
+            return false;
+        }
+
+        if (llvm::verifyFunction(*fun, &llvm::errs()))
+        {
+            _err = "Error when verifying function " + identifier + "\n";
+            return false;
+        }
+
+        pass->run(*fun);
+    }
 
     auto cpu = "generic";
     auto targetTriple = _isParallel ? "spir64" : llvm::sys::getDefaultTargetTriple();
@@ -27,13 +80,9 @@ void weasel::Codegen::compile()
     auto dataLayout = llvm::DataLayout(llvm::StringRef());
     if (!_isParallel)
     {
-        std::string err;
-        auto *target = llvm::TargetRegistry::lookupTarget(targetTriple, err);
+        auto *target = llvm::TargetRegistry::lookupTarget(targetTriple, _err);
         if (!target)
-        {
-            _err = err;
-            return;
-        }
+            return false;
 
         auto targetOpts = llvm::TargetOptions();
         auto rm = llvm::Optional<llvm::Reloc::Model>();
@@ -49,42 +98,6 @@ void weasel::Codegen::compile()
     getModule()->setTargetTriple(targetTriple);
     getModule()->setDataLayout(dataLayout);
 
-    auto pass = std::make_unique<Passes>(getModule());
-    auto ok = true;
-    for (const auto &item : _funs)
-    {
-        auto identifier = item->getIdentifier();
-        auto sym = SymbolTable::get(identifier);
-        if (sym && sym->isKind(AttributeKind::SymbolFunction))
-        {
-            ok = false;
-            break;
-        }
-
-        auto *fun = item->codegen(_context.get());
-        if (!fun)
-        {
-            std::cerr << "Cannot codegen function " << identifier << "\n";
-            ok = false;
-            break;
-        }
-
-        if (llvm::verifyFunction(*fun, &llvm::errs()))
-        {
-            std::cerr << "Error when verifying function " << identifier << "\n";
-            ok = false;
-            break;
-        }
-
-        pass->run(*fun);
-    }
-
-    if (!ok)
-    {
-        std::cerr << "Error when constructing function\n";
-        return;
-    }
-
     auto meta = std::make_unique<Metadata>(getContext());
     if (_isParallel)
     {
@@ -97,19 +110,84 @@ void weasel::Codegen::compile()
 
     if (llvm::verifyModule(*getModule()))
     {
-        std::cerr << "Error when constructing module\n";
+        _err = "Error when constructing module\n";
+        return false;
+    }
+
+    if (!ErrorTable::getErrors().empty()) {
+        std::cerr << "\n=> Error Information\n";
+        ErrorTable::showErrors();
+    }
+
+    return true;
+}
+
+std::string weasel::Codegen::createSpirv()
+{
+    std::ostringstream ir;
+    if (!_isParallel) {
+        return "";
+    }
+
+    if (_funs.empty()) {
+        return "";
+    }
+
+    if (!llvm::regularizeLlvmForSpirv(getModule(), _err))
+    {
+        return "";
+    }
+
+    if (!llvm::writeSpirv(getModule(), ir, _err))
+    {
+        return "";
+    }
+
+    std::ofstream file("runtime-rt/main.spv");
+    if (!llvm::writeSpirv(getModule(), file, _err))
+    {
+        return "";
+    }
+
+    ir.flush();
+
+    return ir.str();
+}
+
+void weasel::Codegen::createObject() const
+{
+    auto filePath = "runtime-rt/main.o";
+
+    std::string err;
+    std::error_code errCode;
+    llvm::raw_fd_ostream dest(filePath, errCode, llvm::sys::fs::OF_None);
+    if (errCode) {
+        llvm::errs() << "Could not open file : " << errCode.message() << "\n";
         return;
     }
 
-    llvm::errs() << *getModule();
+    auto pass = llvm::legacy::PassManager();
+    auto fileType = llvm::CodeGenFileType::CGFT_ObjectFile;
+    auto targetTriple = getModule()->getTargetTriple();
+    auto *target = llvm::TargetRegistry::lookupTarget(targetTriple, err);
+    if (!target)
+    {
+        llvm::errs() << err;
+        exit(1);
+    }
 
-    std::cerr << "\n=> Error Information\n";
-    ErrorTable::showErrors();
+    auto cpu = "generic";
+    auto features = "";
+    auto rm = llvm::Optional<llvm::Reloc::Model>();
+    auto targetOpts = llvm::TargetOptions();
+    auto targetMachine = target->createTargetMachine(targetTriple, cpu, features, targetOpts, rm);
 
-    // std::string errMsg;
-    // std::ofstream file("main.main.spv");
-    // std::stringbuf buf;
-    // std::ostream OS(&buf);
-    // bool val = llvm::regularizeLlvmForSpirv(getModule(), errMsg);
-    // llvm::writeSpirv(getModule(), file, errMsg);
+    if (targetMachine->addPassesToEmitFile(pass, dest, nullptr, fileType))
+    {
+        llvm::errs() << "The Target Machine can't emit a file of this type";
+        exit(1);
+    }
+
+    pass.run(*getModule());
+    dest.flush();
 }

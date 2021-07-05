@@ -1,3 +1,4 @@
+#include <llvm/IR/DerivedTypes.h>
 #include "weasel/basic/number.h"
 #include "weasel/parse/parser.h"
 #include "weasel/symbol/symbol.h"
@@ -24,27 +25,6 @@ std::vector<std::shared_ptr<weasel::Function>> weasel::Parser::getParallelFuncti
     return funs;
 }
 
-std::vector<std::shared_ptr<weasel::Function>> weasel::Parser::getFunctions()
-{
-    if (_parallelCount == 0) {
-        return _funs;
-    }
-
-    if (_parallelCount == _funs.size()) {
-        return {};
-    }
-
-    std::vector<std::shared_ptr<Function>> funs(_funs.size() - _parallelCount);
-    unsigned idx = 0;
-
-    for (const auto &item : _funs) {
-        if (item->getParallelType() == ParallelType::None) {
-            funs[idx++] = item;
-        }
-    }
-
-    return funs;
-}
 llvm::Type *weasel::Parser::parseDataType()
 {
     // Pointer

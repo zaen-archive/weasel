@@ -1,3 +1,11 @@
 #pragma once
 
-#define WEASEL_FULL_VERSION "weasel version 0.0.1-experiment"
+#define WEASEL_FULL_VERSION "weasel version 0.0.1-experimental"
+#define WEASEL_KERNEL_SOURCE_NAME "__WEASEL_KERNEL_SOURCE__"
+#define WEASEL_KERNEL_SOURCE_SIZE_NAME "__WEASEL_KERNEL_SOURCE_SIZE__"
+#define WEASEL_MAIN_FUNCTION "main"
+
+#define WEASEL_PARALLEL_INIT_NAME "initCL"
+#define WEASEL_PARALLEL_INIT_KERNEL_NAME "initKernel"
+#define WEASEL_PARALLEL_INIT_ARGUMENT_NAME "initArgument"
+#define WEASEL_PARALLEL_RUN_KERNEL_NAME "run"

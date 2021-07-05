@@ -29,9 +29,11 @@ namespace weasel
         llvm::MDBuilder *_mdBuilder;
         llvm::LLVMContext *_context;
         llvm::IRBuilder<> *_builder;
-        Function *_currentFuncton;
+        Function *_currentFunction = nullptr;
 
-        unsigned long long _counter = 0;
+        bool _isHostCL = false;
+        bool _isParallel = false;
+        unsigned long _counter = 0;
 
     private:
         llvm::MDNode *getTBAA(llvm::Type *type) const;
@@ -42,13 +44,21 @@ namespace weasel
         llvm::MDNode *getTBAALong() const;
         llvm::MDNode *getTBAAPointer() const;
 
+        void runFunction() const;
+        void initFunctionCL() const;
+        void initFunctionKernel(const std::string& kernelName);
+        void initFunctionArgument(llvm::Value* arr, int size) const;
+
     public:
-        explicit Context(llvm::LLVMContext *context, const std::string &moduleName);
+        explicit Context(llvm::LLVMContext *context, const std::string &moduleName, bool isParallel = false);
 
         llvm::LLVMContext *getContext() const { return _context; }
         llvm::Module *getModule() const { return _module; }
         llvm::IRBuilder<> *getBuilder() const { return _builder; }
         llvm::MDBuilder *getMDBuilder() const { return _mdBuilder; }
+
+        void setHostCL(bool val) { _isHostCL = val; }
+        bool isParallel() const { return _isParallel; }
 
         llvm::Value *castIntegerType(llvm::Value *lhs, llvm::Value *rhs) const;
         llvm::Value *castIntegerType(llvm::Value *value, llvm::Type *castTy);
@@ -63,7 +73,7 @@ namespace weasel
         llvm::Value *codegen(ReturnExpression *expr);
         llvm::Value *codegen(DeclarationExpression *expr);
         llvm::Value *codegen(StringLiteralExpression *expr) const;
-        llvm::Value *codegen(NilLiteralExpression *expr) const;
+        llvm::Value *codegen() const;
         llvm::Value *codegen(ArrayLiteralExpression *expr);
         llvm::Value *codegen(ArrayExpression *expr);
         // TODO: Need to implement modulo operator
