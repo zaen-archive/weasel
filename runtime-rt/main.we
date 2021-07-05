@@ -1,21 +1,4 @@
-parallel
-fun _Z13get_global_idj(i int) long {}
-
-parallel
-fun tut(a *int, i int) {
-    a[i] = i * i
-}
-
-parallel kernel
-fun test(a *int, b *int) {
-    let i long = _Z13get_global_idj(0)
-
-    // tut(a, i)
-
-    a[i] = a[i] / b[i]
-}
-
-// Weasel Parallel Library
+// Weasel Library //
 extern fun generateArray(count int) *int {}
 extern fun initKernel(kernelName *byte) {}
 extern fun initArgument(arr *int, size int, type int) {}
@@ -26,6 +9,20 @@ extern fun load(arr *int, size int) {}
 extern fun release(arr *int) {}
 
 extern fun printf(msg *byte, param ...*int) int {}
+
+// End of Weasel Library //
+
+parallel
+fun _Z13get_global_idj(i int) long {}
+
+parallel kernel
+fun test(a *int, b *int) {
+    let i long = _Z13get_global_idj(0)
+
+    // tut(a, i)
+
+    a[i] = a[i] / b[i]
+}
 
 fun main()
 {
