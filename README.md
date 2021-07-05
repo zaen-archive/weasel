@@ -100,7 +100,7 @@ We also can binding the library created by weasel language into another language
 
 ### Heterogeneous Computing
 
-- [ ] Implement Internal Heterogeneous Computing (for prove of concept)
+- [x] Implement Simple Internal Heterogeneous Computing (for prove of concept)
 
 ### If / Else Statement
 
