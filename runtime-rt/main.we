@@ -9,31 +9,37 @@ extern fun load(arr *int, size int) {}
 extern fun release(arr *int) {}
 
 extern fun printf(msg *byte, param ...*int) int {}
-
 // End of Weasel Library //
 
+// Weasel Parallel Library //
 parallel
 fun _Z13get_global_idj(i int) long {}
 
+parallel
+inline fun getGlobalId(i int) long {
+    return _Z13get_global_idj(i)
+}
+// End of Weasel Parallel Library
+
+
 parallel kernel
-fun test(a *int, b *int) {
-    let i long = _Z13get_global_idj(0)
-
-    // tut(a, i)
-
-    a[i] = a[i] / b[i]
+fun vectorMul(a *int, b *int) {
+    let i long = getGlobalId(0)
+    a[i] = a[i] * b[i]
 }
 
 fun main()
 {
+    // Generate Array or vector with length
     let a *int = generateArray(100)
     let b *int = generateArray(100)
 
-    test(a, b)
+    // Call Parallel Kernel
+    vectorMul(a, b)
 
+    // Read Buffer from GPU Memories
     load(a, 100)
 
-    printf("HELLO x : %d", a[10])
-
-    destroy()
+    // Print some value
+    printf("Value is %d", a[10])
 }

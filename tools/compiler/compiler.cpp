@@ -55,13 +55,15 @@ int main(int argc, char *argv[])
     auto codegen = std::make_unique<weasel::Codegen>(std::move(context), parser->getFunctions());
 
     weasel::SymbolTable::reset();
-    if (!spirCodegen->compile()) {
+    if (!spirCodegen->compile())
+    {
         std::cerr << spirCodegen->getError() << "\n";
         exit(1);
     }
 
     weasel::SymbolTable::reset();
-    if (!codegen->compile(spirCodegen->createSpirv())) {
+    if (!codegen->compile(spirCodegen->createSpirv()))
+    {
         std::cerr << codegen->getError() << "\n";
         exit(1);
     }

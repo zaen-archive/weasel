@@ -18,27 +18,28 @@
 #include "weasel/passes/passes.h"
 #include "weasel/metadata/metadata.h"
 
-weasel::Codegen::Codegen(std::unique_ptr<Context> context, std::vector<std::shared_ptr<Function>> funs) {
+weasel::Codegen::Codegen(std::unique_ptr<Context> context, std::vector<std::shared_ptr<Function>> funs)
+{
     _context = std::move(context);
     _funs = std::move(funs);
     _isParallel = _context->isParallel();
 }
 
-bool weasel::Codegen::compile(const std::string& spirvIR)
+bool weasel::Codegen::compile(const std::string &spirvIR)
 {
     if (_funs.empty())
         return _isParallel;
 
     auto isHostCL = !_isParallel && !spirvIR.empty();
-    if (isHostCL) {
+    if (isHostCL)
+    {
         auto *builder = _context->getBuilder();
         auto *value = builder->getInt32(spirvIR.size());
         auto linkage = llvm::GlobalVariable::LinkageTypes::PrivateLinkage;
         auto *spirvSource = builder->CreateGlobalString(spirvIR, WEASEL_KERNEL_SOURCE_NAME + std::string(".str"), 0, getModule());
         auto idxList = std::vector<llvm::Value *>{
             builder->getInt64(0),
-            builder->getInt64(0)
-        };
+            builder->getInt64(0)};
         auto *gep = llvm::ConstantExpr::getGetElementPtr(spirvSource->getType()->getElementType(), spirvSource, idxList, true);
 
         new llvm::GlobalVariable(*getModule(), builder->getInt8PtrTy(), true, linkage, gep, WEASEL_KERNEL_SOURCE_NAME);
@@ -54,7 +55,7 @@ bool weasel::Codegen::compile(const std::string& spirvIR)
         auto sym = SymbolTable::get(identifier);
         if (sym && sym->isKind(AttributeKind::SymbolFunction))
         {
-            _err = "Function conflict : " + identifier +"\n";
+            _err = "Function conflict : " + identifier + "\n";
             return false;
         }
 
@@ -114,7 +115,8 @@ bool weasel::Codegen::compile(const std::string& spirvIR)
         return false;
     }
 
-    if (!ErrorTable::getErrors().empty()) {
+    if (!ErrorTable::getErrors().empty())
+    {
         std::cerr << "\n=> Error Information\n";
         ErrorTable::showErrors();
     }
@@ -125,11 +127,13 @@ bool weasel::Codegen::compile(const std::string& spirvIR)
 std::string weasel::Codegen::createSpirv()
 {
     std::ostringstream ir;
-    if (!_isParallel) {
+    if (!_isParallel)
+    {
         return "";
     }
 
-    if (_funs.empty()) {
+    if (_funs.empty())
+    {
         return "";
     }
 
@@ -161,7 +165,8 @@ void weasel::Codegen::createObject() const
     std::string err;
     std::error_code errCode;
     llvm::raw_fd_ostream dest(filePath, errCode, llvm::sys::fs::OF_None);
-    if (errCode) {
+    if (errCode)
+    {
         llvm::errs() << "Could not open file : " << errCode.message() << "\n";
         return;
     }

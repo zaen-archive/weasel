@@ -15,11 +15,11 @@ weasel::Context::Context(llvm::LLVMContext *context, const std::string &moduleNa
     _builder = new llvm::IRBuilder<>(*_context);
 }
 
-void weasel::Context::initFunctionCL() const
+void weasel::Context::parallelInit() const
 {
     auto paramsDecl = std::vector<llvm::Type *>{
-            getBuilder()->getInt8PtrTy(),
-            getBuilder()->getInt32Ty(),
+        getBuilder()->getInt8PtrTy(),
+        getBuilder()->getInt32Ty(),
     };
     auto linkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
     auto *funType = llvm::FunctionType::get(getBuilder()->getVoidTy(), paramsDecl, false);
@@ -28,38 +28,44 @@ void weasel::Context::initFunctionCL() const
     // Calling Function
     auto *argFirst = getBuilder()->CreateLoad(getModule()->getGlobalVariable(WEASEL_KERNEL_SOURCE_NAME, true));
     auto *argSecond = getBuilder()->CreateLoad(getModule()->getGlobalVariable(WEASEL_KERNEL_SOURCE_SIZE_NAME, true));
-    auto params = std::vector<llvm::Value *> {argFirst, argSecond};
+    auto params = std::vector<llvm::Value *>{argFirst, argSecond};
 
     getBuilder()->CreateCall(fun, params);
 }
 
-void weasel::Context::initFunctionKernel(const std::string& kernelName)
+void weasel::Context::parallelInitkernel(const std::string &kernelName)
 {
     auto *fun = getModule()->getFunction(WEASEL_PARALLEL_INIT_KERNEL_NAME);
     auto *argFirst = (new StringLiteralExpression(nullptr, kernelName))->codegen(this);
-    auto params = std::vector<llvm::Value *> {argFirst};
+    auto params = std::vector<llvm::Value *>{argFirst};
 
     getBuilder()->CreateCall(fun, params);
 }
 
-void weasel::Context::initFunctionArgument(llvm::Value* arr, int size) const
+void weasel::Context::parallelInitArgument(llvm::Value *arr, int size) const
 {
     auto *fun = getModule()->getFunction(WEASEL_PARALLEL_INIT_ARGUMENT_NAME);
-    auto params = std::vector<llvm::Value *> {
-        arr, getBuilder()->getInt32(size), getBuilder()->getInt32(0)
+    auto params = std::vector<llvm::Value *>{
+        arr, getBuilder()->getInt32(size), getBuilder()->getInt32(0)};
+
+    getBuilder()->CreateCall(fun, params);
+}
+
+void weasel::Context::parallelRun() const
+{
+    auto *fun = getModule()->getFunction(WEASEL_PARALLEL_RUN_KERNEL_NAME);
+    auto params = std::vector<llvm::Value *>{
+        getBuilder()->getInt32(100),
+        getBuilder()->getInt32(50),
     };
 
     getBuilder()->CreateCall(fun, params);
 }
 
-void weasel::Context::runFunction() const
+void weasel::Context::parallelDestroy() const
 {
-    auto *fun = getModule()->getFunction(WEASEL_PARALLEL_RUN_KERNEL_NAME);
-    auto params = std::vector<llvm::Value *> {
-        getBuilder()->getInt32(100), getBuilder()->getInt32(50),
-    };
-
-    getBuilder()->CreateCall(fun, params);
+    auto *fun = getModule()->getFunction(WEASEL_PARALLEL_DESTROY_NAME);
+    getBuilder()->CreateCall(fun);
 }
 
 llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
@@ -98,6 +104,12 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
     auto *funTyLLVM = llvm::FunctionType::get(retTy, args, isVararg);
     auto *funLLVM = llvm::Function::Create(funTyLLVM, linkage, funName, *getModule());
 
+    if (funAST->isInline())
+    {
+        funLLVM->addFnAttr(llvm::Attribute::AttrKind::InlineHint);
+        funLLVM->addFnAttr(llvm::Attribute::AttrKind::AlwaysInline);
+    }
+
     funLLVM->setDSOLocal(true);
     if (parallelType == ParallelType::ParallelKernel)
     {
@@ -132,8 +144,9 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
         getBuilder()->SetInsertPoint(entry);
 
         // Init OpenCL
-        if (_isHostCL && funName == WEASEL_MAIN_FUNCTION) {
-            initFunctionCL();
+        if (_isHostCL && funName == WEASEL_MAIN_FUNCTION)
+        {
+            parallelInit();
         }
 
         // Enter to parameter scope
@@ -216,30 +229,33 @@ llvm::Value *weasel::Context::codegen(CallExpression *expr)
     auto *fun = getModule()->getFunction(identifier);
     auto callConv = fun->getCallingConv();
 
-    if (callConv == llvm::CallingConv::SPIR_FUNC && !_isParallel) {
+    if (callConv == llvm::CallingConv::SPIR_FUNC && !_isParallel)
+    {
         return ErrorTable::addError(expr->getToken(), "parallel function just can be call inside parallel kernel function\n");
     }
 
     // TODO: When General Module calling Spir V or Parallel Module
     // Check if current context is not parallel
     // and function being called is parallel one
-    if (callConv == llvm::CallingConv::SPIR_KERNEL && !_isParallel) {
+    if (callConv == llvm::CallingConv::SPIR_KERNEL && !_isParallel)
+    {
         // Check if argument is the same
-        if (args.size() != fun->arg_size()) {
+        if (args.size() != fun->arg_size())
+        {
             return ErrorTable::addError(expr->getToken(), "function is not equal");
         }
 
         // Init Kernel
-        initFunctionKernel(identifier);
+        parallelInitkernel(identifier);
 
         // Set Arguments
-        for (const auto &item : args) {
-            initFunctionArgument(item->codegen(this), 100);
+        for (const auto &item : args)
+        {
+            parallelInitArgument(item->codegen(this), 100);
         }
 
         // Run Function
-        runFunction();
-        std::cerr << "Something good happened here\n";
+        parallelRun();
         return nullptr;
     }
 
@@ -258,7 +274,9 @@ llvm::Value *weasel::Context::codegen(CallExpression *expr)
     {
         call->setCallingConv(llvm::CallingConv::SPIR_FUNC);
         call->setTailCall();
-    } else {
+    }
+    else
+    {
         call->setCallingConv(llvm::CallingConv::C);
     }
 

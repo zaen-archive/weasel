@@ -359,6 +359,7 @@ namespace weasel
         std::shared_ptr<FunctionType> _funcTy;
         std::shared_ptr<StatementExpression> _body;
         bool _isDefine = false;
+        bool _isInline = false;
         ParallelType _parallelType;
 
     public:
@@ -373,6 +374,9 @@ namespace weasel
 
         void setIsDefine(bool val) { _isDefine = val; }
         bool isDefine() const { return _isDefine; }
+
+        void setIsInline(bool val) { _isInline = val; }
+        bool isInline() const { return _isInline; }
 
         void setParallelType(ParallelType parallelType) { _parallelType = parallelType; }
         ParallelType getParallelType() const { return _parallelType; }

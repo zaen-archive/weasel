@@ -44,10 +44,11 @@ namespace weasel
         llvm::MDNode *getTBAALong() const;
         llvm::MDNode *getTBAAPointer() const;
 
-        void runFunction() const;
-        void initFunctionCL() const;
-        void initFunctionKernel(const std::string& kernelName);
-        void initFunctionArgument(llvm::Value* arr, int size) const;
+        void parallelRun() const;
+        void parallelInit() const;
+        void parallelInitkernel(const std::string &kernelName);
+        void parallelInitArgument(llvm::Value *arr, int size) const;
+        void parallelDestroy() const;
 
     public:
         explicit Context(llvm::LLVMContext *context, const std::string &moduleName, bool isParallel = false);

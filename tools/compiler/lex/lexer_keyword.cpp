@@ -11,6 +11,10 @@ std::shared_ptr<weasel::Token> weasel::Lexer::getKeyword(char *startBuffer, char
     {
         return createToken(TokenKind::TokenKeyKernel, startBuffer, endBuffer);
     }
+    else if (compareBuffer(startBuffer, endBuffer, "inline"))
+    {
+        return createToken(TokenKind::TokenKeyInline, startBuffer, endBuffer);
+    }
     else if (compareBuffer(startBuffer, endBuffer, "fun"))
     {
         return createToken(TokenKind::TokenKeyFun, startBuffer, endBuffer);

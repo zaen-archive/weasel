@@ -91,6 +91,14 @@ std::shared_ptr<weasel::Function> weasel::Parser::parseFunction(ParallelType par
 // extern 'fun' identifier '(' args ')' funTy
 std::shared_ptr<weasel::Function> weasel::Parser::parseDeclareFunction()
 {
+    auto isInline = false;
+    if (getCurrentToken()->isKind(TokenKind::TokenKeyInline))
+    {
+        isInline = true;
+
+        getNextToken();
+    }
+
     if (!getCurrentToken()->isKind(TokenKind::TokenKeyFun))
     {
         return ErrorTable::addError(getCurrentToken(), "Expected fun keyword");
@@ -175,6 +183,8 @@ std::shared_ptr<weasel::Function> weasel::Parser::parseDeclareFunction()
     {
         SymbolTable::insert(funIdentifier, std::make_shared<Attribute>(funIdentifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
     }
+
+    fun->setIsInline(isInline);
 
     return fun;
 }

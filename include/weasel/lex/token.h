@@ -26,6 +26,7 @@ namespace weasel
         // Keyword
         TokenKeyParallel, // parallel // heterogeneous support
         TokenKeyKernel,   // kernel // heterogeneous kernel type
+        TokenKeyInline,   // For Always inline attribute
         TokenKeyFun,      // fun
         TokenKeyExtern,   // extern
         TokenKeyLet,      // let
