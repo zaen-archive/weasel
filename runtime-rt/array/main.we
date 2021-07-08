@@ -1,0 +1,63 @@
+// Weasel Library //
+extern fun generateArray(count int) *int {}
+extern fun initKernel(kernelName *byte) {}
+extern fun initArgument(arr *int, size int, type int) {}
+extern fun run(gSize int, lSize int) {}
+extern fun destroy() {}
+
+extern fun load(arr *int, size int) {}
+extern fun release(arr *int) {}
+
+extern fun printf(msg *byte, param ...*int) int {}
+// End of Weasel Library //
+
+// Weasel Parallel Library //
+parallel
+fun _Z13get_global_idj(i int) long {}
+
+parallel
+inline fun getGlobalId(i int) long {
+    return _Z13get_global_idj(i)
+}
+// End of Weasel Parallel Library
+
+
+parallel kernel
+fun vectorMul(a *int, b *int) {
+    let i long = getGlobalId(0)
+    a[i] = a[i] * b[i]
+}
+
+parallel kernel
+fun vectorAdd(a *int, b *int) {
+    let i long = getGlobalId(0)
+    a[i] = a[i] + b[i]
+}
+
+parallel kernel
+fun vectorSub(a *int, b *int) {
+    let i long = getGlobalId(0)
+    a[i] = a[i] - b[i]
+}
+
+parallel kernel
+fun vectorDiv(a *int, b *int) {
+    let i long = getGlobalId(0)
+    a[i] = a[i] / b[i]
+}
+
+fun main()
+{
+    // Generate Array or vector with length
+    let a *int = generateArray(100)
+    let b *int = generateArray(100)
+
+    // Call Parallel Kernel
+    vectorMul(a, b)
+
+    // Read Buffer from GPU Memories
+    load(a, 100)
+
+    // Print some value
+    printf("Value is %d", a[10])
+}
