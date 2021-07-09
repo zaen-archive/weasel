@@ -1,1 +1,22 @@
-add_subdirectory(parallel)
+add_library(WeaselLib STATIC
+    ast/ast.cpp
+    basic/filemanager.cpp
+    basic/number.cpp
+    codegen/codegen.cpp
+    codegen/codegen.cpp
+    ir/context.cpp
+    ir/context_helper.cpp
+    lex/lexer.cpp
+    lex/lexer_type.cpp
+    lex/lexer_punctuation.cpp
+    lex/lexer_keyword.cpp
+    lex/lexer_literal.cpp
+    lex/token.cpp
+    metadata/metadata.cpp
+    passes/passes.cpp
+    parse/parser.cpp
+    parse/parser_function.cpp
+    parse/parser_expr.cpp
+    parse/parser_helper.cpp
+    symbol/symbol.cpp
+)

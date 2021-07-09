@@ -1,13 +1,12 @@
 # https://llvm.org/docs/CMake.html#options-and-variables
 # # INITIALIZE
 cmake_minimum_required(VERSION 3.15)
-project(underrated VERSION 1.0.0)
+project(weasel VERSION 0.0.1)
 
+set (WeaselCmake_DIR ${CMAKE_SOURCE_DIR}/cmake)
 set(CMAKE_LINKER ld.lld)
 set(LLVM_DIR /usr/lib/llvm-11/lib/cmake/llvm)
 set(THIRD_PARTY_DIR third-party)
-# set(LLVM_DIR /mnt/Applications/LINUX/llvm/lib/cmake/llvm)
-# set(LLVM_DIR /mnt/Applications/LINUX/clang/lib/cmake/llvm)
 
 find_package(LLVM REQUIRED CONFIG)
 
@@ -29,9 +28,8 @@ include_directories(${LLVM_INCLUDE_DIRS})
 include_directories(${THIRD_PARTY_DIR}/include)
 include_directories(include)
 
-# Link Library
-link_directories(${THIRD_PARTY_DIR}/lib)
-
 # Weasel Directories
 add_subdirectory(tools)
 add_subdirectory(lib)
+add_subdirectory(libparallel)
+add_subdirectory(unittests)

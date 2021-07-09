@@ -19,10 +19,13 @@ We also can binding the library created by weasel language into another language
 
 # FOLDER STRUCTURE
 
+- cmake (Cmake File to avoid boilerplate of cmake file)
 - include (folder header)
-- test (program for to be compiled)
+- lib (Library of the header)
+- libparallel (Library that used for creating parallel execution. This is an abstraction of OpenCL FrameWork)
 - tools (tools program)
-- lib (Library of the header. But i get a difficulty to configure the project)
+- runtime-rt (Source program that used for testing)
+- unittests (program for to be compiled)
 
 # ROADMAP
 
@@ -135,7 +138,7 @@ We also can binding the library created by weasel language into another language
 - [x] Weird Lexeme Location(row, col, position)
 - [ ] Special character need handled
 - [ ] I implemented binaryexpression for precedence associative right to left wrongly
-- [ ] Library inside lib folder instead of inside tools folder
+- [x] Library inside lib folder instead of inside tools folder
 
 # BUGS SOLVED
 
