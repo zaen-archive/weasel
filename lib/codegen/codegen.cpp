@@ -147,12 +147,6 @@ std::string weasel::Codegen::createSpirv()
         return "";
     }
 
-    std::ofstream file("runtime-rt/main.spv");
-    if (!llvm::writeSpirv(getModule(), file, _err))
-    {
-        return "";
-    }
-
     ir.flush();
 
     return ir.str();

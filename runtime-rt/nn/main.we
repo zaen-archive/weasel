@@ -21,8 +21,25 @@ inline fun getGlobalId(i int) long {
 }
 // End of Weasel Parallel Library
 
+// Neural Network kernel (y=b+WX)
+parallel kernel
+fun neural(x *int) {
+    // let i long = getGlobalId(0)
+    let i long = 10
+    let w int = 2
+    let b int = 5
 
+    x[i] = x[i] * w + b
+}
+
+// Main Function
 fun main()
 {
-    // TODO: Create Neural Network Example Here
+    let a *int = generateArray(100)
+
+    neural(a)
+
+    load(a, 100)
+
+    printf("Index 10 is %d", a[10])
 }

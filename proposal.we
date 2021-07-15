@@ -1,17 +1,24 @@
 // This is how we import file
 import "io"
-import "gpu"
+import "parallel"
 
 // HETEROGENEOUS PROGRAMMING Function
 fun parallel get_global_id(const i int) ulong {} // Get Global ID
 
 parallel kernel
 fun Mul(data *float) {
-    int index = 2 * parallel.index
-    int nextIndex = index + 1
+    let global = parallel.global
+    let threadCount = parallel.thread
+    let threadIdx = parallel.threadIndex
+    let blockCount = parallel.block
+    let block = parallel.blockIndex
 
-    data[index] = 2 * data[index]
-    data[nextIndex] = 4 * data[nextIndex]
+    let idx = threadCount * block + threadIdx
+    if (idx > global) {
+        return;
+    }
+
+    data[idx] = data[idx] ^ 2
 }
 
 // Main function like always
@@ -38,13 +45,16 @@ fun Main() {
     // The Language automaticly understand how to handle local or global data
     // We need to map data address into lookup gpu memory
     // We use already defined data in memory or use new one if not yet copy
+    @parallel{
+        global: 4000
+        block: 32,
+        thread: 128,
+    }
     Mul(data)
 
-    // TODO: @deprecated
-    // gpu.Run(Mul, data)
-
-    // TODO: So many thing should be done with the memory allocation
-    // Another proposal being created
+    load(data)      // load data from device to host
+    store(data)     // store data from host to device
+    release(data)   // release the device memory
 }
 
 // We not support 'class' but struct
