@@ -21,14 +21,14 @@ inline fun getGlobalId(i int) long {
 }
 // End of Weasel Parallel Library
 
-// Neural Network kernel (y=b+WX)
+// Relu of Neural Network
 parallel kernel
-fun neural(x *int) {
+fun relu(x *int) {
     let i long = getGlobalId(0)
-    let w int = 2
-    let b int = 5
 
-    x[i] = x[i] * w + b
+    if (x[i] < 0) {
+        x[i] = 0
+    }
 }
 
 // Main Function
@@ -36,7 +36,7 @@ fun main()
 {
     let a *int = generateArray(100)
 
-    neural(a)
+    relu(a)
 
     load(a, 100)
 

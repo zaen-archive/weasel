@@ -17,6 +17,116 @@ We also can binding the library created by weasel language into another language
 - Set LLVM DIR
 - Build Project
 
+## Installing Weasel Language
+
+### Linux Version
+
+- Untuk pengguna linux anda dapat menggunakannya pre-release version di github https://github.com/zy0709/underrated_project/releases. Ikuti instruksinya dan langsung gunakan atau ikuti instruksi untuk menginstall dari source code.
+
+### Windows Version
+
+- No binary release for windows, follow installing from source code.
+
+### Mac OS X
+
+- no binary release for mac os x, follow installing from source code.
+  Installing Source Code
+
+### NOTE : Menginstall dari source code diperlukan pemahaman tentang cmake, compiler, dan linker. Dan mungkin tutorial ini akan membingungkan orang yang masih pemula. karena ada beberapa step yang mungkin terlewatkan.
+
+### 1. Install Clang
+
+#### Untuk linux
+
+- anda tinggal run
+- `sudo apt update`
+- `sudo apt install clang-12`
+
+#### Untuk Windows
+
+- Download clang di https://releases.llvm.org/download.html pilih versi 11.0.0
+- Extract dan tambahkan ke variable environment
+
+#### Untuk Mac OS X
+
+- Clang merupakan default compiler di Mac OS X, jadi tidak perlu menginstall lagi
+
+### 2. Clone Project
+
+- Tinggal clone project git clone https://github.com/zy0709/underrated_project ke folder project anda
+
+### 3. Set LLVM DIR
+
+#### Untuk Linux
+
+- Tidak perlu diganti
+
+#### Untuk Windows
+
+- Buka file CMakeLists.txt
+- Ganti pathnya LLVM_DIR ke {folder clang}/lib/cmake/llvm
+
+#### Untuk Mac OS X
+
+-Set ke folder cmake llvm (not tested, limited hardware resource)
+
+### 4. Set Library LLVM SPIRV
+
+#### Untuk Linux
+
+- Membuat folder third-party
+- Download llvm-spirv-11 di https://github.com/zy0709/underrated_project/releases
+- Extract lib dan include di file llvm-spirv-11 ke third-party
+
+#### Untuk Windows
+
+- Build dari source code, ikuti petunjuk dari github aslinya di https://github.com/KhronosGroup/SPIRV-LLVM-Translator
+- Lalu pindah libLLVMSPIRVLib.a ke folder third-party/lib
+- Dan copy semua file dari include ke third-party/include
+
+#### Untuk Mac OS X
+
+- Build dari source code, ikuti petunjuk dari github aslinya di https://github.com/KhronosGroup/SPIRV-LLVM-Translator
+- Lalu pindah libLLVMSPIRVLib.a ke folder third-party/lib
+- Dan copy semua file dari include ke third-party/include
+
+### 5. Build Source
+
+#### Untuk Linux
+
+- mkdir build
+- cd build
+- cmake ..
+- cmake --build .
+- tunggu process selesai dan anda bisa menggunakan file executablenya
+
+#### Untuk Windows
+
+- mkdir build
+- cd build
+- cmake ..
+- cmake --build .
+- tunggu process selesai dan anda bisa menggunakan file executablenya
+
+#### Untuk Mac OS X
+
+- mkdir build
+- cd build
+- cmake ..
+- cmake --build .
+- tunggu process selesai dan anda bisa menggunakan file executablenya
+
+---
+
+---
+
+- ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) NOTE : Untuk menginstall dari source code diperlukan keahlian khusus.
+- ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) NOTE : Mail to github project for more information.
+
+---
+
+---
+
 # FOLDER STRUCTURE
 
 - cmake (Cmake File to avoid boilerplate of cmake file)
