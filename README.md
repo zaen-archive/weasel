@@ -30,9 +30,8 @@ We also can binding the library created by weasel language into another language
 ### Mac OS X
 
 - no binary release for mac os x, follow installing from source code.
-  Installing Source Code
 
-### NOTE : Menginstall dari source code diperlukan pemahaman tentang cmake, compiler, dan linker. Dan mungkin tutorial ini akan membingungkan orang yang masih pemula. karena ada beberapa step yang mungkin terlewatkan.
+## Install from Source Code
 
 ### 1. Install Clang
 
@@ -120,7 +119,7 @@ We also can binding the library created by weasel language into another language
 
 ---
 
-- ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) NOTE : Untuk menginstall dari source code diperlukan keahlian khusus.
+- ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) NOTE : On progress to automate the installation.
 - ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) NOTE : Mail to github project for more information.
 
 ---
