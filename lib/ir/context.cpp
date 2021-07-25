@@ -165,7 +165,7 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
             {
                 item.addAttr(llvm::Attribute::AttrKind::NoCapture);
                 // TODO: Add Modifier const or final
-                // item.addAttr(llvm::Attribute::AttrKind::ReadOnly);
+                item.addAttr(llvm::Attribute::AttrKind::ReadOnly);
             }
 
             auto attrKind = AttributeKind::SymbolVariable;
