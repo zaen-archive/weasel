@@ -1,4 +1,4 @@
-find_package(WeaselCmake)
+find_package(WEASEL)
 
 add_executable(TestLLVM main.cpp)
 

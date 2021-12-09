@@ -88,7 +88,6 @@ set(WEASEL_LIBS
     LLVMRISCVCodeGen
     LLVMRISCVDesc
     LLVMRISCVDisassembler
-    LLVMRISCVUtils
 
     # Sparc
     LLVMSparcInfo
@@ -137,5 +136,5 @@ set(WEASEL_LIBS
     WeaselLib
 
     # LLVM SPIRV
-    ${CMAKE_SOURCE_DIR}/third-party/lib/libLLVMSPIRVLib.a
+    ${LLVM_SPIRV_LIB_DIR}/libLLVMSPIRVLib.a
 )

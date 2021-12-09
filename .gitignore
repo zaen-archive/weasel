@@ -4,6 +4,11 @@ clang/
 examples/
 third-party/
 
+build-llvm/
+build-spirv/
+llvm-project/
+llvm-spirv/
+
 runtime-rt/*.exe
 runtime-rt/*.o
 runtime-rt/*.out

@@ -32,7 +32,7 @@ namespace weasel
             _fpm->add(llvm::createDeadCodeEliminationPass());     // Dead code elimination
             _fpm->add(llvm::createSROAPass());                    // SROA
             _fpm->add(llvm::createLoopSimplifyCFGPass());         // Simplify Loop
-            _fpm->add(llvm::createConstantPropagationPass());     // Propagate constant
+            _fpm->add(llvm::createConstraintEliminationPass());   // Propagate constant
             _fpm->add(llvm::createNewGVNPass());                  // Global value numbering
             _fpm->add(llvm::createReassociatePass());             // Reassociate expressions.
             _fpm->add(llvm::createPartiallyInlineLibCallsPass()); // Inline standard calls

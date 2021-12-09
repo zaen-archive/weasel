@@ -26,8 +26,10 @@ void weasel::Context::parallelInit() const
     auto *fun = llvm::Function::Create(funType, linkage, WEASEL_PARALLEL_INIT_NAME, *getModule());
 
     // Calling Function
-    auto *argFirst = getBuilder()->CreateLoad(getModule()->getGlobalVariable(WEASEL_KERNEL_SOURCE_NAME, true));
-    auto *argSecond = getBuilder()->CreateLoad(getModule()->getGlobalVariable(WEASEL_KERNEL_SOURCE_SIZE_NAME, true));
+    auto *kernelSource = getModule()->getGlobalVariable(WEASEL_KERNEL_SOURCE_NAME, true);
+    auto *kernelSize = getModule()->getGlobalVariable(WEASEL_KERNEL_SOURCE_SIZE_NAME, true);
+    auto *argFirst = getBuilder()->CreateLoad(kernelSource->getType(), kernelSource);
+    auto *argSecond = getBuilder()->CreateLoad(kernelSize->getType(), kernelSize);
     auto params = std::vector<llvm::Value *>{argFirst, argSecond};
 
     getBuilder()->CreateCall(fun, params);
@@ -317,10 +319,10 @@ llvm::Value *weasel::Context::codegen(ArrayLiteralExpression *expr)
     auto dataLayout = llvm::DataLayout(getModule());
     auto alignNum = dataLayout.getPrefTypeAlignment(valueTy);
 
-    gv->setAlignment(llvm::Align(std::max((unsigned)16, alignNum)));
+    gv->setAlignment(llvm::Align(std::max((unsigned int)16, alignNum)));
     gv->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Local);
 
-    return getBuilder()->CreateLoad(gv);
+    return getBuilder()->CreateLoad(gv->getType(), gv);
 }
 
 llvm::Value *weasel::Context::codegen(StringLiteralExpression *expr) const
@@ -451,7 +453,7 @@ llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
         auto *allocLhs = loadLhs->getPointerOperand();
         getBuilder()->CreateStore(rhs, allocLhs);
 
-        return getBuilder()->CreateLoad(allocLhs);
+        return getBuilder()->CreateLoad(allocLhs->getType(), allocLhs);
     }
     default:
         std::cout << "HELLO ERROR\n";
@@ -512,7 +514,7 @@ llvm::Value *weasel::Context::codegen(VariableExpression *expr) const
         return alloc;
     }
 
-    return getBuilder()->CreateLoad(alloc, varName);
+    return getBuilder()->CreateLoad(alloc->getType(), alloc, varName);
 }
 
 llvm::Value *weasel::Context::codegen(ArrayExpression *expr)
@@ -546,17 +548,17 @@ llvm::Value *weasel::Context::codegen(ArrayExpression *expr)
     {
         if (llvm::dyn_cast<llvm::Instruction>(alloc))
         {
-            alloc = getBuilder()->CreateLoad(alloc, "pointerLoad");
+            alloc = getBuilder()->CreateLoad(alloc->getType(), alloc, "pointerLoad");
         }
     }
 
-    auto *elemIndex = getBuilder()->CreateInBoundsGEP(alloc, idxList, "arrayElement");
+    auto *elemIndex = getBuilder()->CreateInBoundsGEP(alloc->getType(), alloc, idxList, "arrayElement");
     if (expr->isAddressOf())
     {
         return elemIndex;
     }
 
-    auto *loadIns = getBuilder()->CreateLoad(elemIndex, varName);
+    auto *loadIns = getBuilder()->CreateLoad(elemIndex->getType(), elemIndex, varName);
 
     if (_currentFunction->getParallelType() != ParallelType::None)
     {
