@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     }
 
     // Initialize LLVM TO BULK
-    llvm::InitializeAllTargetInfos();
+    // llvm::InitializeAllTargetInfos();
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmParser();
     llvm::InitializeNativeTargetAsmPrinter();

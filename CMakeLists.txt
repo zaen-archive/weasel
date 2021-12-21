@@ -1,17 +1,17 @@
 # https://llvm.org/docs/CMake.html#options-and-variables
-# # INITIALIZE
+# INITIALIZE
 cmake_minimum_required(VERSION 3.15)
 project(weasel VERSION 0.0.1)
 
 set(CMAKE_LINKER ld.lld)
 
 # LLVM SPIRV
-set(LLVM_SPIRV_DIR ${CMAKE_SOURCE_DIR}/build-spirv)
+set(LLVM_SPIRV_DIR ${CMAKE_SOURCE_DIR}/llvm-spirv)
 set(LLVM_SPIRV_INCLUDE_DIR ${LLVM_SPIRV_DIR}/include)
-set(LLVM_SPIRV_LIB_DIR ${LLVM_SPIRV_DIR}/lib/SPIRV)
+set(LLVM_SPIRV_LIB_DIR ${LLVM_SPIRV_DIR}/build/lib/SPIRV)
 
 # LLVM
-set(LLVM_DIR /usr/lib/llvm-12/lib/cmake/llvm/)
+set(LLVM_DIR /usr/lib/llvm-13/lib/cmake/llvm/)
 set(WEASEL_DIR ${CMAKE_SOURCE_DIR}/cmake)
 
 find_package(LLVM REQUIRED CONFIG)
