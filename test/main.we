@@ -1,0 +1,6 @@
+extern fun printf(msg *byte, param ...*int) int { }
+
+fun main() {
+    let i = 21
+    printf("Hello World\n")
+}

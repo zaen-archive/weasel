@@ -152,13 +152,11 @@ std::string weasel::Codegen::createSpirv()
     return ir.str();
 }
 
-void weasel::Codegen::createObject() const
+void weasel::Codegen::createObject(char *outputFile) const
 {
-    auto filePath = "runtime-rt/main.o";
-
     std::string err;
     std::error_code errCode;
-    llvm::raw_fd_ostream dest(filePath, errCode, llvm::sys::fs::OF_None);
+    llvm::raw_fd_ostream dest(outputFile, errCode, llvm::sys::fs::OF_None);
     if (errCode)
     {
         llvm::errs() << "Could not open file : " << errCode.message() << "\n";

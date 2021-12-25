@@ -94,13 +94,34 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseLiteralExpression()
 
     if (token->isKind(TokenKind::TokenLitString))
     {
-        return std::make_shared<StringLiteralExpression>(token, token->getValue());
+        auto *currentBuffer = token->getStartBuffer();
+        auto *endBuffer = token->getEndBuffer();
+        std::string value = "";
+
+        while (endBuffer - currentBuffer > 0)
+        {
+            auto currentChar = *currentBuffer;
+            auto nextChar = *(currentBuffer + 1);
+
+            if (currentChar == '\\' && nextChar == 'n')
+            {
+                value += '\n';
+                currentBuffer += 2;
+            }
+            else
+            {
+                value += currentChar;
+                currentBuffer += 1;
+            }
+        }
+
+        return std::make_shared<StringLiteralExpression>(token, value);
     }
 
     return std::make_shared<NilLiteralExpression>(getCurrentToken());
 }
 
-std::shared_ptr<weasel::Expression> weasel::Parser::parseFunctionCallExpression(const std::shared_ptr<weasel::Attribute>& attr)
+std::shared_ptr<weasel::Expression> weasel::Parser::parseFunctionCallExpression(const std::shared_ptr<weasel::Attribute> &attr)
 {
     auto callToken = getCurrentToken();
     if (!getNextToken()->isKind(TokenKind::TokenDelimOpenParen))

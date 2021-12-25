@@ -16,17 +16,14 @@
 
 int main(int argc, char *argv[])
 {
-    char *filePath;
-    if (argc <= 1)
+    if (argc <= 2)
     {
         std::cerr << "Not Input files\n";
         return 1;
     }
-    else
-    {
-        filePath = argv[1];
-    }
 
+    auto *filePath = argv[1];
+    auto *outputPath = argv[2];
     auto *fileManager = new weasel::FileManager(filePath);
     if (!fileManager->isValid())
     {
@@ -48,26 +45,16 @@ int main(int argc, char *argv[])
     parser->parse();
 
     // Prepare for codegen
-    auto spirContext = std::make_unique<weasel::Context>(llvmContext, "SpirVModule", true);
-    auto spirCodegen = std::make_unique<weasel::Codegen>(std::move(spirContext), parser->getParallelFunctions());
-
     auto context = std::make_unique<weasel::Context>(llvmContext, "CodeModule");
     auto codegen = std::make_unique<weasel::Codegen>(std::move(context), parser->getFunctions());
 
     weasel::SymbolTable::reset();
-    if (!spirCodegen->compile())
-    {
-        std::cerr << spirCodegen->getError() << "\n";
-        exit(1);
-    }
-
-    weasel::SymbolTable::reset();
-    if (!codegen->compile(spirCodegen->createSpirv()))
+    if (!codegen->compile())
     {
         std::cerr << codegen->getError() << "\n";
         exit(1);
     }
 
     // Compile to Object
-    codegen->createObject();
+    codegen->createObject(outputPath);
 }

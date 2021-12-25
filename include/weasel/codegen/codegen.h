@@ -20,10 +20,10 @@ namespace weasel
     public:
         Codegen(std::unique_ptr<Context> context, std::vector<std::shared_ptr<Function>> funs);
 
-        bool compile(const std::string& spirvIR = "");
+        bool compile(const std::string &spirvIR = "");
 
         std::string createSpirv();
-        void createObject() const;
+        void createObject(char *outputFile) const;
 
     public:
         llvm::Module *getModule() const { return _context->getModule(); }
