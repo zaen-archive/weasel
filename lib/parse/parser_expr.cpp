@@ -447,18 +447,17 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseDeclarationExpression()
 
     // Insert Symbol Table
     {
-        AttributeKind attrKind;
-        if (type->isArrayTy())
+        AttributeKind attrKind = AttributeKind::SymbolVariable;
+        if (type)
         {
-            attrKind = AttributeKind::SymbolArray;
-        }
-        else if (type->isPointerTy())
-        {
-            attrKind = AttributeKind::SymbolPointer;
-        }
-        else
-        {
-            attrKind = AttributeKind::SymbolVariable;
+            if (type->isArrayTy())
+            {
+                attrKind = AttributeKind::SymbolArray;
+            }
+            else if (type->isPointerTy())
+            {
+                attrKind = AttributeKind::SymbolPointer;
+            }
         }
 
         auto attr = std::make_shared<Attribute>(identifier, AttributeScope::ScopeLocal, attrKind, type);

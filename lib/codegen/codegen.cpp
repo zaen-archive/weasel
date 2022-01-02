@@ -112,6 +112,9 @@ bool weasel::Codegen::compile(const std::string &spirvIR)
     if (llvm::verifyModule(*getModule()))
     {
         _err = "Error when constructing module\n";
+
+        llvm::errs() << *getModule();
+
         return false;
     }
 

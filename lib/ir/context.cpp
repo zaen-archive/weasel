@@ -166,6 +166,7 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
             if ((paramTy->isPointerTy() || paramTy->isArrayTy()) && parallelType != ParallelType::None)
             {
                 item.addAttr(llvm::Attribute::AttrKind::NoCapture);
+
                 // TODO: Add Modifier const or final
                 item.addAttr(llvm::Attribute::AttrKind::ReadOnly);
             }
@@ -351,7 +352,6 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
     {
         if ((value = exprValue->codegen(this)) != nullptr)
         {
-
             if (value->getType()->getTypeID() == llvm::Type::TypeID::VoidTyID)
             {
                 return ErrorTable::addError(exprValue->getToken(), "Cannot assign void to a variable");

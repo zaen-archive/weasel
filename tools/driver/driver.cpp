@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     weasel::SymbolTable::reset();
     if (!codegen->compile())
     {
-        std::cerr << codegen->getError() << "\n";
+        std::cerr << "Codegen Compile : " << codegen->getError() << "\n";
         exit(1);
     }
 
