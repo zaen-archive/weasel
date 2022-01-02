@@ -1,6 +1,7 @@
 extern fun printf(msg *byte, param ...*int) int { }
 
 fun main() {
-    let i = 21
+    let n int = 12
+    let i = n
     printf("Hello World\n")
 }

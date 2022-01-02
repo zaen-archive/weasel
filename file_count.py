@@ -31,7 +31,17 @@ def iter_path(path_name):
     return file_count, line_count
 
 
-file_count, line_count = iter_path(".")
+file_count, line_count = iter_path("lib")
+print("### Library ###")
+print("File Count :", file_count)
+print("Lines Count :", line_count)
 
+file_count, line_count = iter_path("tools")
+print("### Tools ###")
+print("File Count :", file_count)
+print("Lines Count :", line_count)
+
+file_count, line_count = iter_path("include")
+print("### inlude ###")
 print("File Count :", file_count)
 print("Lines Count :", line_count)
